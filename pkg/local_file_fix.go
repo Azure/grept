@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"fmt"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 )
@@ -22,15 +21,6 @@ func (lf *LocalFile) ApplyFix() error {
 	}
 
 	return nil
-}
-
-func (lf *LocalFile) Validate() error {
-	// Check conditions specific to LocalFile
-	if lf.Path == "" {
-		return fmt.Errorf("path is required")
-	}
-	// You can also call the Validate method of BaseFix if needed
-	return lf.BaseFix.Validate()
 }
 
 func (lf *LocalFile) Parse(b *hclsyntax.Block) error {

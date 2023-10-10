@@ -39,3 +39,50 @@ func TestParseConfig(t *testing.T) {
 	assert.Equal(t, "/path/to/file.txt", lff.Path)
 	assert.Equal(t, "Hello, world!", lff.Content)
 }
+
+func TestUnregisteredFix(t *testing.T) {
+	hcl := `  
+	fix "unregistered_fix" sample {  
+		rule = "file_hash.sample"  
+		path = "/path/to/file.txt"  
+		content = "Hello, world!"  
+	}  
+	`
+
+	_, err := ParseConfig("test.hcl", hcl)
+	require.NotNil(t, err)
+	expectedError := "unregistered fix: unregistered_fix"
+	assert.Contains(t, err.Error(), expectedError)
+}
+
+func TestUnregisteredRule(t *testing.T) {
+	hcl := `  
+	rule "unregistered_rule" sample {  
+		glob = "*.txt"  
+		hash = "abc123"  
+		algorithm = "sha256"  
+	}  
+	`
+
+	_, err := ParseConfig("test.hcl", hcl)
+	require.NotNil(t, err)
+
+	expectedError := "unregistered rule: unregistered_rule"
+	assert.Contains(t, err.Error(), expectedError)
+}
+
+func TestInvalidBlockType(t *testing.T) {
+	hcl := `  
+	invalid_block "invalid_type" sample {  
+		glob = "*.txt"  
+		hash = "abc123"  
+		algorithm = "sha256"  
+	}  
+	`
+
+	_, err := ParseConfig("test.hcl", hcl)
+	require.NotNil(t, err)
+
+	expectedError := "invalid block type: invalid_block"
+	assert.Contains(t, err.Error(), expectedError)
+}

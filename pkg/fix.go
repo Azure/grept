@@ -9,7 +9,6 @@ import (
 type Fix interface {
 	ApplyFix() error
 	GetRule() string
-	Validate() error
 	Parse(b *hclsyntax.Block) error
 }
 
@@ -23,13 +22,12 @@ func (bf *BaseFix) GetRule() string {
 }
 
 func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
+	if len(b.Labels) != 2 {
+		return fmt.Errorf("invalid labels for %s %s, expect labels with length 2", b.Type, concatLabels(b.Labels))
+	}
 	bf.Rule, err = readRequiredStringAttribute(b, "rule", bf.ctx)
-	return
-}
-
-func (bf *BaseFix) Validate() error {
-	if bf.Rule == "" {
-		return fmt.Errorf("`rule` is required")
+	if err != nil {
+		return fmt.Errorf("unrecognized rule: %s", bf.Rule)
 	}
 	return nil
 }

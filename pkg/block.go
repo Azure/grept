@@ -14,14 +14,14 @@ func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *
 	}
 	a, ok := b.Body.Attributes[attributeName]
 	if !ok {
-		return "", fmt.Errorf("no %s in the block %s", attributeName, concatLabels(b.Labels))
+		return "", fmt.Errorf("no %s in the block %s, %s", attributeName, concatLabels(b.Labels), b.Range().String())
 	}
 	value, diagnostics := a.Expr.Value(ctx)
 	if diagnostics.HasErrors() {
-		return "", diagnostics
+		return "", fmt.Errorf("cannot evaluate expr at %s, %s", a.Expr.Range().String(), diagnostics.Error())
 	}
 	if value.Type() != cty.String {
-		return "", fmt.Errorf("the attribute %s in the block %s is not a string", attributeName, concatLabels(b.Labels))
+		return "", fmt.Errorf("the attribute %s in the block %s (%s) is not a string", attributeName, concatLabels(b.Labels), a.Expr.Range().String())
 	}
 	return value.AsString(), nil
 }
