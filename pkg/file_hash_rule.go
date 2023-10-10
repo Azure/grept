@@ -1,4 +1,4 @@
-package rules
+package pkg
 
 import (
 	"crypto/md5"
@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
 	"hash"
 
 	"github.com/spf13/afero"
@@ -14,16 +16,49 @@ import (
 var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
+	*BaseRule
 	fs        afero.Fs
 	Glob      string `hcl:"glob,attr"`
 	Hash      string `hcl:"hash,attr"`
 	Algorithm string `hcl:"algorithm,attr"`
 }
 
-func (fhr *FileHashRule) Register(name string, factory func() Rule) {
-	register("file_hash", func() Rule {
-		return &FileHashRule{}
-	})
+func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
+	err := fhr.BaseRule.Parse(b)
+	if err != nil {
+		return err
+	}
+	fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.ctx)
+	if err != nil {
+		return err
+	}
+	fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.ctx)
+	if err != nil {
+		return err
+	}
+	fhr.Algorithm, _ = readOptionalStringAttribute(b, "algorithm", fhr.ctx)
+	if fhr.Algorithm == "" {
+		fhr.Algorithm = "sha1"
+	}
+	switch fhr.Algorithm {
+	case "md5", "sha1", "sha256", "sha512":
+		// valid
+	default:
+		return fmt.Errorf("invalid algorithm: %s", fhr.Algorithm)
+	}
+
+	blockAddress := concatLabels(b.Labels)
+	fhr.ctx.Variables[blockAddress] = cty.StringVal(blockAddress)
+	m, ok := fhr.ctx.Variables[b.Labels[0]]
+	if !ok {
+		m = cty.MapVal(map[string]cty.Value{
+			b.Labels[1]: cty.StringVal(blockAddress),
+		})
+		fhr.ctx.Variables[b.Labels[0]] = m
+		return nil
+	}
+	m.AsValueMap()[b.Labels[1]] = cty.StringVal(blockAddress)
+	return nil
 }
 
 func (fhr *FileHashRule) Check() error {

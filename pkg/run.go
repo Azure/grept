@@ -1,16 +1,15 @@
 package pkg
 
 import (
-	"github.com/Azure/grept/pkg/fixes"
-	"github.com/Azure/grept/pkg/rules"
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
 )
 
 type Config struct {
-	Rules []rules.Rule
-	Fixes []fixes.Fix
+	Rules []Rule
+	Fixes []Fix
 }
 
 func ParseConfig(fn, content string) (*Config, error) {
@@ -23,26 +22,38 @@ func ParseConfig(fn, content string) (*Config, error) {
 
 	body := file.Body.(*hclsyntax.Body)
 
+	//ruleMap := make(map[string]Rule)
+	ctx := &hcl.EvalContext{
+		Variables: map[string]cty.Value{},
+		Functions: map[string]function.Function{},
+	}
+	// First loop: parse all rule blocks
 	for _, block := range body.Blocks {
-		switch block.Type {
-		case "rule":
+		if block.Type == "rule" {
 			t := block.Labels[0]
-			rule := rules.RuleFactories[t]()
-			diag := gohcl.DecodeBody(block.Body, nil, rule)
-			if diag.HasErrors() {
-				return nil, diag
+			rule := RuleFactories[t](ctx)
+			err := rule.Parse(block)
+			if err != nil {
+				return nil, err
 			}
 			config.Rules = append(config.Rules, rule)
-		case "fix":
+			//ruleMap[fmt.Sprintf("%s.%s", t, n)] = rule
+		}
+	}
+
+	// Second loop: parse all fix blocks
+	for _, block := range body.Blocks {
+		if block.Type == "fix" {
 			t := block.Labels[0]
-			fix := fixes.FixFactories[t]()
-			diag := gohcl.DecodeBody(block.Body, nil, fix)
-			if diag.HasErrors() {
-				return nil, diag
+			fix := FixFactories[t](ctx)
+			err := fix.Parse(block)
+			if err != nil {
+				return nil, err
 			}
+			//if _, exists := ruleMap[fix.GetRule()]; !exists {
+			//	return nil, fmt.Errorf("rule %s does not exist", fix.GetRule())
+			//}
 			config.Fixes = append(config.Fixes, fix)
-		default:
-			// handle unknown block
 		}
 	}
 

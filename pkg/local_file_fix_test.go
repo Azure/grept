@@ -1,4 +1,4 @@
-package fixes
+package pkg
 
 import (
 	"testing"
@@ -11,7 +11,6 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	fix := &LocalFile{
 		fs:      fs,
-		Rule:    "rule1",
 		Path:    "/file1.txt",
 		Content: "Hello, world!",
 	}
@@ -28,8 +27,8 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	fix := &LocalFile{
+		BaseFix: &BaseFix{Rule: "rule1"},
 		fs:      fs,
-		Rule:    "rule1",
 		Path:    "/file1.txt",
 		Content: "Hello, world!",
 	}
