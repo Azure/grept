@@ -18,9 +18,9 @@ var _ Rule = &FileHashRule{}
 type FileHashRule struct {
 	*BaseRule
 	fs        afero.Fs
-	Glob      string `hcl:"glob,attr"`
-	Hash      string `hcl:"hash,attr"`
-	Algorithm string `hcl:"algorithm,attr"`
+	Glob      string
+	Hash      string
+	Algorithm string
 }
 
 func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
@@ -51,7 +51,7 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	fhr.ctx.Variables[blockAddress] = cty.StringVal(blockAddress)
 	m, ok := fhr.ctx.Variables[b.Labels[0]]
 	if !ok {
-		m = cty.MapVal(map[string]cty.Value{
+		m = cty.ObjectVal(map[string]cty.Value{
 			b.Labels[1]: cty.StringVal(blockAddress),
 		})
 		fhr.ctx.Variables[b.Labels[0]] = m

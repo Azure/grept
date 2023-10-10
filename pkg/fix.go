@@ -13,7 +13,7 @@ type Fix interface {
 }
 
 type BaseFix struct {
-	Rule string `hcl:"rule,attr"`
+	Rule string
 	ctx  *hcl.EvalContext
 }
 

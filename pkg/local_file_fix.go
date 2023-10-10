@@ -8,8 +8,8 @@ import (
 type LocalFile struct {
 	*BaseFix
 	fs      afero.Fs
-	Path    string `hcl:"path,attr"`
-	Content string `hcl:"content,attr"`
+	Path    string
+	Content string
 }
 
 var _ Fix = &LocalFile{}
