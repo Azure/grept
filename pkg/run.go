@@ -26,15 +26,17 @@ func ParseConfig(fn, content string) (*Config, error) {
 	for _, block := range body.Blocks {
 		switch block.Type {
 		case "rule":
-			var rule rules.Rule
-			diag := gohcl.DecodeBody(block.Body, nil, &rule)
+			t := block.Labels[0]
+			rule := rules.RuleFactories[t]()
+			diag := gohcl.DecodeBody(block.Body, nil, rule)
 			if diag.HasErrors() {
 				return nil, diag
 			}
 			config.Rules = append(config.Rules, rule)
 		case "fix":
-			var fix fixes.Fix
-			diag := gohcl.DecodeBody(block.Body, nil, &fix)
+			t := block.Labels[0]
+			fix := fixes.FixFactories[t]()
+			diag := gohcl.DecodeBody(block.Body, nil, fix)
 			if diag.HasErrors() {
 				return nil, diag
 			}

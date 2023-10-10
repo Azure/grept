@@ -11,6 +11,8 @@ type LocalFile struct {
 	Content string `hcl:"content,attr"`
 }
 
+var _ Fix = &LocalFile{}
+
 func (lf *LocalFile) ApplyFix() error {
 	err := afero.WriteFile(lf.fs, lf.Path, []byte(lf.Content), 0644)
 	if err != nil {

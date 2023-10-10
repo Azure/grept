@@ -11,7 +11,7 @@ import (
 
 func TestParseConfig(t *testing.T) {
 	content := `  
-	rule "file_hash_rule" {  
+	rule "file_hash" {  
 		glob = "*.txt"  
 		hash = "abc123"  
 		algorithm = "sha256"  
@@ -20,7 +20,7 @@ func TestParseConfig(t *testing.T) {
 	fix "local_file" {  
 		rule = "file_hash_rule"  
 		path = "/path/to/file.txt"  
-		content = "Hello, world!"  
+		content = "Hello, world!"
 	}  
 	`
 

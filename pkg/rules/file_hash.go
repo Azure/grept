@@ -20,6 +20,12 @@ type FileHashRule struct {
 	Algorithm string `hcl:"algorithm,attr"`
 }
 
+func (fhr *FileHashRule) Register(name string, factory func() Rule) {
+	register("file_hash", func() Rule {
+		return &FileHashRule{}
+	})
+}
+
 func (fhr *FileHashRule) Check() error {
 	// Use Glob to find files matching the path pattern
 	files, err := afero.Glob(fhr.fs, fhr.Glob)
