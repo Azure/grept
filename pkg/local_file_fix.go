@@ -12,6 +12,10 @@ type LocalFile struct {
 	Content string
 }
 
+func (lf *LocalFile) Type() string {
+	return "local_file"
+}
+
 var _ Fix = &LocalFile{}
 
 func (lf *LocalFile) ApplyFix() error {

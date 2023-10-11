@@ -16,7 +16,7 @@ func TestParseConfig(t *testing.T) {
 	}  
   
 	fix "local_file" hello_world{  
-		rule = file_hash.sample
+		rule_id = rule.file_hash.sample.id
 		path = "/path/to/file.txt"  
 		content = "Hello, world!"
 	}  
@@ -35,7 +35,7 @@ func TestParseConfig(t *testing.T) {
 	assert.Equal(t, 1, len(config.Fixes))
 	lff, ok := config.Fixes[0].(*LocalFile)
 	require.True(t, ok)
-	assert.Equal(t, "file_hash.sample", lff.Rule)
+	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleId)
 	assert.Equal(t, "/path/to/file.txt", lff.Path)
 	assert.Equal(t, "Hello, world!", lff.Content)
 }
@@ -43,7 +43,7 @@ func TestParseConfig(t *testing.T) {
 func TestUnregisteredFix(t *testing.T) {
 	hcl := `  
 	fix "unregistered_fix" sample {  
-		rule = "file_hash.sample"  
+		rule_id = "c01d7cf6-ec3f-47f0-9556-a5d6e9009a43"  
 		path = "/path/to/file.txt"  
 		content = "Hello, world!"  
 	}  
@@ -85,4 +85,25 @@ func TestInvalidBlockType(t *testing.T) {
 
 	expectedError := "invalid block type: invalid_block"
 	assert.Contains(t, err.Error(), expectedError)
+}
+
+func TestEvalContextRef(t *testing.T) {
+	hcl := `
+	rule "file_hash" sample {  
+		glob = "LICENSE"  
+		hash = "abc123"  
+		algorithm = "sha256"  
+	}  
+  
+	fix "local_file" hello_world{  
+		rule_id = rule.file_hash.sample.id
+		path = rule.file_hash.sample.glob  
+		content = "Hello, world!"
+	}
+`
+	config, err := ParseConfig("config.hcl", hcl)
+	assert.NoError(t, err)
+	require.Equal(t, 1, len(config.Fixes))
+	fix := config.Fixes[0].(*LocalFile)
+	assert.Equal(t, "LICENSE", fix.Path)
 }

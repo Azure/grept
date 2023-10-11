@@ -7,29 +7,34 @@ import (
 )
 
 type Fix interface {
+	Type() string
+	Name() string
 	ApplyFix() error
-	GetRule() string
+	GetRuleId() string
 	Parse(b *hclsyntax.Block) error
 }
 
 type BaseFix struct {
-	Rule string
-	ctx  *hcl.EvalContext
+	name   string
+	RuleId string
+	ctx    *hcl.EvalContext
 }
 
-func (bf *BaseFix) GetRule() string {
-	return bf.Rule
+func (bf *BaseFix) GetRuleId() string {
+	return bf.RuleId
 }
 
 func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
-	if len(b.Labels) != 2 {
-		return fmt.Errorf("invalid labels for %s %s, expect labels with length 2", b.Type, concatLabels(b.Labels))
-	}
-	bf.Rule, err = readRequiredStringAttribute(b, "rule", bf.ctx)
+	bf.RuleId, err = readRequiredStringAttribute(b, "rule_id", bf.ctx)
 	if err != nil {
-		return fmt.Errorf("unrecognized rule: %s", bf.Rule)
+		return fmt.Errorf("cannot parse rule: %s, %s", b.Range().String(), err.Error())
 	}
+	bf.name = b.Labels[1]
 	return nil
+}
+
+func (bf *BaseFix) Name() string {
+	return bf.name
 }
 
 var FixFactories = map[string]func(*hcl.EvalContext) Fix{}

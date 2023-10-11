@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/google/uuid"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -27,7 +28,7 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	fix := &LocalFile{
-		BaseFix: &BaseFix{Rule: "rule1"},
+		BaseFix: &BaseFix{RuleId: uuid.NewString()},
 		fs:      fs,
 		Path:    "/file1.txt",
 		Content: "Hello, world!",

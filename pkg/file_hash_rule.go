@@ -23,6 +23,18 @@ type FileHashRule struct {
 	Algorithm string
 }
 
+func (fhr *FileHashRule) Type() string {
+	return "file_hash"
+}
+
+func (fhr *FileHashRule) Value() cty.Value {
+	value := fhr.BaseRule.BaseValue()
+	value["glob"] = cty.StringVal(fhr.Glob)
+	value["hash"] = cty.StringVal(fhr.Hash)
+	value["algorithm"] = cty.StringVal(fhr.Algorithm)
+	return cty.ObjectVal(value)
+}
+
 func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	err := fhr.BaseRule.Parse(b)
 	if err != nil {
