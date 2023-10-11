@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/hashicorp/packer/hcl2template"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -31,30 +32,30 @@ func (rs Rules) Values() cty.Value {
 }
 
 type Config struct {
-	Rules Rules
-	Fixes Fixes
+	basedir string
+	Rules   Rules
+	Fixes   Fixes
 }
 
 func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
+		Functions: hcl2template.Functions(c.basedir),
 		Variables: map[string]cty.Value{
 			"rule": c.Rules.Values(),
 		},
 	}
 }
 
-func ParseConfig(fn, content string) (*Config, error) {
-	config := &Config{}
+func ParseConfig(dir, filename, content string) (*Config, error) {
+	config := &Config{
+		basedir: dir,
+	}
 
-	file, diag := hclsyntax.ParseConfig([]byte(content), fn, hcl.InitialPos)
+	file, diag := hclsyntax.ParseConfig([]byte(content), filename, hcl.InitialPos)
 	if diag.HasErrors() {
 		return nil, diag
 	}
 	body := file.Body.(*hclsyntax.Body)
-	//ctx := &hcl.EvalContext{
-	//	Variables: map[string]cty.Value{},
-	//	Functions: map[string]function.Function{},
-	//}
 	var err error
 	// First loop: parse all rule blocks
 	for _, block := range body.Blocks {
