@@ -143,3 +143,39 @@ func TestFunctionInEvalContext(t *testing.T) {
 	err = rule.Check()
 	assert.NoError(t, err)
 }
+
+func TestParseConfigHttpBlock(t *testing.T) {
+	// Define a HCL configuration with an http block
+	hclConfig := `  
+	data "http" "example" {  
+		url = "http://example.com"  
+		method = "GET"  
+		request_body = "Hello"  
+		request_headers = {  
+			"Content-Type" = "application/json"  
+			"Accept" = "application/json"  
+		}  
+	}  
+	`
+
+	dir := "."
+	filename := "test.hcl"
+
+	// Parse the configuration
+	config, err := ParseConfig(dir, filename, hclConfig)
+	assert.NoError(t, err, "ParseConfig should not return an error")
+
+	// Check the parsed configuration
+	assert.Equal(t, 1, len(config.DataSources), "There should be one data source")
+
+	httpData, ok := config.DataSources[0].(*HttpDatasource)
+	assert.True(t, ok)
+	assert.Equal(t, "http://example.com", httpData.Url)
+	assert.Equal(t, "GET", httpData.Method)
+	assert.Equal(t, "Hello", httpData.RequestBody)
+	assert.Equal(t, map[string]string{
+		"Content-Type": "application/json",
+		"Accept":       "application/json",
+	}, httpData.RequestHeaders)
+	assert.Equal(t, "example", httpData.Name())
+}

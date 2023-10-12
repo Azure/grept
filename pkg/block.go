@@ -90,6 +90,40 @@ func readOptionalStringAttribute(b *hclsyntax.Block, attributeName string, ctx *
 	return value.AsString(), nil
 }
 
+func readOptionalMapAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (map[string]string, error) {
+	if b == nil {
+		return nil, fmt.Errorf("nil Block")
+	}
+	a, ok := b.Body.Attributes[attributeName]
+	if !ok {
+		return nil, nil
+	}
+	value, diagnostics := a.Expr.Value(ctx)
+	if diagnostics.HasErrors() {
+		return nil, diagnostics
+	}
+	if value.Type() != cty.Map(cty.String) && !objectIsMapOfString(value.Type()) {
+		return nil, fmt.Errorf("the attribute %s in the block %s is not a map of string", attributeName, concatLabels(b.Labels))
+	}
+	r := make(map[string]string)
+	for k, v := range value.AsValueMap() {
+		r[k] = v.AsString()
+	}
+	return r, nil
+}
+
+func objectIsMapOfString(t cty.Type) bool {
+	if !t.IsObjectType() {
+		return false
+	}
+	for _, at := range t.AttributeTypes() {
+		if at != cty.String {
+			return false
+		}
+	}
+	return true
+}
+
 func concatLabels(labels []string) string {
 	sb := strings.Builder{}
 	for i, l := range labels {

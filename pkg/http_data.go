@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/http/httpproxy"
 	"io"
@@ -97,4 +98,27 @@ func (h *HttpDatasource) HeaderValue(headers map[string]string) cty.Value {
 		inner[k] = cty.StringVal(v)
 	}
 	return cty.MapVal(inner)
+}
+
+func (h *HttpDatasource) Parse(b *hclsyntax.Block) error {
+	var err error
+	if err = h.BaseData.Parse(b); err != nil {
+		return err
+	}
+	if h.Url, err = readRequiredStringAttribute(b, "url", h.ctx); err != nil {
+		return err
+	}
+	if h.Method, err = readOptionalStringAttribute(b, "method", h.ctx); err != nil {
+		return err
+	}
+	if h.Method == "" {
+		h.Method = "GET"
+	}
+	if h.RequestBody, err = readOptionalStringAttribute(b, "request_body", h.ctx); err != nil {
+		return err
+	}
+	if h.RequestHeaders, err = readOptionalMapAttribute(b, "request_headers", h.ctx); err != nil {
+		return err
+	}
+	return nil
 }

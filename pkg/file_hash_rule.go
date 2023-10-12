@@ -40,15 +40,15 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	if err != nil {
 		return err
 	}
-	fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.ctx)
-	if err != nil {
+	if fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.ctx); err != nil {
 		return err
 	}
-	fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.ctx)
-	if err != nil {
+	if fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.ctx); err != nil {
 		return err
 	}
-	fhr.Algorithm, _ = readOptionalStringAttribute(b, "algorithm", fhr.ctx)
+	if fhr.Algorithm, err = readOptionalStringAttribute(b, "algorithm", fhr.ctx); err != nil {
+		return err
+	}
 	if fhr.Algorithm == "" {
 		fhr.Algorithm = "sha1"
 	}
