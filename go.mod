@@ -3,13 +3,16 @@ module github.com/Azure/grept
 go 1.20
 
 require (
+	github.com/emirpasic/gods v1.12.0
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/hcl/v2 v2.18.1
 	github.com/hashicorp/packer v1.9.4
 	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.2
 	github.com/zclconf/go-cty v1.13.0
+	golang.org/x/net v0.13.0
 )
 
 require (
@@ -36,7 +39,6 @@ require (
 	github.com/hashicorp/go-getter/v2 v2.2.0 // indirect
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
@@ -71,7 +73,6 @@ require (
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.1 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect

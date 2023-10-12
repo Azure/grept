@@ -36,15 +36,3 @@ func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
 func (bf *BaseFix) Name() string {
 	return bf.name
 }
-
-var FixFactories = map[string]func(*hcl.EvalContext) Fix{}
-
-func registerFix() {
-	FixFactories["local_file"] = func(ctx *hcl.EvalContext) Fix {
-		return &LocalFile{
-			BaseFix: &BaseFix{
-				ctx: ctx,
-			},
-		}
-	}
-}

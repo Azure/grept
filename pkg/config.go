@@ -2,6 +2,8 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/emirpasic/gods/sets"
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -9,6 +11,36 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
+
+type parserFactory func(c *Config) func(*hclsyntax.Block) error
+
+var ruleParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
+	return c.parseFunc("rule", ruleFactories, func(cc *Config, b block) {
+		cc.Rules = append(cc.Rules, b.(Rule))
+	})
+
+}
+var fixParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
+	return c.parseFunc("fix", fixFactories, func(cc *Config, b block) {
+		cc.Fixes = append(cc.Fixes, b.(Fix))
+	})
+}
+var dataParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
+	return c.parseFunc("data", datasourceFactories, func(cc *Config, b block) {
+		cc.DataSources = append(cc.DataSources, b.(Data))
+	})
+}
+
+type parsers []parserFactory
+
+var blockParsers parsers = []parserFactory{
+	dataParser,
+	ruleParser,
+	fixParser,
+}
+
+type Datas []Data
 type Rules []Rule
 type Fixes []Fix
 
@@ -32,9 +64,10 @@ func (rs Rules) Values() cty.Value {
 }
 
 type Config struct {
-	basedir string
-	Rules   Rules
-	Fixes   Fixes
+	basedir     string
+	DataSources Datas
+	Rules       Rules
+	Fixes       Fixes
 }
 
 func (c *Config) EvalContext() *hcl.EvalContext {
@@ -43,6 +76,29 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 		Variables: map[string]cty.Value{
 			"rule": c.Rules.Values(),
 		},
+	}
+}
+
+func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*hcl.EvalContext) block, postParseFunc func(*Config, block)) func(*hclsyntax.Block) error {
+	return func(hb *hclsyntax.Block) error {
+		if hb.Type != expectedBlockType {
+			return nil
+		}
+		if len(hb.Labels) != 2 {
+			return fmt.Errorf("invalid labels for rule %s, expect labels with length 2 (%s)", concatLabels(hb.Labels), hb.Range().String())
+		}
+		t := hb.Labels[0]
+		f, ok := factories[t]
+		if !ok {
+			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
+		}
+		b := f(c.EvalContext())
+		err := b.Parse(hb)
+		if err != nil {
+			return err
+		}
+		postParseFunc(c, b)
+		return nil
 	}
 }
 
@@ -58,51 +114,18 @@ func ParseConfig(dir, filename, content string) (*Config, error) {
 	body := file.Body.(*hclsyntax.Body)
 	var err error
 	// First loop: parse all rule blocks
-	for _, block := range body.Blocks {
-		if block.Type != "rule" && block.Type != "fix" {
-			err = multierror.Append(err, fmt.Errorf("invalid block type: %s %s", block.Type, block.Range().String()))
-		}
-		if block.Type == "rule" {
-			if len(block.Labels) != 2 {
-				err = multierror.Append(err, fmt.Errorf("invalid labels for rule %s, expect labels with length 2 (%s)", concatLabels(block.Labels), block.Range().String()))
-				continue
-			}
-			t := block.Labels[0]
-			rf, ok := RuleFactories[t]
-			if !ok {
-				err = multierror.Append(err, fmt.Errorf("unregistered rule: %s, %s", t, block.Range().String()))
-				continue
-			}
-			rule := rf(config.EvalContext())
-			parseError := rule.Parse(block)
-			if parseError != nil {
-				err = multierror.Append(err, parseError)
-				continue
-			}
-			config.Rules = append(config.Rules, rule)
+	for _, b := range body.Blocks {
+		if !validBlockTypes.Contains(b.Type) {
+			err = multierror.Append(err, fmt.Errorf("invalid block type: %s %s", b.Type, b.Range().String()))
+			continue
 		}
 	}
-
-	// Second loop: parse all fix blocks
-	for _, block := range body.Blocks {
-		if block.Type == "fix" {
-			if len(block.Labels) != 2 {
-				err = multierror.Append(err, fmt.Errorf("invalid labels for fix %s, expect labels with length 2 (%s)", concatLabels(block.Labels), block.Range().String()))
-				continue
-			}
-			t := block.Labels[0]
-			ff, ok := FixFactories[t]
-			if !ok {
-				err = multierror.Append(err, fmt.Errorf("unregistered fix: %s, %s", t, block.Range().String()))
-				continue
-			}
-			fix := ff(config.EvalContext())
-			parseError := fix.Parse(block)
+	for _, parser := range blockParsers {
+		for _, b := range body.Blocks {
+			parseError := parser(config)(b)
 			if parseError != nil {
 				err = multierror.Append(err, parseError)
-				continue
 			}
-			config.Fixes = append(config.Fixes, fix)
 		}
 	}
 

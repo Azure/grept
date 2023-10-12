@@ -8,6 +8,52 @@ import (
 	"strings"
 )
 
+func init() {
+	registerRule()
+	registerFix()
+	registerData()
+}
+
+type block interface {
+	Parse(*hclsyntax.Block) error
+}
+
+var fixFactories = map[string]func(*hcl.EvalContext) block{}
+
+func registerFix() {
+	fixFactories["local_file"] = func(ctx *hcl.EvalContext) block {
+		return &LocalFile{
+			BaseFix: &BaseFix{
+				ctx: ctx,
+			},
+		}
+	}
+}
+
+var ruleFactories = map[string]func(*hcl.EvalContext) block{}
+
+func registerRule() {
+	ruleFactories["file_hash"] = func(ctx *hcl.EvalContext) block {
+		return &FileHashRule{
+			BaseRule: &BaseRule{
+				ctx: ctx,
+			},
+		}
+	}
+}
+
+var datasourceFactories = map[string]func(ctx *hcl.EvalContext) block{}
+
+func registerData() {
+	datasourceFactories["http"] = func(ctx *hcl.EvalContext) block {
+		return &HttpDatasource{
+			BaseData: &BaseData{
+				ctx: ctx,
+			},
+		}
+	}
+}
+
 func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
 	if b == nil {
 		return "", fmt.Errorf("nil Block")

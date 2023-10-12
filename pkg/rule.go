@@ -7,11 +7,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-func init() {
-	registerRule()
-	registerFix()
-}
-
 type Rule interface {
 	Check() error
 	Type() string
@@ -44,17 +39,5 @@ func (r *BaseRule) Name() string {
 func (r *BaseRule) BaseValue() map[string]cty.Value {
 	return map[string]cty.Value{
 		"id": cty.StringVal(r.id),
-	}
-}
-
-var RuleFactories = map[string]func(*hcl.EvalContext) Rule{}
-
-func registerRule() {
-	RuleFactories["file_hash"] = func(ctx *hcl.EvalContext) Rule {
-		return &FileHashRule{
-			BaseRule: &BaseRule{
-				ctx: ctx,
-			},
-		}
 	}
 }
