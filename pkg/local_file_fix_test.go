@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"github.com/google/uuid"
+	"github.com/prashantv/gostub"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -10,8 +11,11 @@ import (
 
 func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
 	fix := &LocalFile{
-		fs:      fs,
 		Path:    "/file1.txt",
 		Content: "Hello, world!",
 	}
@@ -20,16 +24,19 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the file was created with the correct content
-	content, err := afero.ReadFile(fix.fs, fix.Path)
+	content, err := afero.ReadFile(fs, fix.Path)
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
 }
 
 func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
 	fix := &LocalFile{
 		BaseFix: &BaseFix{RuleId: uuid.NewString()},
-		fs:      fs,
 		Path:    "/file1.txt",
 		Content: "Hello, world!",
 	}
@@ -44,7 +51,7 @@ func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the file was overwritten with the correct content
-	content, err := afero.ReadFile(fix.fs, fix.Path)
+	content, err := afero.ReadFile(fs, fix.Path)
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
 }

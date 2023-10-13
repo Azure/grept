@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"net/http"
 	"net/http/httptest"
@@ -116,7 +117,10 @@ func TestEvalContextRef(t *testing.T) {
 func TestFunctionInEvalContext(t *testing.T) {
 	// Create a in-memory filesystem
 	fs := afero.NewMemMapFs()
-
+	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
 	// Create a file with some content
 	fileContent := "Hello, world!"
 	err := afero.WriteFile(fs, "/testfile", []byte(fileContent), 0644)
@@ -142,7 +146,6 @@ func TestFunctionInEvalContext(t *testing.T) {
 	require.Equal(t, 1, len(config.Rules))
 	rule, ok := config.Rules[0].(*FileHashRule)
 	require.True(t, ok)
-	rule.fs = fs
 	err = rule.Check()
 	assert.NoError(t, err)
 }

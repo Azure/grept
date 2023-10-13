@@ -17,7 +17,6 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*BaseRule
-	fs        afero.Fs
 	Glob      string
 	Hash      string
 	Algorithm string
@@ -63,7 +62,8 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 
 func (fhr *FileHashRule) Check() error {
 	// Use Glob to find files matching the path pattern
-	files, err := afero.Glob(fhr.fs, fhr.Glob)
+	fs := fsFactory()
+	files, err := afero.Glob(fs, fhr.Glob)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (fhr *FileHashRule) Check() error {
 	}
 
 	for _, file := range files {
-		fileData, err := afero.ReadFile(fhr.fs, file)
+		fileData, err := afero.ReadFile(fs, file)
 		if err != nil {
 			return err
 		}

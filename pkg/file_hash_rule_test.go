@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"fmt"
+	"github.com/prashantv/gostub"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -11,7 +12,10 @@ import (
 
 func TestFileHashRule_Check(t *testing.T) {
 	fs := afero.NewMemMapFs()
-
+	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
 	// Write some test files
 	filePaths := []string{"./file1.txt", "./file2.txt", "./file3.txt", "./pkg/sub/subfile1.txt"}
 	fileContents := []string{"hello", "world", "golang", "world"}
@@ -32,7 +36,6 @@ func TestFileHashRule_Check(t *testing.T) {
 		{
 			name: "matching file found",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "file*.txt",
 				Hash:      fmt.Sprintf("%x", expectedHash),
 				Algorithm: "md5",
@@ -42,7 +45,6 @@ func TestFileHashRule_Check(t *testing.T) {
 		{
 			name: "no matching file found",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "file*.txt",
 				Hash:      fmt.Sprintf("%x", sha1.Sum([]byte("world1"))),
 				Algorithm: "sha1",
@@ -52,7 +54,6 @@ func TestFileHashRule_Check(t *testing.T) {
 		{
 			name: "no matching glob pattern",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "nofile*.txt",
 				Hash:      fmt.Sprintf("%x", expectedHash),
 				Algorithm: "md5",
@@ -73,7 +74,10 @@ func TestFileHashRule_Check(t *testing.T) {
 
 func TestFileHashRule_Validate(t *testing.T) {
 	fs := afero.NewMemMapFs()
-
+	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
 	tests := []struct {
 		name      string
 		rule      *FileHashRule
@@ -82,7 +86,6 @@ func TestFileHashRule_Validate(t *testing.T) {
 		{
 			name: "valid rule",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "/file*.txt",
 				Hash:      "abc123",
 				Algorithm: "md5",
@@ -92,7 +95,6 @@ func TestFileHashRule_Validate(t *testing.T) {
 		{
 			name: "missing glob",
 			rule: &FileHashRule{
-				fs:        fs,
 				Hash:      "abc123",
 				Algorithm: "md5",
 			},
@@ -101,7 +103,6 @@ func TestFileHashRule_Validate(t *testing.T) {
 		{
 			name: "missing hash",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "/file*.txt",
 				Algorithm: "md5",
 			},
@@ -110,7 +111,6 @@ func TestFileHashRule_Validate(t *testing.T) {
 		{
 			name: "invalid algorithm",
 			rule: &FileHashRule{
-				fs:        fs,
 				Glob:      "/file*.txt",
 				Hash:      "abc123",
 				Algorithm: "invalid",

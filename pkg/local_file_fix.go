@@ -8,7 +8,6 @@ import (
 
 type LocalFile struct {
 	*BaseFix
-	fs      afero.Fs
 	Path    string
 	Content string
 }
@@ -27,7 +26,7 @@ func (lf *LocalFile) Type() string {
 var _ Fix = &LocalFile{}
 
 func (lf *LocalFile) ApplyFix() error {
-	err := afero.WriteFile(lf.fs, lf.Path, []byte(lf.Content), 0644)
+	err := afero.WriteFile(fsFactory(), lf.Path, []byte(lf.Content), 0644)
 	if err != nil {
 		return err
 	}
