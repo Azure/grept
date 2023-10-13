@@ -8,8 +8,10 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/http/httpproxy"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -43,6 +45,7 @@ func (h *HttpDatasource) Load() error {
 	}
 
 	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = log.New(os.Stderr, fmt.Sprintf("data.http.%s:", h.name), log.LstdFlags)
 	retryClient.HTTPClient.Transport = clonedTr
 	request, err := retryablehttp.NewRequestWithContext(h.Context(), h.Method, h.Url, strings.NewReader(h.RequestBody))
 	if err != nil {
@@ -52,6 +55,7 @@ func (h *HttpDatasource) Load() error {
 		request.Header.Set(k, v)
 	}
 	response, err := retryClient.Do(request)
+
 	if err != nil {
 		return fmt.Errorf("error making request data.http.%s, detail: %s", h.name, err.Error())
 	}

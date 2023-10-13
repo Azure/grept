@@ -1,8 +1,11 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/afero"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -178,4 +181,31 @@ func TestParseConfigHttpBlock(t *testing.T) {
 		"Accept":       "application/json",
 	}, httpData.RequestHeaders)
 	assert.Equal(t, "example", httpData.Name())
+}
+
+func TestPlanError_DatasourceError(t *testing.T) {
+	// Create a mock HTTP server that always returns an error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Mock server error", http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`  
+	data "http" "foo" {  
+		url = "%s"  
+	}  
+`, server.URL)
+
+	// Parse the config
+	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	require.NoError(t, err)
+
+	config.ctx = context.TODO()
+
+	// Test the Plan method
+	err = config.Plan()
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error making request")
+	assert.Contains(t, err.Error(), "data.http.foo")
 }

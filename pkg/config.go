@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/packer/hcl2template"
 	"github.com/zclconf/go-cty/cty"
+	"sync"
 )
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
@@ -133,6 +134,58 @@ func ParseConfig(dir, filename, content string) (*Config, error) {
 	}
 
 	return config, err
+}
+
+func (c *Config) Plan() error {
+	var wg sync.WaitGroup
+	var err *blockErrors
+	var mutex sync.Mutex
+
+	// Run Load method for all Datasources in parallel
+	for _, data := range c.DataSources {
+		wg.Add(1)
+		go func(data Data) {
+			defer wg.Done()
+			if loadErr := data.Load(); loadErr != nil {
+				mutex.Lock()
+				err = err.Add(blockError{
+					BlockCategory: "data",
+					BlockType:     data.Type(),
+					BlockName:     data.Name(),
+					Err:           loadErr,
+				})
+				mutex.Unlock()
+			}
+		}(data)
+	}
+	wg.Wait()
+
+	// If there were any errors while loading data sources, return immediately
+	if err != nil {
+		return err
+	}
+
+	// Run Check method for all Rules in parallel
+	for _, rule := range c.Rules {
+		wg.Add(1)
+		go func(rule Rule) {
+			defer wg.Done()
+			if checkErr := rule.Check(); checkErr != nil {
+				mutex.Lock()
+				err = err.Add(blockError{
+					BlockCategory: "rule",
+					BlockType:     rule.Type(),
+					BlockName:     rule.Name(),
+					Err:           checkErr,
+				})
+				mutex.Unlock()
+			}
+		}(rule)
+	}
+	wg.Wait()
+
+	// Return aggregated errors, if any
+	return err
 }
 
 func ApplyRulesAndFixes(config *Config) error {
