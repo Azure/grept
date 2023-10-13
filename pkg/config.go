@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"github.com/emirpasic/gods/sets"
 	"github.com/emirpasic/gods/sets/hashset"
@@ -64,6 +65,7 @@ func Values[T block](slice []T) cty.Value {
 }
 
 type Config struct {
+	ctx         context.Context
 	basedir     string
 	DataSources Datas
 	Rules       Rules

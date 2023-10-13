@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
@@ -27,7 +26,7 @@ type HttpDatasource struct {
 	StatusCode      int
 }
 
-func (h *HttpDatasource) Load(ctx context.Context) error {
+func (h *HttpDatasource) Load() error {
 	tr, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
 		return fmt.Errorf("error http: can't configure http transport")
@@ -45,7 +44,7 @@ func (h *HttpDatasource) Load(ctx context.Context) error {
 
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = clonedTr
-	request, err := retryablehttp.NewRequestWithContext(ctx, h.Method, h.Url, strings.NewReader(h.RequestBody))
+	request, err := retryablehttp.NewRequestWithContext(h.Context(), h.Method, h.Url, strings.NewReader(h.RequestBody))
 	if err != nil {
 		return fmt.Errorf("error creating request data.http.%s, %s", h.name, err.Error())
 	}
@@ -76,16 +75,14 @@ func (h *HttpDatasource) Type() string {
 }
 
 func (h *HttpDatasource) Value() cty.Value {
-	attrs := map[string]cty.Value{
-		"url":              cty.StringVal(h.Url),
-		"method":           cty.StringVal(h.Method),
-		"request_body":     cty.StringVal(h.RequestBody),
-		"response_body":    cty.StringVal(h.ResponseBody),
-		"status_code":      cty.NumberIntVal(int64(h.StatusCode)),
-		"request_headers":  h.HeaderValue(h.RequestHeaders),
-		"response_headers": h.HeaderValue(h.ResponseHeaders),
-	}
-
+	attrs := h.BaseValue()
+	attrs["url"] = cty.StringVal(h.Url)
+	attrs["method"] = cty.StringVal(h.Method)
+	attrs["request_body"] = cty.StringVal(h.RequestBody)
+	attrs["response_body"] = cty.StringVal(h.ResponseBody)
+	attrs["status_code"] = cty.NumberIntVal(int64(h.StatusCode))
+	attrs["request_headers"] = h.HeaderValue(h.RequestHeaders)
+	attrs["response_headers"] = h.HeaderValue(h.ResponseHeaders)
 	return cty.ObjectVal(attrs)
 }
 

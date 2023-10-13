@@ -9,7 +9,7 @@ import (
 )
 
 type Data interface {
-	Load(context.Context) error
+	Load() error
 	Type() string
 	Name() string
 	Value() cty.Value
@@ -37,6 +37,16 @@ func (bd *BaseData) Parse(b *hclsyntax.Block) error {
 	return nil
 }
 
+func (bd *BaseData) BaseValue() map[string]cty.Value {
+	return map[string]cty.Value{
+		"id": cty.StringVal(bd.id),
+	}
+}
+
 func (bd *BaseData) EvalContext() *hcl.EvalContext {
 	return bd.c.EvalContext()
+}
+
+func (bd *BaseData) Context() context.Context {
+	return bd.c.ctx
 }

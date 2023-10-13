@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -39,4 +40,8 @@ func (bf *BaseFix) Name() string {
 
 func (bf *BaseFix) EvalContext() *hcl.EvalContext {
 	return bf.c.EvalContext()
+}
+
+func (bf *BaseFix) Context() context.Context {
+	return bf.Context()
 }

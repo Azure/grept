@@ -23,13 +23,14 @@ func TestHttpDatasource_Load(t *testing.T) {
 	// Create a HttpDatasource instance
 	h := &HttpDatasource{
 		BaseData: &BaseData{
+			c:    &Config{ctx: context.TODO()},
 			name: "test",
 		},
 		Url:    ts.URL,
 		Method: "GET",
 	}
 
-	err := h.Load(context.TODO())
+	err := h.Load()
 
 	// Assert no error from Load function
 	require.NoError(t, err)
