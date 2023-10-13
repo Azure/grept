@@ -18,7 +18,7 @@ type Data interface {
 }
 
 type BaseData struct {
-	ctx  *hcl.EvalContext
+	c    *Config
 	name string
 	id   string
 }
@@ -35,4 +35,8 @@ func (bd *BaseData) Parse(b *hclsyntax.Block) error {
 	bd.name = b.Labels[1]
 	bd.id = uuid.NewString()
 	return nil
+}
+
+func (bd *BaseData) EvalContext() *hcl.EvalContext {
+	return bd.c.EvalContext()
 }

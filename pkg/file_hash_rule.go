@@ -40,13 +40,13 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	if err != nil {
 		return err
 	}
-	if fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.ctx); err != nil {
+	if fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.EvalContext()); err != nil {
 		return err
 	}
-	if fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.ctx); err != nil {
+	if fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.EvalContext()); err != nil {
 		return err
 	}
-	if fhr.Algorithm, err = readOptionalStringAttribute(b, "algorithm", fhr.ctx); err != nil {
+	if fhr.Algorithm, err = readOptionalStringAttribute(b, "algorithm", fhr.EvalContext()); err != nil {
 		return err
 	}
 	if fhr.Algorithm == "" {
@@ -58,18 +58,6 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	default:
 		return fmt.Errorf("invalid algorithm: %s", fhr.Algorithm)
 	}
-
-	blockAddress := concatLabels(b.Labels)
-	fhr.ctx.Variables[blockAddress] = cty.StringVal(blockAddress)
-	m, ok := fhr.ctx.Variables[b.Labels[0]]
-	if !ok {
-		m = cty.ObjectVal(map[string]cty.Value{
-			b.Labels[1]: cty.StringVal(blockAddress),
-		})
-		fhr.ctx.Variables[b.Labels[0]] = m
-		return nil
-	}
-	m.AsValueMap()[b.Labels[1]] = cty.StringVal(blockAddress)
 	return nil
 }
 

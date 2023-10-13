@@ -17,27 +17,31 @@ type Rule interface {
 }
 
 type BaseRule struct {
-	ctx  *hcl.EvalContext
+	c    *Config
 	name string
 	id   string
 }
 
-func (r *BaseRule) Parse(b *hclsyntax.Block) error {
-	r.name = b.Labels[1]
-	r.id = uuid.NewString()
+func (br *BaseRule) Parse(b *hclsyntax.Block) error {
+	br.name = b.Labels[1]
+	br.id = uuid.NewString()
 	return nil
 }
 
-func (r *BaseRule) Id() string {
-	return r.id
+func (br *BaseRule) Id() string {
+	return br.id
 }
 
-func (r *BaseRule) Name() string {
-	return r.name
+func (br *BaseRule) Name() string {
+	return br.name
 }
 
-func (r *BaseRule) BaseValue() map[string]cty.Value {
+func (br *BaseRule) BaseValue() map[string]cty.Value {
 	return map[string]cty.Value{
-		"id": cty.StringVal(r.id),
+		"id": cty.StringVal(br.id),
 	}
+}
+
+func (br *BaseRule) EvalContext() *hcl.EvalContext {
+	return br.c.EvalContext()
 }

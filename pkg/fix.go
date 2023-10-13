@@ -17,7 +17,7 @@ type Fix interface {
 type BaseFix struct {
 	name   string
 	RuleId string
-	ctx    *hcl.EvalContext
+	c      *Config
 }
 
 func (bf *BaseFix) GetRuleId() string {
@@ -25,7 +25,7 @@ func (bf *BaseFix) GetRuleId() string {
 }
 
 func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
-	bf.RuleId, err = readRequiredStringAttribute(b, "rule_id", bf.ctx)
+	bf.RuleId, err = readRequiredStringAttribute(b, "rule_id", bf.EvalContext())
 	if err != nil {
 		return fmt.Errorf("cannot parse rule: %s, %s", b.Range().String(), err.Error())
 	}
@@ -35,4 +35,8 @@ func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
 
 func (bf *BaseFix) Name() string {
 	return bf.name
+}
+
+func (bf *BaseFix) EvalContext() *hcl.EvalContext {
+	return bf.c.EvalContext()
 }

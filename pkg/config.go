@@ -44,14 +44,14 @@ type Datas []Data
 type Rules []Rule
 type Fixes []Fix
 
-func (rs Rules) Values() cty.Value {
-	if len(rs) == 0 {
+func Values[T block](slice []T) cty.Value {
+	if len(slice) == 0 {
 		return cty.EmptyObjectVal
 	}
 	res := map[string]cty.Value{}
 	valuesMap := map[string]map[string]cty.Value{}
 
-	for _, r := range rs {
+	for _, r := range slice {
 		inner := valuesMap[r.Type()]
 		if inner == nil {
 			inner = map[string]cty.Value{}
@@ -74,12 +74,13 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Functions: hcl2template.Functions(c.basedir),
 		Variables: map[string]cty.Value{
-			"rule": c.Rules.Values(),
+			"data": Values(c.DataSources),
+			"rule": Values(c.Rules),
 		},
 	}
 }
 
-func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*hcl.EvalContext) block, postParseFunc func(*Config, block)) func(*hclsyntax.Block) error {
+func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*Config) block, postParseFunc func(*Config, block)) func(*hclsyntax.Block) error {
 	return func(hb *hclsyntax.Block) error {
 		if hb.Type != expectedBlockType {
 			return nil
@@ -92,7 +93,7 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 		if !ok {
 			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
 		}
-		b := f(c.EvalContext())
+		b := f(c)
 		err := b.Parse(hb)
 		if err != nil {
 			return err

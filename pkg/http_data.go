@@ -105,19 +105,19 @@ func (h *HttpDatasource) Parse(b *hclsyntax.Block) error {
 	if err = h.BaseData.Parse(b); err != nil {
 		return err
 	}
-	if h.Url, err = readRequiredStringAttribute(b, "url", h.ctx); err != nil {
+	if h.Url, err = readRequiredStringAttribute(b, "url", h.EvalContext()); err != nil {
 		return err
 	}
-	if h.Method, err = readOptionalStringAttribute(b, "method", h.ctx); err != nil {
+	if h.Method, err = readOptionalStringAttribute(b, "method", h.EvalContext()); err != nil {
 		return err
 	}
 	if h.Method == "" {
 		h.Method = "GET"
 	}
-	if h.RequestBody, err = readOptionalStringAttribute(b, "request_body", h.ctx); err != nil {
+	if h.RequestBody, err = readOptionalStringAttribute(b, "request_body", h.EvalContext()); err != nil {
 		return err
 	}
-	if h.RequestHeaders, err = readOptionalMapAttribute(b, "request_headers", h.ctx); err != nil {
+	if h.RequestHeaders, err = readOptionalMapAttribute(b, "request_headers", h.EvalContext()); err != nil {
 		return err
 	}
 	return nil

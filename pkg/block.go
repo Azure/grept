@@ -16,39 +16,42 @@ func init() {
 
 type block interface {
 	Parse(*hclsyntax.Block) error
+	Name() string
+	Type() string
+	Value() cty.Value
 }
 
-var fixFactories = map[string]func(*hcl.EvalContext) block{}
+var fixFactories = map[string]func(*Config) block{}
 
 func registerFix() {
-	fixFactories["local_file"] = func(ctx *hcl.EvalContext) block {
+	fixFactories["local_file"] = func(c *Config) block {
 		return &LocalFile{
 			BaseFix: &BaseFix{
-				ctx: ctx,
+				c: c,
 			},
 		}
 	}
 }
 
-var ruleFactories = map[string]func(*hcl.EvalContext) block{}
+var ruleFactories = map[string]func(*Config) block{}
 
 func registerRule() {
-	ruleFactories["file_hash"] = func(ctx *hcl.EvalContext) block {
+	ruleFactories["file_hash"] = func(c *Config) block {
 		return &FileHashRule{
 			BaseRule: &BaseRule{
-				ctx: ctx,
+				c: c,
 			},
 		}
 	}
 }
 
-var datasourceFactories = map[string]func(ctx *hcl.EvalContext) block{}
+var datasourceFactories = map[string]func(*Config) block{}
 
 func registerData() {
-	datasourceFactories["http"] = func(ctx *hcl.EvalContext) block {
+	datasourceFactories["http"] = func(c *Config) block {
 		return &HttpDatasource{
 			BaseData: &BaseData{
-				ctx: ctx,
+				c: c,
 			},
 		}
 	}
