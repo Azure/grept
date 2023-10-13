@@ -19,6 +19,7 @@ type block interface {
 	Name() string
 	Type() string
 	Value() cty.Value
+	HclSyntaxBlock() *hclsyntax.Block
 }
 
 var fixFactories = map[string]func(*Config) block{}
@@ -136,4 +137,8 @@ func concatLabels(labels []string) string {
 		}
 	}
 	return sb.String()
+}
+
+func refresh(b block) {
+	b.Parse(b.HclSyntaxBlock())
 }

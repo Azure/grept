@@ -170,6 +170,7 @@ func (c *Config) Plan() error {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
+			refresh(rule)
 			if checkErr := rule.Check(); checkErr != nil {
 				mutex.Lock()
 				err = err.Add(blockError{

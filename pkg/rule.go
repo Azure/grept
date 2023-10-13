@@ -13,19 +13,26 @@ type Rule interface {
 	Name() string
 	Id() string
 	Parse(*hclsyntax.Block) error
+	HclSyntaxBlock() *hclsyntax.Block
 	Value() cty.Value
 }
 
 type BaseRule struct {
 	c    *Config
+	hb   *hclsyntax.Block
 	name string
 	id   string
 }
 
 func (br *BaseRule) Parse(b *hclsyntax.Block) error {
+	br.hb = b
 	br.name = b.Labels[1]
 	br.id = uuid.NewString()
 	return nil
+}
+
+func (br *BaseRule) HclSyntaxBlock() *hclsyntax.Block {
+	return br.hb
 }
 
 func (br *BaseRule) Id() string {

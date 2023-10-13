@@ -212,3 +212,82 @@ func TestPlanError_DatasourceError(t *testing.T) {
 	assert.Contains(t, err.Error(), "error making request")
 	assert.Contains(t, err.Error(), "data.http.foo")
 }
+
+func TestPlanError_FileHashRuleError(t *testing.T) {
+	// Create a mock HTTP server that returns a specific content
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Mock server content"))
+	}))
+	defer server.Close()
+
+	// Create a mock file system and write a file
+	fs := afero.NewMemMapFs()
+	stub := gostub.Stub(&fsFactory, func() afero.Fs { return fs })
+	defer stub.Reset()
+
+	_ = afero.WriteFile(fs, "/testfile", []byte("Different content"), 0644)
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`  
+	data "http" "foo" {  
+		url = "%s"  
+	}  
+  
+	rule "file_hash" "bar" {  
+		glob = "/testfile"  
+		hash = md5(data.http.foo.response_body)  
+		algorithm = "md5"  
+	}  
+	`, server.URL)
+
+	// Parse the config
+	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	require.NoError(t, err)
+
+	config.ctx = context.TODO()
+
+	// Test the Plan method
+	err = config.Plan()
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "no file with glob /testfile and hash")
+	assert.Contains(t, err.Error(), "rule.file_hash.bar")
+}
+
+func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
+	expectedContent := "Hello World!"
+	// Create a mock HTTP server that returns a specific content
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(expectedContent))
+	}))
+	defer server.Close()
+
+	// Create a mock file system and write a file with the same content as the server
+	fs := afero.NewMemMapFs()
+	stub := gostub.Stub(&fsFactory, func() afero.Fs { return fs })
+	defer stub.Reset()
+
+	_ = afero.WriteFile(fs, "/testfile", []byte(expectedContent), 0644)
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`  
+	data "http" "foo" {  
+		url = "%s"  
+	}  
+  
+	rule "file_hash" "bar" {  
+		glob = "/testfile"  
+		hash = md5(data.http.foo.response_body)  
+		algorithm = "md5"  
+	}  
+	`, server.URL)
+
+	// Parse the config
+	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	require.NoError(t, err)
+
+	config.ctx = context.TODO()
+
+	// Test the Plan method
+	err = config.Plan()
+	assert.Nil(t, err)
+}

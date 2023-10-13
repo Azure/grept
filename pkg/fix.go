@@ -13,12 +13,14 @@ type Fix interface {
 	ApplyFix() error
 	GetRuleId() string
 	Parse(b *hclsyntax.Block) error
+	HclSyntaxBlock() *hclsyntax.Block
 }
 
 type BaseFix struct {
 	name   string
 	RuleId string
 	c      *Config
+	hb     *hclsyntax.Block
 }
 
 func (bf *BaseFix) GetRuleId() string {
@@ -26,12 +28,17 @@ func (bf *BaseFix) GetRuleId() string {
 }
 
 func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
+	bf.hb = b
 	bf.RuleId, err = readRequiredStringAttribute(b, "rule_id", bf.EvalContext())
 	if err != nil {
 		return fmt.Errorf("cannot parse rule: %s, %s", b.Range().String(), err.Error())
 	}
 	bf.name = b.Labels[1]
 	return nil
+}
+
+func (bf *BaseFix) HclSyntaxBlock() *hclsyntax.Block {
+	return bf.hb
 }
 
 func (bf *BaseFix) Name() string {
