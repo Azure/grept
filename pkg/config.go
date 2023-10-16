@@ -187,6 +187,7 @@ func (c *Config) Plan() (Plan, error) {
 			plan[fr] = make(Fixes, 0)
 			// Find fixes for this rule
 			for _, fix := range c.Fixes {
+				refresh(fix)
 				if fix.GetRuleId() == rule.Id() {
 					plan[fr] = append(plan[fr], fix)
 				}

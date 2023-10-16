@@ -6,6 +6,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+var _ Fix = &LocalFile{}
+
 type LocalFile struct {
 	*BaseFix
 	Path    string `json:path`

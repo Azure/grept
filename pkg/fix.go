@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
 )
 
 type Fix interface {
@@ -15,6 +16,7 @@ type Fix interface {
 	GetRuleId() string
 	Parse(b *hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
+	Value() cty.Value
 }
 
 func FixToString(f Fix) string {

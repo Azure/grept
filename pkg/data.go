@@ -36,7 +36,9 @@ func (bd *BaseData) Name() string {
 func (bd *BaseData) Parse(b *hclsyntax.Block) error {
 	bd.hb = b
 	bd.name = b.Labels[1]
-	bd.id = uuid.NewString()
+	if bd.id == "" {
+		bd.id = uuid.NewString()
+	}
 	return nil
 }
 

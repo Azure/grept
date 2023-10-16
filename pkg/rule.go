@@ -27,7 +27,9 @@ type BaseRule struct {
 func (br *BaseRule) Parse(b *hclsyntax.Block) error {
 	br.hb = b
 	br.name = b.Labels[1]
-	br.id = uuid.NewString()
+	if br.id == "" {
+		br.id = uuid.NewString()
+	}
 	return nil
 }
 
