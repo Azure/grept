@@ -28,7 +28,7 @@ func TestParseConfig(t *testing.T) {
 	}  
 	`
 
-	config, err := ParseConfig("", "config.hcl", content)
+	config, err := ParseConfig("", "config.hcl", content, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, len(config.Rules))
@@ -55,7 +55,7 @@ func TestUnregisteredFix(t *testing.T) {
 	}  
 	`
 
-	_, err := ParseConfig("", "test.hcl", hcl)
+	_, err := ParseConfig("", "test.hcl", hcl, nil)
 	require.NotNil(t, err)
 	expectedError := "unregistered fix: unregistered_fix"
 	assert.Contains(t, err.Error(), expectedError)
@@ -70,7 +70,7 @@ func TestUnregisteredRule(t *testing.T) {
 	}  
 	`
 
-	_, err := ParseConfig("", "test.hcl", hcl)
+	_, err := ParseConfig("", "test.hcl", hcl, nil)
 	require.NotNil(t, err)
 
 	expectedError := "unregistered rule: unregistered_rule"
@@ -86,7 +86,7 @@ func TestInvalidBlockType(t *testing.T) {
 	}  
 	`
 
-	_, err := ParseConfig("", "test.hcl", hcl)
+	_, err := ParseConfig("", "test.hcl", hcl, nil)
 	require.NotNil(t, err)
 
 	expectedError := "invalid block type: invalid_block"
@@ -107,7 +107,7 @@ func TestEvalContextRef(t *testing.T) {
 		content = "Hello, world!"
 	}
 `
-	config, err := ParseConfig("", "config.hcl", hcl)
+	config, err := ParseConfig("", "config.hcl", hcl, nil)
 	assert.NoError(t, err)
 	require.Equal(t, 1, len(config.Fixes))
 	fix := config.Fixes[0].(*LocalFile)
@@ -117,7 +117,7 @@ func TestEvalContextRef(t *testing.T) {
 func TestFunctionInEvalContext(t *testing.T) {
 	// Create a in-memory filesystem
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()
@@ -138,7 +138,7 @@ func TestFunctionInEvalContext(t *testing.T) {
 	`, fileContent)
 
 	// Parse the configuration string
-	config, err := ParseConfig(".", "test.hcl", configStr)
+	config, err := ParseConfig(".", "test.hcl", configStr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +168,7 @@ func TestParseConfigHttpBlock(t *testing.T) {
 	filename := "test.hcl"
 
 	// Parse the configuration
-	config, err := ParseConfig(dir, filename, hclConfig)
+	config, err := ParseConfig(dir, filename, hclConfig, nil)
 	assert.NoError(t, err, "ParseConfig should not return an error")
 
 	// Check the parsed configuration
@@ -201,7 +201,7 @@ func TestPlanError_DatasourceError(t *testing.T) {
 `, server.URL)
 
 	// Parse the config
-	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	config, err := ParseConfig(".", "test.hcl", sampleConfig, nil)
 	require.NoError(t, err)
 
 	config.ctx = context.TODO()
@@ -223,7 +223,7 @@ func TestPlanError_FileHashRuleError(t *testing.T) {
 
 	// Create a mock file system and write a file
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs { return fs })
+	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
 	defer stub.Reset()
 
 	_ = afero.WriteFile(fs, "/testfile", []byte("Different content"), 0644)
@@ -242,7 +242,7 @@ func TestPlanError_FileHashRuleError(t *testing.T) {
 	`, server.URL)
 
 	// Parse the config
-	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	config, err := ParseConfig(".", "test.hcl", sampleConfig, nil)
 	require.NoError(t, err)
 
 	config.ctx = context.TODO()
@@ -263,7 +263,7 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 
 	// Create a mock file system and write a file with the same content as the server
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs { return fs })
+	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
 	defer stub.Reset()
 
 	_ = afero.WriteFile(fs, "/testfile", []byte(expectedContent), 0644)
@@ -282,7 +282,7 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 	`, server.URL)
 
 	// Parse the config
-	config, err := ParseConfig(".", "test.hcl", sampleConfig)
+	config, err := ParseConfig(".", "test.hcl", sampleConfig, nil)
 	require.NoError(t, err)
 
 	config.ctx = context.TODO()

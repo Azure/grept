@@ -11,7 +11,7 @@ import (
 
 func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()
@@ -31,7 +31,7 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 
 func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -14,6 +15,11 @@ type Fix interface {
 	GetRuleId() string
 	Parse(b *hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
+}
+
+func FixToString(f Fix) string {
+	marshal, _ := json.Marshal(f)
+	return string(marshal)
 }
 
 type BaseFix struct {

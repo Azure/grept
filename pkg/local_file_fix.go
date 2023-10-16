@@ -8,8 +8,8 @@ import (
 
 type LocalFile struct {
 	*BaseFix
-	Path    string
-	Content string
+	Path    string `json:path`
+	Content string `json:content`
 }
 
 func (lf *LocalFile) Value() cty.Value {
@@ -26,7 +26,7 @@ func (lf *LocalFile) Type() string {
 var _ Fix = &LocalFile{}
 
 func (lf *LocalFile) ApplyFix() error {
-	err := afero.WriteFile(fsFactory(), lf.Path, []byte(lf.Content), 0644)
+	err := afero.WriteFile(FsFactory(), lf.Path, []byte(lf.Content), 0644)
 	if err != nil {
 		return err
 	}

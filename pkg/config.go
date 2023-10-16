@@ -106,9 +106,13 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 	}
 }
 
-func ParseConfig(dir, filename, content string) (*Config, error) {
+func ParseConfig(dir, filename, content string, ctx context.Context) (*Config, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	config := &Config{
 		basedir: dir,
+		ctx:     ctx,
 	}
 
 	file, diag := hclsyntax.ParseConfig([]byte(content), filename, hcl.InitialPos)
@@ -175,12 +179,16 @@ func (c *Config) Plan() (Plan, error) {
 				// This rule passes check, no need to fix it
 				return
 			}
+			fr := &failedRule{
+				Rule:       rule,
+				CheckError: checkErr,
+			}
 
-			plan[rule] = make(Fixes, 0)
+			plan[fr] = make(Fixes, 0)
 			// Find fixes for this rule
 			for _, fix := range c.Fixes {
 				if fix.GetRuleId() == rule.Id() {
-					plan[rule] = append(plan[rule], fix)
+					plan[fr] = append(plan[fr], fix)
 				}
 			}
 		}(rule)
@@ -195,23 +203,6 @@ func (c *Config) Plan() (Plan, error) {
 	}
 
 	return plan, nil
-}
-
-func ApplyRulesAndFixes(config *Config) error {
-	for _, rule := range config.Rules {
-		_, err := rule.Check()
-		if err != nil {
-			// If a rule check fails, apply the corresponding fixes
-			for _, fix := range config.Fixes {
-				err := fix.ApplyFix()
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func readError(errors chan error) []error {

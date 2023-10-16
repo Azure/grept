@@ -62,7 +62,7 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 
 func (fhr *FileHashRule) Check() (error, error) {
 	// Use Glob to find files matching the path pattern
-	fs := fsFactory()
+	fs := FsFactory()
 	files, err := afero.Glob(fs, fhr.Glob)
 	if err != nil {
 		return nil, err

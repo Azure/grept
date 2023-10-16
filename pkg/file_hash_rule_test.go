@@ -12,7 +12,7 @@ import (
 
 func TestFileHashRule_Check(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()
@@ -74,7 +74,7 @@ func TestFileHashRule_Check(t *testing.T) {
 
 func TestFileHashRule_Validate(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&fsFactory, func() afero.Fs {
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()
