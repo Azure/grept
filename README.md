@@ -77,4 +77,4 @@ Contributions to `grept` are welcome! Please submit a pull request or issue on t
 
 ## License
 
-`grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/master/LICENSE).
+`grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/main/LICENSE).
