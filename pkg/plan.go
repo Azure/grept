@@ -20,6 +20,21 @@ func (p Plan) String() string {
 	return sb.String()
 }
 
+func (p Plan) Apply() error {
+	var errs []error
+	for _, fixes := range p {
+		for _, fix := range fixes {
+			if err := fix.ApplyFix(); err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors applying fixes: %v", errs)
+	}
+	return nil
+}
+
 type failedRule struct {
 	Rule       Rule
 	CheckError error

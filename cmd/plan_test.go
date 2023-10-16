@@ -49,7 +49,7 @@ func TestPlanFunc_NoCheckFailure(t *testing.T) {
 
 	cmd := NewPlanCmd(context.TODO())
 	// Run function
-	cmd.Run(nil, []string{"test_config.hcl"})
+	cmd.Run(nil, []string{"plan", "test_config.hcl"})
 
 	// Reset Stdout
 	w.Close()
@@ -102,7 +102,7 @@ func TestPlanFunc_CheckFailure(t *testing.T) {
 
 	cmd := NewPlanCmd(context.TODO())
 	// Run function
-	cmd.Run(nil, []string{"test_config.hcl"})
+	cmd.Run(nil, []string{"plan", "test_config.hcl"})
 
 	// Reset Stdout
 	w.Close()
