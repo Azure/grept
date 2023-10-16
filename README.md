@@ -78,3 +78,5 @@ Contributions to `grept` are welcome! Please submit a pull request or issue on t
 ## License
 
 `grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/main/LICENSE).
+
+This tool used [HashiCorp Packer](https://www.packer.io/)'s built-in functions, but I've already locked Packer's version at v1.9.3 so it was a MPL license library.

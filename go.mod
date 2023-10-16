@@ -3,12 +3,12 @@ module github.com/Azure/grept
 go 1.20
 
 require (
-	github.com/emirpasic/gods v1.12.0
+	github.com/emirpasic/gods v1.18.1
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/hcl/v2 v2.18.1
-	github.com/hashicorp/packer v1.9.4
+	github.com/hashicorp/packer v1.9.3
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.7.0
