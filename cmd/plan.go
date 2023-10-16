@@ -24,7 +24,7 @@ func planFunc(ctx context.Context) func(*cobra.Command, []string) {
 			return
 		}
 
-		filename := args[0]
+		filename := args[1]
 		dir, err := os.Getwd()
 		if err != nil {
 			fmt.Println("Error:", err)
