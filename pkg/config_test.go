@@ -146,7 +146,7 @@ func TestFunctionInEvalContext(t *testing.T) {
 	require.Equal(t, 1, len(config.Rules))
 	rule, ok := config.Rules[0].(*FileHashRule)
 	require.True(t, ok)
-	err = rule.Check()
+	_, err = rule.Check()
 	assert.NoError(t, err)
 }
 
@@ -207,7 +207,8 @@ func TestPlanError_DatasourceError(t *testing.T) {
 	config.ctx = context.TODO()
 
 	// Test the Plan method
-	err = config.Plan()
+	plan, err := config.Plan()
+	assert.Empty(t, plan)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error making request")
 	assert.Contains(t, err.Error(), "data.http.foo")
@@ -247,10 +248,9 @@ func TestPlanError_FileHashRuleError(t *testing.T) {
 	config.ctx = context.TODO()
 
 	// Test the Plan method
-	err = config.Plan()
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "no file with glob /testfile and hash")
-	assert.Contains(t, err.Error(), "rule.file_hash.bar")
+	plan, runtimeErr := config.Plan()
+	assert.NoError(t, runtimeErr)
+	assert.Len(t, plan, 1)
 }
 
 func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
@@ -288,6 +288,7 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 	config.ctx = context.TODO()
 
 	// Test the Plan method
-	err = config.Plan()
+	plan, err := config.Plan()
 	assert.Nil(t, err)
+	assert.Empty(t, plan)
 }

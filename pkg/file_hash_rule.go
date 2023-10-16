@@ -60,22 +60,22 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	return nil
 }
 
-func (fhr *FileHashRule) Check() error {
+func (fhr *FileHashRule) Check() (error, error) {
 	// Use Glob to find files matching the path pattern
 	fs := fsFactory()
 	files, err := afero.Glob(fs, fhr.Glob)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(files) == 0 {
-		return fmt.Errorf("no files match path pattern: %s", fhr.Glob)
+		return fmt.Errorf("no files match path pattern: %s", fhr.Glob), nil
 	}
 
 	for _, file := range files {
 		fileData, err := afero.ReadFile(fs, file)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// Calculate the hash of the file data
@@ -96,11 +96,11 @@ func (fhr *FileHashRule) Check() error {
 		computedHash := fmt.Sprintf("%x", h.Sum(nil))
 
 		if computedHash == fhr.Hash {
-			return nil
+			return nil, nil
 		}
 	}
 
-	return fmt.Errorf("no file with glob %s and hash %s found", fhr.Glob, fhr.Hash)
+	return fmt.Errorf("no file with glob %s and hash %s found", fhr.Glob, fhr.Hash), nil
 }
 
 func (fhr *FileHashRule) Validate() error {

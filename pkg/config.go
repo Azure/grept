@@ -136,62 +136,70 @@ func ParseConfig(dir, filename, content string) (*Config, error) {
 	return config, err
 }
 
-func (c *Config) Plan() error {
+func (c *Config) Plan() (Plan, error) {
 	var wg sync.WaitGroup
-	var err *blockErrors
-	var mutex sync.Mutex
+	errCh := make(chan error, len(c.DataSources))
+	plan := make(Plan)
 
-	// Run Load method for all Datasources in parallel
+	// Load all datasources
 	for _, data := range c.DataSources {
 		wg.Add(1)
 		go func(data Data) {
 			defer wg.Done()
-			if loadErr := data.Load(); loadErr != nil {
-				mutex.Lock()
-				err = err.Add(blockError{
-					BlockCategory: "data",
-					BlockType:     data.Type(),
-					BlockName:     data.Name(),
-					Err:           loadErr,
-				})
-				mutex.Unlock()
+			if err := data.Load(); err != nil {
+				errCh <- fmt.Errorf("data.%s.%s throws error: %s", data.Type(), data.Name(), err.Error())
 			}
 		}(data)
 	}
 	wg.Wait()
-
-	// If there were any errors while loading data sources, return immediately
-	if err != nil {
-		return err
+	close(errCh)
+	errs := readError(errCh)
+	if len(errs) > 0 {
+		return nil, &blockErrors{Errors: errs}
 	}
 
-	// Run Check method for all Rules in parallel
+	errCh = make(chan error, len(c.Rules))
+
+	// Check all rules
 	for _, rule := range c.Rules {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
 			refresh(rule)
-			if checkErr := rule.Check(); checkErr != nil {
-				mutex.Lock()
-				err = err.Add(blockError{
-					BlockCategory: "rule",
-					BlockType:     rule.Type(),
-					BlockName:     rule.Name(),
-					Err:           checkErr,
-				})
-				mutex.Unlock()
+			checkErr, runtimeErr := rule.Check()
+			if runtimeErr != nil {
+				errCh <- runtimeErr
+				return
+			}
+			if checkErr == nil {
+				// This rule passes check, no need to fix it
+				return
+			}
+
+			plan[rule] = make(Fixes, 0)
+			// Find fixes for this rule
+			for _, fix := range c.Fixes {
+				if fix.GetRuleId() == rule.Id() {
+					plan[rule] = append(plan[rule], fix)
+				}
 			}
 		}(rule)
 	}
-	wg.Wait()
 
-	// Return aggregated errors, if any
-	return err
+	wg.Wait()
+	close(errCh)
+
+	errs = readError(errCh)
+	if len(errs) > 0 {
+		return nil, &blockErrors{Errors: errs}
+	}
+
+	return plan, nil
 }
 
 func ApplyRulesAndFixes(config *Config) error {
 	for _, rule := range config.Rules {
-		err := rule.Check()
+		_, err := rule.Check()
 		if err != nil {
 			// If a rule check fails, apply the corresponding fixes
 			for _, fix := range config.Fixes {
@@ -204,4 +212,12 @@ func ApplyRulesAndFixes(config *Config) error {
 	}
 
 	return nil
+}
+
+func readError(errors chan error) []error {
+	var errs []error
+	for err := range errors {
+		errs = append(errs, err)
+	}
+	return errs
 }

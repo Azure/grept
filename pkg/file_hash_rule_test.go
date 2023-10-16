@@ -64,9 +64,9 @@ func TestFileHashRule_Check(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.rule.Check()
-			if (err != nil) != tt.wantError {
-				t.Errorf("FileHashRule.Check() error = %v, wantError %v", err, tt.wantError)
+			checkError, _ := tt.rule.Check()
+			if (checkError != nil) != tt.wantError {
+				t.Errorf("FileHashRule.Check() error = %v, wantError %v", checkError, tt.wantError)
 			}
 		})
 	}

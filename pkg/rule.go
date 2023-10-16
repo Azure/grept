@@ -8,7 +8,7 @@ import (
 )
 
 type Rule interface {
-	Check() error
+	Check() (checkError error, runtimeError error)
 	Type() string
 	Name() string
 	Id() string
