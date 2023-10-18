@@ -28,7 +28,7 @@ func NewApplyCmd(ctx context.Context) *cobra.Command {
 
 func applyFunc(ctx context.Context, auto *bool) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		if len(args) < 1 {
+		if len(args) < 2 {
 			fmt.Println("Please specify a configuration file")
 			return
 		}

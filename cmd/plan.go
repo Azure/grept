@@ -19,7 +19,7 @@ func NewPlanCmd(ctx context.Context) *cobra.Command {
 
 func planFunc(ctx context.Context) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		if len(args) < 1 {
+		if len(args) < 2 {
 			fmt.Println("Please specify a configuration file")
 			return
 		}
