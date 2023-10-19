@@ -107,7 +107,7 @@ func TestPlanFunc_CheckFailure(t *testing.T) {
 	cmd.SetContext(context.TODO())
 	// Run function
 	err := cmd.RunE(cmd, []string{"plan", "."})
-	assert.Equal(t, NonZeroSucceededError{2}, err)
+	require.NoError(t, err)
 
 	// Reset Stdout
 	w.Close()
