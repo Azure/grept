@@ -7,6 +7,7 @@ import (
 	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -40,19 +41,21 @@ func TestPlanFunc_NoCheckFailure(t *testing.T) {
 	})
 	defer stub.Reset()
 
-	_ = afero.WriteFile(mockFs, "test.txt", []byte(expectedContent), 0644)
-	_ = afero.WriteFile(mockFs, "test_config.hcl", []byte(configContent), 0644)
+	_ = afero.WriteFile(mockFs, "./test.txt", []byte(expectedContent), 0644)
+	_ = afero.WriteFile(mockFs, "./test_config.grept.hcl", []byte(configContent), 0644)
 
 	// Redirect Stdout
 	r, w, _ := os.Pipe()
 	stub.Stub(&os.Stdout, w)
 
-	cmd := NewPlanCmd(context.TODO())
+	cmd := NewPlanCmd()
+	cmd.SetContext(context.TODO())
 	// Run function
-	cmd.Run(nil, []string{"plan", "test_config.hcl"})
+	err := cmd.RunE(cmd, []string{"plan", "."})
+	require.NoError(t, err)
 
 	// Reset Stdout
-	w.Close()
+	_ = w.Close()
 
 	// Read Stdout
 	out, _ := io.ReadAll(r)
@@ -94,15 +97,17 @@ func TestPlanFunc_CheckFailure(t *testing.T) {
 	defer stub.Reset()
 
 	_ = afero.WriteFile(mockFs, "test.txt", []byte("incorrect content"), 0644)
-	_ = afero.WriteFile(mockFs, "test_config.hcl", []byte(configContent), 0644)
+	_ = afero.WriteFile(mockFs, "test_config.grept.hcl", []byte(configContent), 0644)
 
 	// Redirect Stdout
 	r, w, _ := os.Pipe()
 	stub.Stub(&os.Stdout, w)
 
-	cmd := NewPlanCmd(context.TODO())
+	cmd := NewPlanCmd()
+	cmd.SetContext(context.TODO())
 	// Run function
-	cmd.Run(nil, []string{"plan", "test_config.hcl"})
+	err := cmd.RunE(cmd, []string{"plan", "."})
+	assert.Equal(t, NonZeroSucceededError{2}, err)
 
 	// Reset Stdout
 	w.Close()

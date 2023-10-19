@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/packer/hcl2template"
+	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
+	"path/filepath"
 	"sync"
 )
 
@@ -106,7 +108,7 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 	}
 }
 
-func ParseConfig(dir, filename, content string, ctx context.Context) (*Config, error) {
+func ParseConfig(dir string, ctx context.Context) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -115,21 +117,44 @@ func ParseConfig(dir, filename, content string, ctx context.Context) (*Config, e
 		ctx:     ctx,
 	}
 
-	file, diag := hclsyntax.ParseConfig([]byte(content), filename, hcl.InitialPos)
-	if diag.HasErrors() {
-		return nil, diag
-	}
-	body := file.Body.(*hclsyntax.Body)
 	var err error
+	fs := FsFactory()
+	matches, err := afero.Glob(fs, fmt.Sprintf(filepath.Join(dir, "*.grept.hcl")))
+	if err != nil {
+		return nil, err
+	}
+
+	var blocks []*hclsyntax.Block
+
+	for _, filename := range matches {
+		content, fsErr := afero.ReadFile(fs, filename)
+		if fsErr != nil {
+			err = multierror.Append(err, fsErr)
+			continue
+		}
+		file, diag := hclsyntax.ParseConfig(content, filename, hcl.InitialPos)
+		if diag.HasErrors() {
+			err = multierror.Append(err, diag.Errs()...)
+			continue
+		}
+		body := file.Body.(*hclsyntax.Body)
+		for _, b := range body.Blocks {
+			blocks = append(blocks, b)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	// First loop: parse all rule blocks
-	for _, b := range body.Blocks {
+	for _, b := range blocks {
 		if !validBlockTypes.Contains(b.Type) {
 			err = multierror.Append(err, fmt.Errorf("invalid block type: %s %s", b.Type, b.Range().String()))
 			continue
 		}
 	}
 	for _, parser := range blockParsers {
-		for _, b := range body.Blocks {
+		for _, b := range blocks {
 			parseError := parser(config)(b)
 			if parseError != nil {
 				err = multierror.Append(err, parseError)

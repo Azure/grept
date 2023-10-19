@@ -2,23 +2,21 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/Azure/grept/pkg"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
-func NewApplyCmd(ctx context.Context) *cobra.Command {
+func NewApplyCmd() *cobra.Command {
 	auto := false
 
 	applyCmd := &cobra.Command{
 		Use:   "apply",
-		Short: "Apply the plan",
-		Run:   applyFunc(ctx, &auto),
+		Short: "Apply the plan, grept apply [-a] [path to config files]",
+		RunE:  applyFunc(&auto),
 	}
 
 	applyCmd.Flags().BoolVarP(&auto, "auto", "a", false, "Apply fixes without confirmation")
@@ -26,43 +24,35 @@ func NewApplyCmd(ctx context.Context) *cobra.Command {
 	return applyCmd
 }
 
-func applyFunc(ctx context.Context, auto *bool) func(*cobra.Command, []string) {
-	return func(_ *cobra.Command, args []string) {
-		if len(args) < 2 {
-			fmt.Println("Please specify a configuration file")
-			return
+func applyFunc(auto *bool) func(*cobra.Command, []string) error {
+	return func(c *cobra.Command, args []string) error {
+		var cfgDir string
+		if len(args) == 1 {
+			cfgDir = "."
+		} else {
+			cfgDir = args[1]
+		}
+		configPath, cleaner, err := getConfigFolder(cfgDir, c.Context())
+		if cleaner != nil {
+			defer cleaner()
+		}
+		if err != nil {
+			return fmt.Errorf("error getting config %s: %+v", cfgDir, err)
 		}
 
-		filename := args[1]
-		dir, err := os.Getwd()
+		config, err := pkg.ParseConfig(configPath, c.Context())
 		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fs := pkg.FsFactory()
-		fileBytes, err := afero.ReadFile(fs, filename)
-		if err != nil {
-			fmt.Printf("Error reading file: %s\n", err.Error())
-			return
-		}
-		content := string(fileBytes)
-
-		config, err := pkg.ParseConfig(dir, filename, content, ctx)
-		if err != nil {
-			fmt.Printf("Error parsing config: %s\n", err.Error())
-			return
+			return fmt.Errorf("error parsing config: %s\n", err.Error())
 		}
 
 		plan, err := config.Plan()
 		if err != nil {
-			fmt.Printf("Error generating plan: %s\n", err.Error())
-			return
+			return fmt.Errorf("Error generating plan: %s\n", err.Error())
 		}
 
 		if len(plan) == 0 {
 			fmt.Println("All rule checks successful, nothing to do.")
-			return
+			return nil
 		}
 
 		fmt.Println(plan.String())
@@ -74,14 +64,14 @@ func applyFunc(ctx context.Context, auto *bool) func(*cobra.Command, []string) {
 			text = strings.ToLower(strings.TrimSpace(text))
 
 			if text != "yes" {
-				return
+				return nil
 			}
 		}
 		err = plan.Apply()
 		if err != nil {
-			fmt.Printf("Error applying plan: %s\n", err.Error())
-			return
+			return fmt.Errorf("error applying plan: %s\n", err.Error())
 		}
 		fmt.Println("Plan applied successfully.")
+		return nil
 	}
 }

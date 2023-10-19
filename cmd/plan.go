@@ -1,60 +1,51 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/Azure/grept/pkg"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-func NewPlanCmd(ctx context.Context) *cobra.Command {
-	return &cobra.Command{
+func NewPlanCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "plan",
-		Short: "Generates a plan based on the specified configuration",
-		Run:   planFunc(ctx),
+		Short: "Generates a plan based on the specified configuration, grept plan [path to config files]",
+		RunE:  planFunc(),
 	}
+	return cmd
 }
 
-func planFunc(ctx context.Context) func(*cobra.Command, []string) {
-	return func(_ *cobra.Command, args []string) {
-		if len(args) < 2 {
-			fmt.Println("Please specify a configuration file")
-			return
+func planFunc() func(*cobra.Command, []string) error {
+	return func(c *cobra.Command, args []string) error {
+		var cfgDir string
+		if len(args) == 1 {
+			cfgDir = "."
+		} else {
+			cfgDir = args[1]
+		}
+		configPath, cleaner, err := getConfigFolder(cfgDir, c.Context())
+		if cleaner != nil {
+			defer cleaner()
+		}
+		if err != nil {
+			return fmt.Errorf("error getting config %s: %+v", cfgDir, err)
 		}
 
-		filename := args[1]
-		dir, err := os.Getwd()
+		config, err := pkg.ParseConfig(configPath, c.Context())
 		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fs := pkg.FsFactory()
-		fileBytes, err := afero.ReadFile(fs, filename)
-		if err != nil {
-			fmt.Printf("Error reading file: %s\n", err.Error())
-			return
-		}
-		content := string(fileBytes)
-
-		config, err := pkg.ParseConfig(dir, filename, content, ctx)
-		if err != nil {
-			fmt.Printf("Error parsing config: %s\n", err.Error())
-			return
+			return fmt.Errorf("error parsing config: %+v\n", err)
 		}
 
 		plan, err := config.Plan()
 		if err != nil {
-			fmt.Printf("Error generating plan: %s\n", err.Error())
-			return
+			return fmt.Errorf("error generating plan: %s\n", err.Error())
 		}
 
 		if len(plan) == 0 {
 			fmt.Println("All rule checks successful, nothing to do.")
-			return
+			return nil
 		}
 		fmt.Println(plan.String())
+		return nil
 	}
 }

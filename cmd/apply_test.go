@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -47,20 +48,22 @@ func TestApplyFunc(t *testing.T) {
 	})
 	defer stub.Reset()
 
-	_ = afero.WriteFile(mockFs, "test.txt", []byte("incorrect content"), 0644)
-	_ = afero.WriteFile(mockFs, "test_config.hcl", []byte(configContent), 0644)
+	_ = afero.WriteFile(mockFs, "./test.txt", []byte("incorrect content"), 0644)
+	_ = afero.WriteFile(mockFs, "./test_config.grept.hcl", []byte(configContent), 0644)
 
 	// Redirect Stdin and Stdout
 	r, w, _ := os.Pipe()
 	stub.Stub(&os.Stdout, w)
 
-	cmd := NewApplyCmd(context.TODO())
+	cmd := NewApplyCmd()
+	cmd.SetContext(context.TODO())
 	_ = cmd.Flags().Set("auto", "true")
 	// Run function
-	cmd.Run(nil, []string{"apply", "test_config.hcl"})
+	err := cmd.RunE(cmd, []string{"apply", "."})
+	require.NoError(t, err)
 
 	// Reset Stdout
-	w.Close()
+	_ = w.Close()
 
 	// Read Stdout
 	out, _ := io.ReadAll(r)
