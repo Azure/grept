@@ -48,25 +48,6 @@ type Datas []Data
 type Rules []Rule
 type Fixes []Fix
 
-func Values[T block](slice []T) cty.Value {
-	if len(slice) == 0 {
-		return cty.EmptyObjectVal
-	}
-	res := map[string]cty.Value{}
-	valuesMap := map[string]map[string]cty.Value{}
-
-	for _, r := range slice {
-		inner := valuesMap[r.Type()]
-		if inner == nil {
-			inner = map[string]cty.Value{}
-		}
-		inner[r.Name()] = r.Value()
-		res[r.Type()] = cty.MapVal(inner)
-		valuesMap[r.Type()] = inner
-	}
-	return cty.MapVal(res)
-}
-
 type Config struct {
 	ctx         context.Context
 	basedir     string
@@ -91,7 +72,7 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 			return nil
 		}
 		if len(hb.Labels) != 2 {
-			return fmt.Errorf("invalid labels for rule %s, expect labels with length 2 (%s)", concatLabels(hb.Labels), hb.Range().String())
+			return fmt.Errorf("invalid labels for %s %s, expect labels with length 2 (%s)", expectedBlockType, concatLabels(hb.Labels), hb.Range().String())
 		}
 		t := hb.Labels[0]
 		f, ok := factories[t]
@@ -99,9 +80,9 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
 		}
 		b := f(c)
-		err := b.Parse(hb)
+		err := b.Eval(hb)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s.%s.%s(%s) eval error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
 		}
 		postParseFunc(c, b)
 		return nil
@@ -182,16 +163,20 @@ func (c *Config) Plan() (Plan, error) {
 					return
 				}
 			}
+			if err := data.Eval(data.HclSyntaxBlock()); err != nil {
+				errCh <- fmt.Errorf("data.%s.%s(%s) eval error: %+v", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err)
+				return
+			}
 			if err := data.Load(); err != nil {
-				errCh <- fmt.Errorf("data.%s.%s throws error: %s", data.Type(), data.Name(), err.Error())
+				errCh <- fmt.Errorf("data.%s.%s(%s) throws error: %s", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err.Error())
 			}
 		}(data)
 	}
 	wg.Wait()
 	close(errCh)
-	errs := readError(errCh)
-	if len(errs) > 0 {
-		return nil, &blockErrors{Errors: errs}
+	err := readError(errCh)
+	if err != nil {
+		return nil, fmt.Errorf("the following blocks throw errors: %+v", err)
 	}
 
 	errCh = make(chan error, len(c.Rules))
@@ -201,7 +186,10 @@ func (c *Config) Plan() (Plan, error) {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
-			refresh(rule)
+			if err := rule.Eval(rule.HclSyntaxBlock()); err != nil {
+				errCh <- fmt.Errorf("rule.%s.%s(%s) eval error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
+				return
+			}
 			checkErr, runtimeErr := rule.Check()
 			if runtimeErr != nil {
 				errCh <- runtimeErr
@@ -230,18 +218,18 @@ func (c *Config) Plan() (Plan, error) {
 	wg.Wait()
 	close(errCh)
 
-	errs = readError(errCh)
-	if len(errs) > 0 {
-		return nil, &blockErrors{Errors: errs}
+	err = readError(errCh)
+	if err != nil {
+		return nil, fmt.Errorf("the following blocks throw errors: %+v", err)
 	}
 
 	return plan, nil
 }
 
-func readError(errors chan error) []error {
-	var errs []error
-	for err := range errors {
-		errs = append(errs, err)
+func readError(errors chan error) error {
+	var err error
+	for e := range errors {
+		err = multierror.Append(err, e)
 	}
-	return errs
+	return err
 }

@@ -12,7 +12,7 @@ type Rule interface {
 	Type() string
 	Name() string
 	Id() string
-	Parse(*hclsyntax.Block) error
+	Eval(*hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
 	Value() cty.Value
 }

@@ -15,7 +15,7 @@ func init() {
 }
 
 type block interface {
-	Parse(*hclsyntax.Block) error
+	Eval(*hclsyntax.Block) error
 	Name() string
 	Type() string
 	Value() cty.Value
@@ -76,56 +76,23 @@ func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *
 	return value.AsString(), nil
 }
 
-func readOptionalStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
-	if b == nil {
-		return "", fmt.Errorf("nil Block")
+func Values[T block](slice []T) cty.Value {
+	if len(slice) == 0 {
+		return cty.EmptyObjectVal
 	}
-	a, ok := b.Body.Attributes[attributeName]
-	if !ok {
-		return "", nil
-	}
-	value, diagnostics := a.Expr.Value(ctx)
-	if diagnostics.HasErrors() {
-		return "", diagnostics
-	}
-	if value.Type() != cty.String {
-		return "", fmt.Errorf("the attribute %s in the block %s is not a string", attributeName, concatLabels(b.Labels))
-	}
-	return value.AsString(), nil
-}
+	res := map[string]cty.Value{}
+	valuesMap := map[string]map[string]cty.Value{}
 
-func readOptionalMapAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (map[string]string, error) {
-	if b == nil {
-		return nil, fmt.Errorf("nil Block")
-	}
-	a, ok := b.Body.Attributes[attributeName]
-	if !ok {
-		return nil, nil
-	}
-	value, diagnostics := a.Expr.Value(ctx)
-	if diagnostics.HasErrors() {
-		return nil, diagnostics
-	}
-	if value.Type() != cty.Map(cty.String) && !objectIsMapOfString(value.Type()) {
-		return nil, fmt.Errorf("the attribute %s in the block %s is not a map of string", attributeName, concatLabels(b.Labels))
-	}
-	r := make(map[string]string)
-	for k, v := range value.AsValueMap() {
-		r[k] = v.AsString()
-	}
-	return r, nil
-}
-
-func objectIsMapOfString(t cty.Type) bool {
-	if !t.IsObjectType() {
-		return false
-	}
-	for _, at := range t.AttributeTypes() {
-		if at != cty.String {
-			return false
+	for _, r := range slice {
+		inner := valuesMap[r.Type()]
+		if inner == nil {
+			inner = map[string]cty.Value{}
 		}
+		inner[r.Name()] = r.Value()
+		res[r.Type()] = cty.MapVal(inner)
+		valuesMap[r.Type()] = inner
 	}
-	return true
+	return cty.MapVal(res)
 }
 
 func concatLabels(labels []string) string {
@@ -140,5 +107,5 @@ func concatLabels(labels []string) string {
 }
 
 func refresh(b block) {
-	b.Parse(b.HclSyntaxBlock())
+	b.Eval(b.HclSyntaxBlock())
 }

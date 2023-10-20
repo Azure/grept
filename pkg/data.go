@@ -13,7 +13,7 @@ type Data interface {
 	Type() string
 	Name() string
 	Value() cty.Value
-	Parse(*hclsyntax.Block) error
+	Eval(*hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
 	Id() string
 }

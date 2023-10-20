@@ -35,7 +35,7 @@ func (fhr *FileHashRule) Value() cty.Value {
 	return cty.ObjectVal(value)
 }
 
-func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
+func (fhr *FileHashRule) Eval(b *hclsyntax.Block) error {
 	err := fhr.BaseRule.Parse(b)
 	if err != nil {
 		return err

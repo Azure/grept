@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"strings"
 )
 
@@ -21,16 +22,27 @@ func (p Plan) String() string {
 }
 
 func (p Plan) Apply() error {
-	var errs []error
+	var err error
 	for _, fixes := range p {
 		for _, fix := range fixes {
-			if err := fix.ApplyFix(); err != nil {
-				errs = append(errs, err)
+			if err := fix.Eval(fix.HclSyntaxBlock()); err != nil {
+				err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) eval error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fixes := range p {
+		for _, fix := range fixes {
+			if applyErr := fix.ApplyFix(); applyErr != nil {
+				err = multierror.Append(err, applyErr)
 			}
 		}
 	}
-	if len(errs) > 0 {
-		return fmt.Errorf("errors applying fixes: %v", errs)
+	if err != nil {
+		return fmt.Errorf("errors applying fixes: %+v", err)
 	}
 	return nil
 }

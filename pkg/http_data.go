@@ -104,7 +104,7 @@ func (h *HttpDatasource) HeaderValue(headers map[string]string) cty.Value {
 	return cty.MapVal(inner)
 }
 
-func (h *HttpDatasource) Parse(b *hclsyntax.Block) error {
+func (h *HttpDatasource) Eval(b *hclsyntax.Block) error {
 	var err error
 	if err = h.BaseData.Parse(b); err != nil {
 		return err

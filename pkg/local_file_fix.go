@@ -38,7 +38,7 @@ func (lf *LocalFile) ApplyFix() error {
 	return nil
 }
 
-func (lf *LocalFile) Parse(b *hclsyntax.Block) error {
+func (lf *LocalFile) Eval(b *hclsyntax.Block) error {
 	err := lf.BaseFix.Parse(b)
 	if err != nil {
 		return err

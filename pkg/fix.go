@@ -14,7 +14,7 @@ type Fix interface {
 	Name() string
 	ApplyFix() error
 	GetRuleId() string
-	Parse(b *hclsyntax.Block) error
+	Eval(b *hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
 	Value() cty.Value
 }
