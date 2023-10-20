@@ -3,16 +3,18 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"sync"
+
 	"github.com/emirpasic/gods/sets"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/packer/hcl2template"
+	"github.com/heimdalr/dag"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
-	"path/filepath"
-	"sync"
 )
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
@@ -54,6 +56,7 @@ type Config struct {
 	DataSources Datas
 	Rules       Rules
 	Fixes       Fixes
+	dag         *dag.DAG
 }
 
 func (c *Config) EvalContext() *hcl.EvalContext {
@@ -99,6 +102,26 @@ func ParseConfig(dir string, ctx context.Context) (*Config, error) {
 	}
 
 	var err error
+	blocks, err := config.loadHclBlocks(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, eval := range blockParsers {
+		for _, b := range blocks {
+			parseError := eval(config)(b)
+			if parseError != nil {
+				err = multierror.Append(err, parseError)
+			}
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	config.dag, err = config.walkDag()
+	return config, err
+}
+
+func (c *Config) loadHclBlocks(dir string) ([]*hclsyntax.Block, error) {
 	fs := FsFactory()
 	matches, err := afero.Glob(fs, fmt.Sprintf(filepath.Join(dir, "*.grept.hcl")))
 	if err != nil {
@@ -134,16 +157,7 @@ func ParseConfig(dir string, ctx context.Context) (*Config, error) {
 			continue
 		}
 	}
-	for _, parser := range blockParsers {
-		for _, b := range blocks {
-			parseError := parser(config)(b)
-			if parseError != nil {
-				err = multierror.Append(err, parseError)
-			}
-		}
-	}
-
-	return config, err
+	return blocks, err
 }
 
 func (c *Config) Plan() (Plan, error) {
@@ -181,7 +195,7 @@ func (c *Config) Plan() (Plan, error) {
 
 	errCh = make(chan error, len(c.Rules))
 
-	// Check all rules
+	// Eval all rules
 	for _, rule := range c.Rules {
 		wg.Add(1)
 		go func(rule Rule) {
@@ -224,6 +238,33 @@ func (c *Config) Plan() (Plan, error) {
 	}
 
 	return plan, nil
+}
+
+func (c *Config) walkDag() (*dag.DAG, error) {
+	g := dag.NewDAG()
+	var walkErr error
+	for _, d := range c.DataSources {
+		err := g.AddVertexByID(fmt.Sprintf("data.%s.%s", d.Type(), d.Name()), d)
+		if err != nil {
+			walkErr = multierror.Append(walkErr, err)
+			continue
+		}
+	}
+	for _, r := range c.Rules {
+		err := g.AddVertexByID(fmt.Sprintf("rule.%s.%s", r.Type(), r.Name()), r)
+		if err != nil {
+			walkErr = multierror.Append(walkErr, err)
+			continue
+		}
+	}
+	for _, f := range c.Fixes {
+		err := g.AddVertexByID(fmt.Sprintf("fix.%s.%s", f.Type(), f.Name()), f)
+		if err != nil {
+			walkErr = multierror.Append(walkErr, err)
+			continue
+		}
+	}
+	return g, nil
 }
 
 func readError(errors chan error) error {

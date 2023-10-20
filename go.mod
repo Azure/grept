@@ -10,6 +10,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/packer v1.8.0
+	github.com/heimdalr/dag v1.3.1
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.7.0
