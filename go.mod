@@ -5,16 +5,16 @@ go 1.20
 require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/google/uuid v1.3.1
-	github.com/hashicorp/go-getter/v2 v2.1.0
+	github.com/hashicorp/go-getter/v2 v2.2.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.4
-	github.com/hashicorp/hcl/v2 v2.18.1
+	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/packer v1.8.0
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
-	github.com/zclconf/go-cty v1.13.0
+	github.com/zclconf/go-cty v1.14.1
 	golang.org/x/net v0.17.0
 )
 
@@ -26,7 +26,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.0.1 // indirect
-	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-metrics v0.3.9 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
@@ -83,6 +82,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
+	github.com/klauspost/compress v1.13.5 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
