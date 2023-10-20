@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
@@ -10,8 +11,9 @@ var _ Fix = &LocalFile{}
 
 type LocalFile struct {
 	*BaseFix
-	Path    string `json:path`
-	Content string `json:content`
+	RuleId  string `json:"rule_id" hcl:"rule_id"`
+	Path    string `json:"path" hcl:"path"`
+	Content string `json:"content" hcl:"content"`
 }
 
 func (lf *LocalFile) Value() cty.Value {
@@ -41,10 +43,9 @@ func (lf *LocalFile) Parse(b *hclsyntax.Block) error {
 	if err != nil {
 		return err
 	}
-	lf.Path, err = readRequiredStringAttribute(b, "path", lf.EvalContext())
-	if err != nil {
-		return err
+	diag := gohcl.DecodeBody(b.Body, lf.EvalContext(), lf)
+	if diag.HasErrors() {
+		return diag
 	}
-	lf.Content, err = readRequiredStringAttribute(b, "content", lf.EvalContext())
 	return err
 }

@@ -25,8 +25,8 @@ func FixToString(f Fix) string {
 }
 
 type BaseFix struct {
-	name   string
-	RuleId string
+	name   string `json:"name" hcl:"name"`
+	RuleId string `json:"rule_id" hcl:"rule_id"`
 	c      *Config
 	hb     *hclsyntax.Block
 }

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"hash"
@@ -17,9 +18,9 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*BaseRule
-	Glob      string
-	Hash      string
-	Algorithm string
+	Glob      string `hcl:"glob"`
+	Hash      string `hcl:"hash"`
+	Algorithm string `hcl:"algorithm,optional"`
 }
 
 func (fhr *FileHashRule) Type() string {
@@ -39,14 +40,9 @@ func (fhr *FileHashRule) Parse(b *hclsyntax.Block) error {
 	if err != nil {
 		return err
 	}
-	if fhr.Glob, err = readRequiredStringAttribute(b, "glob", fhr.EvalContext()); err != nil {
-		return err
-	}
-	if fhr.Hash, err = readRequiredStringAttribute(b, "hash", fhr.EvalContext()); err != nil {
-		return err
-	}
-	if fhr.Algorithm, err = readOptionalStringAttribute(b, "algorithm", fhr.EvalContext()); err != nil {
-		return err
+	diag := gohcl.DecodeBody(b.Body, fhr.EvalContext(), fhr)
+	if diag.HasErrors() {
+		return diag
 	}
 	if fhr.Algorithm == "" {
 		fhr.Algorithm = "sha1"

@@ -175,6 +175,13 @@ func (c *Config) Plan() (Plan, error) {
 		wg.Add(1)
 		go func(data Data) {
 			defer wg.Done()
+
+			if v, ok := data.(Validatable); ok {
+				if err := v.Validate(); err != nil {
+					errCh <- fmt.Errorf("data.%s.%s is not valid: %s", data.Type(), data.Name(), err.Error())
+					return
+				}
+			}
 			if err := data.Load(); err != nil {
 				errCh <- fmt.Errorf("data.%s.%s throws error: %s", data.Type(), data.Name(), err.Error())
 			}

@@ -3,7 +3,10 @@ package pkg
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/emirpasic/gods/sets/hashset"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/http/httpproxy"
@@ -19,10 +22,10 @@ var _ Data = &HttpDatasource{}
 
 type HttpDatasource struct {
 	*BaseData
-	Url             string
-	Method          string
-	RequestBody     string
-	RequestHeaders  map[string]string
+	Url             string            `hcl:"url"`
+	Method          string            `hcl:"method,optional"`
+	RequestBody     string            `hcl:"request_body,optional"`
+	RequestHeaders  map[string]string `hcl:"request_headers,optional"`
 	ResponseBody    string
 	ResponseHeaders map[string]string
 	StatusCode      int
@@ -106,20 +109,22 @@ func (h *HttpDatasource) Parse(b *hclsyntax.Block) error {
 	if err = h.BaseData.Parse(b); err != nil {
 		return err
 	}
-	if h.Url, err = readRequiredStringAttribute(b, "url", h.EvalContext()); err != nil {
-		return err
-	}
-	if h.Method, err = readOptionalStringAttribute(b, "method", h.EvalContext()); err != nil {
-		return err
+	diag := gohcl.DecodeBody(b.Body, h.EvalContext(), h)
+	if diag.HasErrors() {
+		return diag
 	}
 	if h.Method == "" {
 		h.Method = "GET"
 	}
-	if h.RequestBody, err = readOptionalStringAttribute(b, "request_body", h.EvalContext()); err != nil {
-		return err
-	}
-	if h.RequestHeaders, err = readOptionalMapAttribute(b, "request_headers", h.EvalContext()); err != nil {
-		return err
-	}
 	return nil
+}
+
+var validHttpMethods = hashset.New("GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH")
+
+func (h *HttpDatasource) Validate() error {
+	var err error
+	if !validHttpMethods.Contains(h.Method) {
+		err = multierror.Append(err, fmt.Errorf(`"method"" must be one of "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"`))
+	}
+	return err
 }

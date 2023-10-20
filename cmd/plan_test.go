@@ -118,5 +118,5 @@ func TestPlanFunc_CheckFailure(t *testing.T) {
 
 	assert.Contains(t, output, "rule.file_hash.test check return failure:")
 	assert.Contains(t, output, "fix.local_file.test would be apply:")
-	assert.Contains(t, output, `"Content":"Mock server response"`)
+	assert.Contains(t, output, `"content":"Mock server response"`)
 }
