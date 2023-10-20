@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/google/uuid v1.3.1
-	github.com/hashicorp/go-getter/v2 v2.0.1
+	github.com/hashicorp/go-getter/v2 v2.1.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/hcl/v2 v2.18.1
