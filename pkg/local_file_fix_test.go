@@ -16,7 +16,7 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	})
 	defer stub.Reset()
 	fix := &LocalFile{
-		Path:    "/file1.txt",
+		Paths:   []string{"/file1.txt"},
 		Content: "Hello, world!",
 	}
 
@@ -24,7 +24,7 @@ func TestLocalFile_ApplyFix_CreateNewFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the file was created with the correct content
-	content, err := afero.ReadFile(fs, fix.Path)
+	content, err := afero.ReadFile(fs, fix.Paths[0])
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
 }
@@ -37,7 +37,7 @@ func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	defer stub.Reset()
 	fix := &LocalFile{
 		BaseFix: &BaseFix{RuleId: uuid.NewString()},
-		Path:    "/file1.txt",
+		Paths:   []string{"/file1.txt"},
 		Content: "Hello, world!",
 	}
 
@@ -51,7 +51,7 @@ func TestLocalFile_ApplyFix_OverwriteExistingFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the file was overwritten with the correct content
-	content, err := afero.ReadFile(fs, fix.Path)
+	content, err := afero.ReadFile(fs, fix.Paths[0])
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
 }

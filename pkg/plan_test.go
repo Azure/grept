@@ -31,7 +31,7 @@ func TestPlan_String(t *testing.T) {
 						BaseFix: &BaseFix{
 							name: "test-fix",
 						},
-						Path:    "test-path",
+						Paths:   []string{"test-path"},
 						Content: "test-content",
 					},
 				},

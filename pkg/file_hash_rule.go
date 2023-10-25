@@ -18,9 +18,11 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*BaseRule
-	Glob      string `hcl:"glob"`
-	Hash      string `hcl:"hash"`
-	Algorithm string `hcl:"algorithm,optional"`
+	Glob               string `hcl:"glob"`
+	Hash               string `hcl:"hash"`
+	Algorithm          string `hcl:"algorithm,optional"`
+	FailOnHashMismatch bool   `hcl:"fail_on_hash_mismatch,optional"`
+	HashMismatchFiles  []string
 }
 
 func (fhr *FileHashRule) Type() string {
@@ -29,9 +31,11 @@ func (fhr *FileHashRule) Type() string {
 
 func (fhr *FileHashRule) Value() cty.Value {
 	value := fhr.BaseRule.BaseValue()
-	value["glob"] = cty.StringVal(fhr.Glob)
-	value["hash"] = cty.StringVal(fhr.Hash)
-	value["algorithm"] = cty.StringVal(fhr.Algorithm)
+	value["glob"] = ToCtyValue(fhr.Glob)
+	value["hash"] = ToCtyValue(fhr.Hash)
+	value["algorithm"] = ToCtyValue(fhr.Algorithm)
+	value["fail_on_hash_mismatch"] = ToCtyValue(fhr.FailOnHashMismatch)
+	value["hash_mismatch_files"] = ToCtyValue(fhr.HashMismatchFiles)
 	return cty.ObjectVal(value)
 }
 
@@ -67,6 +71,7 @@ func (fhr *FileHashRule) Check() (error, error) {
 	if len(files) == 0 {
 		return fmt.Errorf("no files match path pattern: %s", fhr.Glob), nil
 	}
+	matchFound := false
 
 	for _, file := range files {
 		fileData, err := afero.ReadFile(fs, file)
@@ -92,11 +97,21 @@ func (fhr *FileHashRule) Check() (error, error) {
 		computedHash := fmt.Sprintf("%x", h.Sum(nil))
 
 		if computedHash == fhr.Hash {
-			return nil, nil
+			matchFound = true
+			continue
 		}
+		fhr.HashMismatchFiles = append(fhr.HashMismatchFiles, file)
 	}
 
-	return fmt.Errorf("no file with glob %s and hash %s found", fhr.Glob, fhr.Hash), nil
+	if !fhr.FailOnHashMismatch && matchFound {
+		return nil, nil
+	}
+
+	if len(fhr.HashMismatchFiles) == 0 {
+		return nil, nil
+	}
+
+	return fmt.Errorf("file with glob %s and  different hash than %s found", fhr.Glob, fhr.Hash), nil
 }
 
 func (fhr *FileHashRule) Validate() error {

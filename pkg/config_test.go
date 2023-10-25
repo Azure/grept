@@ -25,7 +25,7 @@ func TestParseConfig(t *testing.T) {
   
 	fix "local_file" hello_world{  
 		rule_id = rule.file_hash.sample.id
-		path = "/path/to/file.txt"  
+		paths = ["/path/to/file.txt"]  
 		content = "Hello, world!"
 	}  
 	`
@@ -47,7 +47,7 @@ func TestParseConfig(t *testing.T) {
 	lff, ok := config.Fixes[0].(*LocalFile)
 	require.True(t, ok)
 	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleId)
-	assert.Equal(t, "/path/to/file.txt", lff.Path)
+	assert.Equal(t, "/path/to/file.txt", lff.Paths[0])
 	assert.Equal(t, "Hello, world!", lff.Content)
 }
 
@@ -114,7 +114,7 @@ func TestEvalContextRef(t *testing.T) {
   
 	fix "local_file" hello_world{  
 		rule_id = rule.file_hash.sample.id
-		path = rule.file_hash.sample.glob  
+		paths = [rule.file_hash.sample.glob]  
 		content = "Hello, world!"
 	}
 `
@@ -124,21 +124,18 @@ func TestEvalContextRef(t *testing.T) {
 	assert.NoError(t, err)
 	require.Equal(t, 1, len(config.Fixes))
 	fix := config.Fixes[0].(*LocalFile)
-	assert.Equal(t, "LICENSE", fix.Path)
+	assert.Equal(t, "LICENSE", fix.Paths[0])
 }
 
 func TestFunctionInEvalContext(t *testing.T) {
-	// Create a in-memory filesystem
 	fs := afero.NewMemMapFs()
 	stub := gostub.Stub(&FsFactory, func() afero.Fs {
 		return fs
 	})
 	defer stub.Reset()
-	// Create a file with some content
 	fileContent := "Hello, world!"
 	_ = afero.WriteFile(fs, "/testfile", []byte(fileContent), 0644)
 
-	// Define a configuration string with a rule block that uses the md5 function
 	configStr := fmt.Sprintf(`  
 	rule "file_hash" "test_rule" {  
 		glob = "/testfile"  
@@ -148,7 +145,6 @@ func TestFunctionInEvalContext(t *testing.T) {
 	`, fileContent)
 	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(configStr), 0644)
 
-	// Parse the configuration string
 	config, err := ParseConfig(".", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -274,12 +270,10 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create a mock file system and write a file with the same content as the server
 	fs := afero.NewMemMapFs()
 	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
 	defer stub.Reset()
 
-	// Define a sample config for testing
 	sampleConfig := fmt.Sprintf(`  
 	data "http" "foo" {  
 		url = "%s"  
@@ -301,7 +295,6 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 
 	config.ctx = context.TODO()
 
-	// Test the Plan method
 	plan, err := config.Plan()
 	assert.Nil(t, err)
 	assert.Empty(t, plan)
@@ -332,7 +325,7 @@ func TestDag_DagVertex(t *testing.T) {
   
 	fix "local_file" hello_world{  
 		rule_id = rule.file_hash.sample.id
-		path = "/path/to/file.txt"  
+		paths = ["/path/to/file.txt"]  
 		content = "Hello, world!"
 	}  
 	`
@@ -357,4 +350,40 @@ func assertVertex[T block](t *testing.T, dag *dag.DAG, address string) {
 	split := strings.Split(address, ".")
 	name := split[len(split)-1]
 	assert.Equal(t, name, bb.Name())
+}
+
+func TestApplyPlan_multiple_file_fix(t *testing.T) {
+	content := `    
+	rule "file_hash" sample {    
+		glob = "/example/*/testfile"    
+		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // // SHA256 of "hello"    
+		algorithm = "sha256"    
+	}    
+    
+	fix "local_file" hello_world{    
+		rule_id = rule.file_hash.sample.id  
+		paths = rule.file_hash.sample.hash_mismatch_files  
+		content = "hello"  
+	}    
+	`
+
+	stub := dummyFsWithFiles([]string{"test.grept.hcl", "/example/sub1/testfile", "/example/sub2/testfile"}, []string{content, "world", "world"})
+	defer stub.Reset()
+
+	config, err := ParseConfig("", nil)
+	require.NoError(t, err)
+
+	plan, err := config.Plan()
+	require.NoError(t, err)
+
+	err = plan.Apply()
+	require.NoError(t, err)
+
+	content1, err := afero.ReadFile(FsFactory(), "/example/sub1/testfile")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", string(content1))
+
+	content2, err := afero.ReadFile(FsFactory(), "/example/sub2/testfile")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", string(content2))
 }

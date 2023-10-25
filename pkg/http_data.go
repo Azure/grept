@@ -83,25 +83,14 @@ func (h *HttpDatasource) Type() string {
 
 func (h *HttpDatasource) Value() cty.Value {
 	attrs := h.BaseValue()
-	attrs["url"] = cty.StringVal(h.Url)
-	attrs["method"] = cty.StringVal(h.Method)
-	attrs["request_body"] = cty.StringVal(h.RequestBody)
-	attrs["response_body"] = cty.StringVal(h.ResponseBody)
-	attrs["status_code"] = cty.NumberIntVal(int64(h.StatusCode))
-	attrs["request_headers"] = h.HeaderValue(h.RequestHeaders)
-	attrs["response_headers"] = h.HeaderValue(h.ResponseHeaders)
+	attrs["url"] = ToCtyValue(h.Url)
+	attrs["method"] = ToCtyValue(h.Method)
+	attrs["request_body"] = ToCtyValue(h.RequestBody)
+	attrs["response_body"] = ToCtyValue(h.ResponseBody)
+	attrs["status_code"] = ToCtyValue(int64(h.StatusCode))
+	attrs["request_headers"] = ToCtyValue(h.RequestHeaders)
+	attrs["response_headers"] = ToCtyValue(h.ResponseHeaders)
 	return cty.ObjectVal(attrs)
-}
-
-func (h *HttpDatasource) HeaderValue(headers map[string]string) cty.Value {
-	if len(headers) == 0 {
-		return cty.MapValEmpty(cty.String)
-	}
-	inner := make(map[string]cty.Value, 0)
-	for k, v := range headers {
-		inner[k] = cty.StringVal(v)
-	}
-	return cty.MapVal(inner)
 }
 
 func (h *HttpDatasource) Eval(b *hclsyntax.Block) error {
