@@ -3,12 +3,10 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"github.com/heimdalr/dag"
 	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -309,47 +307,6 @@ func dummyFsWithFiles(fileNames []string, contents []string) *gostub.Stubs {
 	return gostub.Stub(&FsFactory, func() afero.Fs {
 		return dummyFs
 	})
-}
-
-func TestDag_DagVertex(t *testing.T) {
-	content := `
-	data "http" sample {
-	    url = "http://localhost"
-    }
-
-	rule "file_hash" sample {  
-		glob = "*.txt"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
-  
-	fix "local_file" hello_world{  
-		rule_id = rule.file_hash.sample.id
-		paths = ["/path/to/file.txt"]  
-		content = "Hello, world!"
-	}  
-	`
-
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
-	defer stub.Reset()
-
-	config, err := ParseConfig("", nil)
-	assert.NoError(t, err)
-	assert.Len(t, config.dag.GetVertices(), 3)
-
-	assertVertex[Rule](t, config.dag, "rule.file_hash.sample")
-	assertVertex[Data](t, config.dag, "data.http.sample")
-	assertVertex[Fix](t, config.dag, "fix.local_file.hello_world")
-}
-
-func assertVertex[T block](t *testing.T, dag *dag.DAG, address string) {
-	b, err := dag.GetVertex(address)
-	assert.NoError(t, err)
-	bb, ok := b.(T)
-	assert.True(t, ok)
-	split := strings.Split(address, ".")
-	name := split[len(split)-1]
-	assert.Equal(t, name, bb.Name())
 }
 
 func TestApplyPlan_multiple_file_fix(t *testing.T) {

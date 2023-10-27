@@ -18,6 +18,7 @@ type block interface {
 	Eval(*hclsyntax.Block) error
 	Name() string
 	Type() string
+	BlockType() string
 	Value() cty.Value
 	HclSyntaxBlock() *hclsyntax.Block
 }

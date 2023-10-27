@@ -10,6 +10,7 @@ import (
 type Rule interface {
 	Check() (checkError error, runtimeError error)
 	Type() string
+	BlockType() string
 	Name() string
 	Id() string
 	Eval(*hclsyntax.Block) error
@@ -43,6 +44,10 @@ func (br *BaseRule) Id() string {
 
 func (br *BaseRule) Name() string {
 	return br.name
+}
+
+func (br *BaseRule) BlockType() string {
+	return "rule"
 }
 
 func (br *BaseRule) BaseValue() map[string]cty.Value {

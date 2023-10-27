@@ -264,6 +264,25 @@ func (c *Config) walkDag() (*dag.DAG, error) {
 			continue
 		}
 	}
+
+	for _, d := range c.DataSources {
+		diag := hclsyntax.Walk(d.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: d})
+		if diag.HasErrors() {
+			walkErr = multierror.Append(walkErr, diag.Errs()...)
+		}
+	}
+	for _, r := range c.Rules {
+		diag := hclsyntax.Walk(r.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: r})
+		if diag.HasErrors() {
+			walkErr = multierror.Append(walkErr, diag.Errs()...)
+		}
+	}
+	for _, f := range c.Fixes {
+		diag := hclsyntax.Walk(f.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: f})
+		if diag.HasErrors() {
+			walkErr = multierror.Append(walkErr, diag.Errs()...)
+		}
+	}
 	return g, nil
 }
 

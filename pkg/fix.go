@@ -11,6 +11,7 @@ import (
 
 type Fix interface {
 	Type() string
+	BlockType() string
 	Name() string
 	ApplyFix() error
 	GetRuleId() string
@@ -51,6 +52,10 @@ func (bf *BaseFix) HclSyntaxBlock() *hclsyntax.Block {
 
 func (bf *BaseFix) Name() string {
 	return bf.name
+}
+
+func (bf *BaseFix) BlockType() string {
+	return "fix"
 }
 
 func (bf *BaseFix) EvalContext() *hcl.EvalContext {

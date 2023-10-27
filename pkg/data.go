@@ -11,6 +11,7 @@ import (
 type Data interface {
 	Load() error
 	Type() string
+	BlockType() string
 	Name() string
 	Value() cty.Value
 	Eval(*hclsyntax.Block) error
@@ -31,6 +32,10 @@ func (bd *BaseData) Id() string {
 
 func (bd *BaseData) Name() string {
 	return bd.name
+}
+
+func (bd *BaseData) BlockType() string {
+	return "data"
 }
 
 func (bd *BaseData) Parse(b *hclsyntax.Block) error {
