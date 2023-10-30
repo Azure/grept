@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	
+
 	"github.com/emirpasic/gods/sets"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/hcl/v2"
@@ -24,9 +24,13 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 		traversals := expr.Variables()
 		for _, traversal := range traversals {
 			for i, traverser := range traversal {
-				if keywords.Contains(d.name(traverser)) && i < len(traversal)-3 && d.name(traversal[i+1]) != "" && d.name(traversal[i+2]) != "" && d.name(traversal[i+3]) != "" {
-					src := fmt.Sprintf("%s.%s.%s", d.name(traverser), d.name(traversal[i+1]), d.name(traversal[i+2]))
-					dest := fmt.Sprintf("%s.%s.%s", d.rootBlock.BlockType(), d.rootBlock.Type(), d.rootBlock.Name())
+				refIter, ok := refIters[name(traverser)]
+				if !ok {
+					continue
+				}
+				if ref := refIter(traversal, i); ref != nil {
+					src := *ref
+					dest := blockAddress(d.rootBlock)
 					children, err := d.dag.GetChildren(src)
 					if err != nil {
 						diag = diag.Append(&hcl.Diagnostic{
@@ -55,21 +59,4 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 
 func (d dagWalker) Exit(node hclsyntax.Node) hcl.Diagnostics {
 	return nil
-}
-
-func (d dagWalker) name(t hcl.Traverser) string {
-	switch t.(type) {
-	case hcl.TraverseRoot:
-		{
-			return t.(hcl.TraverseRoot).Name
-		}
-	case hcl.TraverseAttr:
-		{
-			return t.(hcl.TraverseAttr).Name
-		}
-	default:
-		{
-			return ""
-		}
-	}
 }

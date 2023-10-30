@@ -110,3 +110,15 @@ func concatLabels(labels []string) string {
 func refresh(b block) {
 	b.Eval(b.HclSyntaxBlock())
 }
+
+func blockAddress(b block) string {
+	sb := strings.Builder{}
+	sb.WriteString(b.BlockType())
+	sb.WriteString(".")
+	if t := b.Type(); t != "" {
+		sb.WriteString(t)
+		sb.WriteString(".")
+	}
+	sb.WriteString(b.Name())
+	return sb.String()
+}
