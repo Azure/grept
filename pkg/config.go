@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/hashicorp/packer/hcl2template"
 	"github.com/heimdalr/dag"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
@@ -62,7 +61,7 @@ type Config struct {
 
 func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
-		Functions: hcl2template.Functions(c.basedir),
+		Functions: functions(c.basedir),
 		Variables: map[string]cty.Value{
 			"data": Values(c.DataSources),
 			"rule": Values(c.Rules),
