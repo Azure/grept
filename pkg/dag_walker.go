@@ -3,15 +3,12 @@ package pkg
 import (
 	"fmt"
 
-	"github.com/emirpasic/gods/sets"
-	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/heimdalr/dag"
 )
 
 var _ hclsyntax.Walker = dagWalker{}
-var keywords sets.Set = hashset.New("data", "fix", "rule")
 
 type dagWalker struct {
 	dag       *dag.DAG
@@ -31,7 +28,7 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 				if ref := refIter(traversal, i); ref != nil {
 					src := *ref
 					dest := blockAddress(d.rootBlock)
-					children, err := d.dag.GetChildren(src)
+					dests, err := d.dag.GetChildren(src)
 					if err != nil {
 						diag = diag.Append(&hcl.Diagnostic{
 							Severity: hcl.DiagError,
@@ -40,7 +37,7 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 						})
 						continue
 					}
-					if _, ok := children[dest]; !ok {
+					if _, edgeExist := dests[dest]; !edgeExist {
 						err := d.dag.AddEdge(src, dest)
 						if err != nil {
 							diag = diag.Append(&hcl.Diagnostic{

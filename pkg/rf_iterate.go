@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"strings"
+
+	"github.com/hashicorp/hcl/v2"
 )
 
 type refIterator func(t []hcl.Traverser, i int) *string
