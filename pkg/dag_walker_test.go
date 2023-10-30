@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
@@ -69,6 +70,27 @@ func TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlock
 	assert.Len(t, roots, 1)
 	assertEdge(t, config.dag, "data.http.sample", "rule.file_hash.sample")
 	assertEdge(t, config.dag, "rule.file_hash.sample", "fix.local_file.hello_world")
+}
+
+func TestDag_CycleDependencyShouldCauseError(t *testing.T) {
+	content := `
+	data "http" sample {
+	    url = data.http.sample2.url
+    }
+
+	data "http" sample2 {
+		url = data.http.sample.url
+    }
+	`
+
+	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	defer stub.Reset()
+
+	_, err := ParseConfig("", nil)
+	require.NotNil(t, err)
+	// The error message must contain both of two blocks' address so we're sure that it's about the loop.
+	assert.Contains(t, err.Error(), "data.http.sample")
+	assert.Contains(t, err.Error(), "data.http.sample2")
 }
 
 func assertEdge(t *testing.T, dag *dag.DAG, src, dest string) {

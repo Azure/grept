@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/emirpasic/gods/sets"
@@ -69,7 +70,7 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 	}
 }
 
-func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*Config) block, postParseFunc func(*Config, block)) func(*hclsyntax.Block) error {
+func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*Config) block, blockRegisterFunc func(*Config, block)) func(*hclsyntax.Block) error {
 	return func(hb *hclsyntax.Block) error {
 		if hb.Type != expectedBlockType {
 			return nil
@@ -83,11 +84,11 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
 		}
 		b := f(c)
+		blockRegisterFunc(c, b)
 		err := b.Eval(hb)
 		if err != nil {
 			return fmt.Errorf("%s.%s.%s(%s) eval error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
 		}
-		postParseFunc(c, b)
 		return nil
 	}
 }
@@ -106,19 +107,27 @@ func ParseConfig(dir string, ctx context.Context) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	parseErr := config.parseBlocks(blocks)
+	// If there's dag error, return dag error first.
+	config.dag, err = config.walkDag()
+	if err != nil {
+		return nil, err
+	}
+
+	return config, parseErr
+}
+
+func (c *Config) parseBlocks(blocks []*hclsyntax.Block) error {
+	var err error
 	for _, eval := range blockParsers {
 		for _, b := range blocks {
-			parseError := eval(config)(b)
+			parseError := eval(c)(b)
 			if parseError != nil {
 				err = multierror.Append(err, parseError)
 			}
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
-	config.dag, err = config.walkDag()
-	return config, err
+	return err
 }
 
 func (c *Config) loadHclBlocks(dir string) ([]*hclsyntax.Block, error) {
@@ -242,48 +251,42 @@ func (c *Config) Plan() (Plan, error) {
 
 func (c *Config) walkDag() (*dag.DAG, error) {
 	g := dag.NewDAG()
+	var blocks []block
+	for _, d := range c.DataSources {
+		blocks = append(blocks, d)
+	}
+	for _, r := range c.Rules {
+		blocks = append(blocks, r)
+	}
+	for _, f := range c.Fixes {
+		blocks = append(blocks, f)
+	}
 	var walkErr error
-	for _, d := range c.DataSources {
-		err := g.AddVertexByID(fmt.Sprintf("data.%s.%s", d.Type(), d.Name()), d)
+	for _, b := range blocks {
+		err := g.AddVertexByID(address(b), b)
 		if err != nil {
 			walkErr = multierror.Append(walkErr, err)
-			continue
 		}
 	}
-	for _, r := range c.Rules {
-		err := g.AddVertexByID(fmt.Sprintf("rule.%s.%s", r.Type(), r.Name()), r)
-		if err != nil {
-			walkErr = multierror.Append(walkErr, err)
-			continue
+	for _, b := range blocks {
+		diag := hclsyntax.Walk(b.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: b})
+		if diag.HasErrors() {
+			walkErr = multierror.Append(walkErr, diag.Errs()...)
 		}
 	}
-	for _, f := range c.Fixes {
-		err := g.AddVertexByID(fmt.Sprintf("fix.%s.%s", f.Type(), f.Name()), f)
-		if err != nil {
-			walkErr = multierror.Append(walkErr, err)
-			continue
-		}
-	}
+	return g, walkErr
+}
 
-	for _, d := range c.DataSources {
-		diag := hclsyntax.Walk(d.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: d})
-		if diag.HasErrors() {
-			walkErr = multierror.Append(walkErr, diag.Errs()...)
-		}
+func address(b block) string {
+	sb := strings.Builder{}
+	sb.WriteString(b.BlockType())
+	sb.WriteString(".")
+	if t := b.Type(); t != "" {
+		sb.WriteString(t)
+		sb.WriteString(".")
 	}
-	for _, r := range c.Rules {
-		diag := hclsyntax.Walk(r.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: r})
-		if diag.HasErrors() {
-			walkErr = multierror.Append(walkErr, diag.Errs()...)
-		}
-	}
-	for _, f := range c.Fixes {
-		diag := hclsyntax.Walk(f.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: f})
-		if diag.HasErrors() {
-			walkErr = multierror.Append(walkErr, diag.Errs()...)
-		}
-	}
-	return g, nil
+	sb.WriteString(b.Name())
+	return sb.String()
 }
 
 func readError(errors chan error) error {
