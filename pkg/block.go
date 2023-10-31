@@ -23,42 +23,6 @@ type block interface {
 	HclSyntaxBlock() *hclsyntax.Block
 }
 
-var fixFactories = map[string]func(*Config) block{}
-
-func registerFix() {
-	fixFactories["local_file"] = func(c *Config) block {
-		return &LocalFile{
-			BaseFix: &BaseFix{
-				c: c,
-			},
-		}
-	}
-}
-
-var ruleFactories = map[string]func(*Config) block{}
-
-func registerRule() {
-	ruleFactories["file_hash"] = func(c *Config) block {
-		return &FileHashRule{
-			BaseRule: &BaseRule{
-				c: c,
-			},
-		}
-	}
-}
-
-var datasourceFactories = map[string]func(*Config) block{}
-
-func registerData() {
-	datasourceFactories["http"] = func(c *Config) block {
-		return &HttpDatasource{
-			BaseData: &BaseData{
-				c: c,
-			},
-		}
-	}
-}
-
 func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
 	if b == nil {
 		return "", fmt.Errorf("nil Block")
