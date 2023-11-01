@@ -57,7 +57,7 @@ func Values[T block](slice []T) cty.Value {
 		res[r.Type()] = cty.MapVal(inner)
 		valuesMap[r.Type()] = inner
 	}
-	return cty.MapVal(res)
+	return cty.ObjectVal(res)
 }
 
 func concatLabels(labels []string) string {

@@ -344,3 +344,26 @@ func TestApplyPlan_multiple_file_fix(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "hello", string(content2))
 }
+
+func TestConfig_MultipleTypeRules(t *testing.T) {
+	hcl := `
+rule file_hash license {
+  glob = "LICENSE"
+  hash = sha1("this is a fake license")
+}
+
+rule must_be_true test {
+  condition = env("OS") == "windows"
+}
+`
+	fs := afero.NewMemMapFs()
+	stub := gostub.Stub(&FsFactory, func() afero.Fs {
+		return fs
+	})
+	defer stub.Reset()
+
+	_ = afero.WriteFile(fs, "/test.grept.hcl", []byte(hcl), 0644)
+	c, err := ParseConfig("/", context.TODO())
+	assert.NoError(t, err)
+	assert.Len(t, c.Rules, 2)
+}
