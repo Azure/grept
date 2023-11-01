@@ -39,8 +39,8 @@ func (m *MustBeTrueRule) Eval(b *hclsyntax.Block) error {
 }
 
 func (m *MustBeTrueRule) Value() cty.Value {
-	return cty.ObjectVal(map[string]cty.Value{
-		"condition":     cty.BoolVal(m.Condition),
-		"error_message": cty.StringVal(m.ErrorMessage),
-	})
+	value := m.BaseRule.BaseValue()
+	value["condition"] = cty.BoolVal(m.Condition)
+	value["error_message"] = cty.StringVal(m.ErrorMessage)
+	return cty.ObjectVal(value)
 }

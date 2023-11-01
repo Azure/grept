@@ -49,9 +49,9 @@ func (g *GitIgnore) Type() string {
 }
 
 func (g *GitIgnore) Value() cty.Value {
-	return cty.ObjectVal(map[string]cty.Value{
-		"records": ToCtyValue(g.Records),
-	})
+	values := g.BaseValue()
+	values["records"] = ToCtyValue(g.Records)
+	return cty.ObjectVal(values)
 }
 
 func (g *GitIgnore) Eval(h *hclsyntax.Block) error {
