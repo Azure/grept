@@ -366,4 +366,6 @@ rule must_be_true test {
 	c, err := ParseConfig("/", context.TODO())
 	assert.NoError(t, err)
 	assert.Len(t, c.Rules, 2)
+	assert.Equal(t, "file_hash", c.Rules[0].Type())
+	assert.Equal(t, "must_be_true", c.Rules[1].Type())
 }

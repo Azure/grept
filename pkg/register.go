@@ -29,6 +29,13 @@ func registerRule() {
 			},
 		}
 	}
+	ruleFactories["dir_exist"] = func(c *Config) block {
+		return &DirExistRule{
+			BaseRule: &BaseRule{
+				c: c,
+			},
+		}
+	}
 }
 
 var datasourceFactories = map[string]func(*Config) block{}
