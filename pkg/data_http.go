@@ -81,8 +81,7 @@ func (h *HttpDatasource) Type() string {
 	return "http"
 }
 
-func (h *HttpDatasource) Value() cty.Value {
-	attrs := h.BaseValue()
+func (h *HttpDatasource) SetValues(attrs map[string]cty.Value) {
 	attrs["url"] = ToCtyValue(h.Url)
 	attrs["method"] = ToCtyValue(h.Method)
 	attrs["request_body"] = ToCtyValue(h.RequestBody)
@@ -90,7 +89,6 @@ func (h *HttpDatasource) Value() cty.Value {
 	attrs["status_code"] = ToCtyValue(int64(h.StatusCode))
 	attrs["request_headers"] = ToCtyValue(h.RequestHeaders)
 	attrs["response_headers"] = ToCtyValue(h.ResponseHeaders)
-	return cty.ObjectVal(attrs)
 }
 
 func (h *HttpDatasource) Eval(b *hclsyntax.Block) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
@@ -17,7 +18,8 @@ type Fix interface {
 	GetRuleId() string
 	Eval(b *hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
-	Value() cty.Value
+	SetValues(values map[string]cty.Value)
+	SetBaseValues(map[string]cty.Value)
 }
 
 func FixToString(f Fix) string {
@@ -30,6 +32,7 @@ type BaseFix struct {
 	RuleId string `json:"rule_id" hcl:"rule_id"`
 	c      *Config
 	hb     *hclsyntax.Block
+	id     string
 }
 
 func (bf *BaseFix) GetRuleId() string {
@@ -43,6 +46,9 @@ func (bf *BaseFix) Parse(b *hclsyntax.Block) (err error) {
 		return fmt.Errorf("cannot parse rule: %s, %s", b.Range().String(), err.Error())
 	}
 	bf.name = b.Labels[1]
+	if bf.id == "" {
+		bf.id = uuid.NewString()
+	}
 	return nil
 }
 
@@ -64,4 +70,8 @@ func (bf *BaseFix) EvalContext() *hcl.EvalContext {
 
 func (bf *BaseFix) Context() context.Context {
 	return bf.Context()
+}
+
+func (bf *BaseFix) SetBaseValues(values map[string]cty.Value) {
+	values["id"] = cty.StringVal(bf.id)
 }

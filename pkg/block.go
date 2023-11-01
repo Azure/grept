@@ -19,8 +19,9 @@ type block interface {
 	Name() string
 	Type() string
 	BlockType() string
-	Value() cty.Value
 	HclSyntaxBlock() *hclsyntax.Block
+	SetValues(values map[string]cty.Value)
+	SetBaseValues(values map[string]cty.Value)
 }
 
 func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
@@ -41,21 +42,26 @@ func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *
 	return value.AsString(), nil
 }
 
-func Values[T block](slice []T) cty.Value {
-	if len(slice) == 0 {
+func Values[T block](blocks []T) cty.Value {
+	if len(blocks) == 0 {
 		return cty.EmptyObjectVal
 	}
 	res := map[string]cty.Value{}
 	valuesMap := map[string]map[string]cty.Value{}
 
-	for _, r := range slice {
-		inner := valuesMap[r.Type()]
-		if inner == nil {
-			inner = map[string]cty.Value{}
+	for _, b := range blocks {
+		values := valuesMap[b.Type()]
+		if values == nil {
+			values = map[string]cty.Value{}
+			valuesMap[b.Type()] = values
 		}
-		inner[r.Name()] = r.Value()
-		res[r.Type()] = cty.MapVal(inner)
-		valuesMap[r.Type()] = inner
+		blockValues := map[string]cty.Value{}
+		b.SetBaseValues(blockValues)
+		b.SetValues(blockValues)
+		values[b.Name()] = cty.ObjectVal(blockValues)
+	}
+	for t, m := range valuesMap {
+		res[t] = cty.MapVal(m)
 	}
 	return cty.ObjectVal(res)
 }

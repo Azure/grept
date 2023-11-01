@@ -29,14 +29,12 @@ func (fhr *FileHashRule) Type() string {
 	return "file_hash"
 }
 
-func (fhr *FileHashRule) Value() cty.Value {
-	value := fhr.BaseRule.BaseValue()
+func (fhr *FileHashRule) SetValues(value map[string]cty.Value) {
 	value["glob"] = ToCtyValue(fhr.Glob)
 	value["hash"] = ToCtyValue(fhr.Hash)
 	value["algorithm"] = ToCtyValue(fhr.Algorithm)
 	value["fail_on_hash_mismatch"] = ToCtyValue(fhr.FailOnHashMismatch)
 	value["hash_mismatch_files"] = ToCtyValue(fhr.HashMismatchFiles)
-	return cty.ObjectVal(value)
 }
 
 func (fhr *FileHashRule) Eval(b *hclsyntax.Block) error {

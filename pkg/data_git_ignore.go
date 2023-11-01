@@ -48,10 +48,8 @@ func (g *GitIgnore) Type() string {
 	return "git_ignore"
 }
 
-func (g *GitIgnore) Value() cty.Value {
-	values := g.BaseValue()
+func (g *GitIgnore) SetValues(values map[string]cty.Value) {
 	values["records"] = ToCtyValue(g.Records)
-	return cty.ObjectVal(values)
 }
 
 func (g *GitIgnore) Eval(h *hclsyntax.Block) error {

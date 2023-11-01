@@ -36,12 +36,8 @@ func (rf *RenameFile) Eval(b *hclsyntax.Block) error {
 	return err
 }
 
-func (rf *RenameFile) Value() cty.Value {
-	return cty.ObjectVal(
-		map[string]cty.Value{
-			"rule_id":  ToCtyValue(rf.RuleId),
-			"old_name": ToCtyValue(rf.OldName),
-			"new_name": ToCtyValue(rf.NewName),
-		},
-	)
+func (rf *RenameFile) SetValues(values map[string]cty.Value) {
+	values["rule_id"] = ToCtyValue(rf.RuleId)
+	values["old_name"] = ToCtyValue(rf.OldName)
+	values["new_name"] = ToCtyValue(rf.NewName)
 }

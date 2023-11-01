@@ -17,12 +17,10 @@ type LocalFile struct {
 	Content string   `json:"content" hcl:"content"`
 }
 
-func (lf *LocalFile) Value() cty.Value {
-	return cty.ObjectVal(map[string]cty.Value{
-		"rule_id": ToCtyValue(lf.RuleId),
-		"paths":   ToCtyValue(lf.Paths),
-		"content": ToCtyValue(lf.Content),
-	})
+func (lf *LocalFile) SetValues(values map[string]cty.Value) {
+	values["rule_id"] = ToCtyValue(lf.RuleId)
+	values["paths"] = ToCtyValue(lf.Paths)
+	values["content"] = ToCtyValue(lf.Content)
 }
 
 func (lf *LocalFile) Type() string {

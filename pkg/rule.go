@@ -15,7 +15,8 @@ type Rule interface {
 	Id() string
 	Eval(*hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
-	Value() cty.Value
+	SetValues(values map[string]cty.Value)
+	SetBaseValues(map[string]cty.Value)
 }
 
 type BaseRule struct {
@@ -50,10 +51,8 @@ func (br *BaseRule) BlockType() string {
 	return "rule"
 }
 
-func (br *BaseRule) BaseValue() map[string]cty.Value {
-	return map[string]cty.Value{
-		"id": cty.StringVal(br.id),
-	}
+func (br *BaseRule) SetBaseValues(values map[string]cty.Value) {
+	values["id"] = cty.StringVal(br.id)
 }
 
 func (br *BaseRule) EvalContext() *hcl.EvalContext {
