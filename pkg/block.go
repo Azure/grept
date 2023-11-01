@@ -20,8 +20,8 @@ type block interface {
 	Type() string
 	BlockType() string
 	HclSyntaxBlock() *hclsyntax.Block
-	SetValues(values map[string]cty.Value)
-	SetBaseValues(values map[string]cty.Value)
+	Values() map[string]cty.Value
+	BaseValues() map[string]cty.Value
 }
 
 func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
@@ -56,8 +56,14 @@ func Values[T block](blocks []T) cty.Value {
 			valuesMap[b.Type()] = values
 		}
 		blockValues := map[string]cty.Value{}
-		b.SetBaseValues(blockValues)
-		b.SetValues(blockValues)
+		baseCtyValues := b.BaseValues()
+		ctyValues := b.Values()
+		for k, v := range ctyValues {
+			blockValues[k] = v
+		}
+		for k, v := range baseCtyValues {
+			blockValues[k] = v
+		}
 		values[b.Name()] = cty.ObjectVal(blockValues)
 	}
 	for t, m := range valuesMap {

@@ -16,8 +16,8 @@ type Data interface {
 	Eval(*hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
 	Id() string
-	SetValues(values map[string]cty.Value)
-	SetBaseValues(map[string]cty.Value)
+	Values() map[string]cty.Value
+	BaseValues() map[string]cty.Value
 }
 
 type BaseData struct {
@@ -52,8 +52,10 @@ func (bd *BaseData) HclSyntaxBlock() *hclsyntax.Block {
 	return bd.hb
 }
 
-func (bd *BaseData) SetBaseValues(values map[string]cty.Value) {
-	values["id"] = cty.StringVal(bd.id)
+func (bd *BaseData) BaseValues() map[string]cty.Value {
+	return map[string]cty.Value{
+		"id": cty.StringVal(bd.id),
+	}
 }
 
 func (bd *BaseData) EvalContext() *hcl.EvalContext {

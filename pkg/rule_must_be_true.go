@@ -38,7 +38,9 @@ func (m *MustBeTrueRule) Eval(b *hclsyntax.Block) error {
 	return nil
 }
 
-func (m *MustBeTrueRule) SetValues(value map[string]cty.Value) {
-	value["condition"] = cty.BoolVal(m.Condition)
-	value["error_message"] = cty.StringVal(m.ErrorMessage)
+func (m *MustBeTrueRule) Values() map[string]cty.Value {
+	return map[string]cty.Value{
+		"condition":     ToCtyValue(m.Condition),
+		"error_message": ToCtyValue(m.ErrorMessage),
+	}
 }

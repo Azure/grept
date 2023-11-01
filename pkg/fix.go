@@ -18,8 +18,8 @@ type Fix interface {
 	GetRuleId() string
 	Eval(b *hclsyntax.Block) error
 	HclSyntaxBlock() *hclsyntax.Block
-	SetValues(values map[string]cty.Value)
-	SetBaseValues(map[string]cty.Value)
+	Values() map[string]cty.Value
+	BaseValues() map[string]cty.Value
 }
 
 func FixToString(f Fix) string {
@@ -72,6 +72,8 @@ func (bf *BaseFix) Context() context.Context {
 	return bf.Context()
 }
 
-func (bf *BaseFix) SetBaseValues(values map[string]cty.Value) {
-	values["id"] = cty.StringVal(bf.id)
+func (bf *BaseFix) BaseValues() map[string]cty.Value {
+	return map[string]cty.Value{
+		"id": cty.StringVal(bf.id),
+	}
 }
