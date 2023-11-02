@@ -10,6 +10,20 @@ func registerFix() {
 			},
 		}
 	}
+	fixFactories["rename_file"] = func(c *Config) block {
+		return &RenameFile{
+			BaseFix: &BaseFix{
+				c: c,
+			},
+		}
+	}
+	fixFactories["rm_local_file"] = func(c *Config) block {
+		return &RmLocalFile{
+			BaseFix: &BaseFix{
+				c: c,
+			},
+		}
+	}
 }
 
 var ruleFactories = map[string]func(*Config) block{}
@@ -43,6 +57,13 @@ var datasourceFactories = map[string]func(*Config) block{}
 func registerData() {
 	datasourceFactories["http"] = func(c *Config) block {
 		return &HttpDatasource{
+			BaseData: &BaseData{
+				c: c,
+			},
+		}
+	}
+	datasourceFactories["git_ignore"] = func(c *Config) block {
+		return &GitIgnoreDatasource{
 			BaseData: &BaseData{
 				c: c,
 			},

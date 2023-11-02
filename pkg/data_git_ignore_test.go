@@ -32,8 +32,8 @@ func (s *gitIgnoreSuite) TestGitIgnore_Load() {
 	ignoreContent := "# This is a comment\n*.log\n"
 	_ = afero.WriteFile(fs, ".gitignore", []byte(ignoreContent), 0644)
 
-	// create GitIgnore instance and load .gitignore content
-	gitIgnore := &GitIgnore{
+	// create GitIgnoreDatasource instance and load .gitignore content
+	gitIgnore := &GitIgnoreDatasource{
 		BaseData: &BaseData{
 			c: &Config{},
 		},
@@ -51,8 +51,8 @@ func (s *gitIgnoreSuite) TestGitIgnore_Load() {
 func (s *gitIgnoreSuite) TestGitIgnore_NoGitIgnoreFile() {
 	t := s.T()
 
-	// create GitIgnore instance and load .gitignore content
-	gitIgnore := &GitIgnore{
+	// create GitIgnoreDatasource instance and load .gitignore content
+	gitIgnore := &GitIgnoreDatasource{
 		BaseData: &BaseData{
 			c: &Config{},
 		},
@@ -70,7 +70,7 @@ func (s *gitIgnoreSuite) TestGitIgnore_TabSpaceNewLine() {
 	content := "\t\n   \n \t \n\t \t\n\n\r\n"
 	_ = afero.WriteFile(fs, ".gitignore", []byte(content), 0644)
 
-	gitIgnore := &GitIgnore{
+	gitIgnore := &GitIgnoreDatasource{
 		BaseData: &BaseData{
 			c: &Config{},
 		},
