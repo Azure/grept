@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"strings"
 	"testing"
 
@@ -9,7 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDag_DagVertex(t *testing.T) {
+type dagSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestDagSuite(t *testing.T) {
+	suite.Run(t, new(dagSuite))
+}
+
+func (s *dagSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *dagSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *dagSuite) TestDag_DagVertex() {
+	t := s.T()
 	content := `
 	data "http" sample {
 	    url = "http://localhost"
@@ -28,8 +47,7 @@ func TestDag_DagVertex(t *testing.T) {
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
 	config, err := ParseConfig("", nil)
 	assert.NoError(t, err)
@@ -40,8 +58,8 @@ func TestDag_DagVertex(t *testing.T) {
 	assertVertex[Fix](t, config.dag, "fix.local_file.hello_world")
 }
 
-func TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlocks(t *testing.T) {
-
+func (s *dagSuite) TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlocks() {
+	t := s.T()
 	content := `
 	data "http" sample {
 	    url = "http://localhost"
@@ -60,8 +78,7 @@ func TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlock
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
 	config, err := ParseConfig("", nil)
 	assert.NoError(t, err)
@@ -72,7 +89,8 @@ func TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlock
 	assertEdge(t, config.dag, "rule.file_hash.sample", "fix.local_file.hello_world")
 }
 
-func TestDag_CycleDependencyShouldCauseError(t *testing.T) {
+func (s *dagSuite) TestDag_CycleDependencyShouldCauseError() {
+	t := s.T()
 	content := `
 	data "http" sample {
 	    url = data.http.sample2.url
@@ -83,8 +101,7 @@ func TestDag_CycleDependencyShouldCauseError(t *testing.T) {
     }
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
 	_, err := ParseConfig("", nil)
 	require.NotNil(t, err)

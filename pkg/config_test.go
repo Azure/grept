@@ -3,8 +3,8 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +13,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseConfig(t *testing.T) {
+type configSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestConfigSuite(t *testing.T) {
+	suite.Run(t, new(configSuite))
+}
+
+func (s *configSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *configSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *configSuite) TestParseConfig() {
 	content := `  
 	rule "file_hash" sample {  
 		glob = "*.txt"  
@@ -28,8 +45,8 @@ func TestParseConfig(t *testing.T) {
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	t := s.T()
 
 	config, err := ParseConfig("", nil)
 	assert.NoError(t, err)
@@ -49,7 +66,7 @@ func TestParseConfig(t *testing.T) {
 	assert.Equal(t, "Hello, world!", lff.Content)
 }
 
-func TestUnregisteredFix(t *testing.T) {
+func (s *configSuite) TestUnregisteredFix() {
 	hcl := `  
 	fix "unregistered_fix" sample {  
 		rule_id = "c01d7cf6-ec3f-47f0-9556-a5d6e9009a43"  
@@ -58,15 +75,15 @@ func TestUnregisteredFix(t *testing.T) {
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	defer stub.Reset()
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
 	_, err := ParseConfig(".", nil)
 	require.NotNil(t, err)
 	expectedError := "unregistered fix: unregistered_fix"
 	assert.Contains(t, err.Error(), expectedError)
 }
 
-func TestUnregisteredRule(t *testing.T) {
+func (s *configSuite) TestUnregisteredRule() {
 	hcl := `  
 	rule "unregistered_rule" sample {  
 		glob = "*.txt"  
@@ -75,8 +92,8 @@ func TestUnregisteredRule(t *testing.T) {
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	defer stub.Reset()
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
 	_, err := ParseConfig(".", nil)
 	require.NotNil(t, err)
 
@@ -84,7 +101,7 @@ func TestUnregisteredRule(t *testing.T) {
 	assert.Contains(t, err.Error(), expectedError)
 }
 
-func TestInvalidBlockType(t *testing.T) {
+func (s *configSuite) TestInvalidBlockType() {
 	hcl := `  
 	invalid_block "invalid_type" sample {  
 		glob = "*.txt"  
@@ -93,8 +110,8 @@ func TestInvalidBlockType(t *testing.T) {
 	}  
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	defer stub.Reset()
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
 	_, err := ParseConfig("", nil)
 	require.NotNil(t, err)
 
@@ -102,7 +119,7 @@ func TestInvalidBlockType(t *testing.T) {
 	assert.Contains(t, err.Error(), expectedError)
 }
 
-func TestEvalContextRef(t *testing.T) {
+func (s *configSuite) TestEvalContextRef() {
 	hcl := `
 	rule "file_hash" sample {  
 		glob = "LICENSE"  
@@ -116,8 +133,8 @@ func TestEvalContextRef(t *testing.T) {
 		content = "Hello, world!"
 	}
 `
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	defer stub.Reset()
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
 	config, err := ParseConfig("", nil)
 	assert.NoError(t, err)
 	require.Equal(t, 1, len(config.Fixes))
@@ -125,15 +142,9 @@ func TestEvalContextRef(t *testing.T) {
 	assert.Equal(t, "LICENSE", fix.Paths[0])
 }
 
-func TestFunctionInEvalContext(t *testing.T) {
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
+func (s *configSuite) TestFunctionInEvalContext() {
+	t := s.T()
 	fileContent := "Hello, world!"
-	_ = afero.WriteFile(fs, "/testfile", []byte(fileContent), 0644)
-
 	configStr := fmt.Sprintf(`  
 	rule "file_hash" "test_rule" {  
 		glob = "/testfile"  
@@ -141,13 +152,10 @@ func TestFunctionInEvalContext(t *testing.T) {
 		algorithm = "md5"  
 	}  
 	`, fileContent)
-	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(configStr), 0644)
+	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{fileContent, configStr})
 
 	config, err := ParseConfig(".", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	require.NoError(t, err)
 	require.Equal(t, 1, len(config.Rules))
 	rule, ok := config.Rules[0].(*FileHashRule)
 	require.True(t, ok)
@@ -155,8 +163,7 @@ func TestFunctionInEvalContext(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestParseConfigHttpBlock(t *testing.T) {
-	// Define a HCL configuration with an http block
+func (s *configSuite) TestParseConfigHttpBlock() {
 	hclConfig := `  
 	data "http" "example" {  
 		url = "http://example.com"  
@@ -170,8 +177,8 @@ func TestParseConfigHttpBlock(t *testing.T) {
 	`
 
 	dir := "."
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
-	defer stub.Reset()
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	// Parse the configuration
 	config, err := ParseConfig(dir, nil)
@@ -192,8 +199,8 @@ func TestParseConfigHttpBlock(t *testing.T) {
 	assert.Equal(t, "example", httpData.Name())
 }
 
-func TestPlanError_DatasourceError(t *testing.T) {
-	// Create a mock HTTP server that always returns an error
+func (s *configSuite) TestPlanError_DatasourceError() {
+	t := s.T()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Mock server error", http.StatusInternalServerError)
 	}))
@@ -205,8 +212,7 @@ func TestPlanError_DatasourceError(t *testing.T) {
 		url = "%s"  
 	}  
 `, server.URL)
-	stub := dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 	// Parse the config
 	config, err := ParseConfig(".", nil)
 	require.NoError(t, err)
@@ -221,19 +227,13 @@ func TestPlanError_DatasourceError(t *testing.T) {
 	assert.Contains(t, err.Error(), "data.http.foo")
 }
 
-func TestPlanError_FileHashRuleError(t *testing.T) {
+func (s *configSuite) TestPlanError_FileHashRuleError() {
+	t := s.T()
 	// Create a mock HTTP server that returns a specific content
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Mock server content"))
 	}))
 	defer server.Close()
-
-	// Create a mock file system and write a file
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
-	defer stub.Reset()
-
-	_ = afero.WriteFile(fs, "/testfile", []byte("Different content"), 0644)
 
 	// Define a sample config for testing
 	sampleConfig := fmt.Sprintf(`  
@@ -247,7 +247,7 @@ func TestPlanError_FileHashRuleError(t *testing.T) {
 		algorithm = "md5"  
 	}  
 	`, server.URL)
-	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(sampleConfig), 0644)
+	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{"Different content", sampleConfig})
 	// Parse the config
 	config, err := ParseConfig(".", nil)
 	require.NoError(t, err)
@@ -260,17 +260,14 @@ func TestPlanError_FileHashRuleError(t *testing.T) {
 	assert.Len(t, plan, 1)
 }
 
-func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
+func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
+	t := s.T()
 	expectedContent := "Hello World!"
 	// Create a mock HTTP server that returns a specific content
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(expectedContent))
 	}))
 	defer server.Close()
-
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
-	defer stub.Reset()
 
 	sampleConfig := fmt.Sprintf(`  
 	data "http" "foo" {  
@@ -283,11 +280,8 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 		algorithm = "md5"  
 	}  
 	`, server.URL)
+	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{expectedContent, sampleConfig})
 
-	_ = afero.WriteFile(fs, "/testfile", []byte(expectedContent), 0644)
-	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(sampleConfig), 0644)
-
-	// Parse the config
 	config, err := ParseConfig(".", nil)
 	require.NoError(t, err)
 
@@ -298,18 +292,8 @@ func TestPlanSuccess_FileHashRuleSuccess(t *testing.T) {
 	assert.Empty(t, plan)
 }
 
-func dummyFsWithFiles(fileNames []string, contents []string) *gostub.Stubs {
-	dummyFs := afero.NewMemMapFs()
-	for i, _ := range fileNames {
-		_ = afero.WriteFile(dummyFs, fileNames[i], []byte(contents[i]), 0644)
-	}
-
-	return gostub.Stub(&FsFactory, func() afero.Fs {
-		return dummyFs
-	})
-}
-
-func TestApplyPlan_multiple_file_fix(t *testing.T) {
+func (s *configSuite) TestApplyPlan_multiple_file_fix() {
+	t := s.T()
 	content := `    
 	rule "file_hash" sample {    
 		glob = "/example/*/testfile"    
@@ -324,8 +308,7 @@ func TestApplyPlan_multiple_file_fix(t *testing.T) {
 	}    
 	`
 
-	stub := dummyFsWithFiles([]string{"test.grept.hcl", "/example/sub1/testfile", "/example/sub2/testfile"}, []string{content, "world", "world"})
-	defer stub.Reset()
+	s.dummyFsWithFiles([]string{"test.grept.hcl", "/example/sub1/testfile", "/example/sub2/testfile"}, []string{content, "world", "world"})
 
 	config, err := ParseConfig("", nil)
 	require.NoError(t, err)
@@ -345,7 +328,8 @@ func TestApplyPlan_multiple_file_fix(t *testing.T) {
 	assert.Equal(t, "hello", string(content2))
 }
 
-func TestConfig_MultipleTypeRules(t *testing.T) {
+func (s *configSuite) TestConfig_MultipleTypeRules() {
+	t := s.T()
 	hcl := `
 rule file_hash license {
   glob = "LICENSE"
@@ -356,13 +340,8 @@ rule must_be_true test {
   condition = env("OS") == "windows"
 }
 `
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
 
-	_ = afero.WriteFile(fs, "/test.grept.hcl", []byte(hcl), 0644)
+	s.dummyFsWithFiles([]string{"/test.grept.hcl"}, []string{hcl})
 	c, err := ParseConfig("/", context.TODO())
 	assert.NoError(t, err)
 	assert.Len(t, c.Rules, 2)

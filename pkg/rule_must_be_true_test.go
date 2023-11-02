@@ -3,17 +3,35 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func TestMustBeTrueRule_Check(t *testing.T) {
+type mustBeTrueRuleSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestMustBeTrueRuleSuite(t *testing.T) {
+	suite.Run(t, new(mustBeTrueRuleSuite))
+}
+
+func (s *mustBeTrueRuleSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *mustBeTrueRuleSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Check() {
+	t := s.T()
 	tests := []struct {
 		name        string
 		rule        *MustBeTrueRule
@@ -54,7 +72,9 @@ func TestMustBeTrueRule_Check(t *testing.T) {
 	}
 }
 
-func TestMustBeTrueRule_Eval(t *testing.T) {
+func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
+	fs := s.fs
+	t := s.T()
 	expectedContent := "hello world"
 	temp, err := os.CreateTemp("", "testfile")
 	require.NoError(t, err)
@@ -63,20 +83,14 @@ func TestMustBeTrueRule_Eval(t *testing.T) {
 	err = temp.Close()
 	defer func() {
 		s := temp.Name()
-		err := os.Remove(s)
-		print(err)
+		_ = os.Remove(s)
 	}()
 
-	fs := afero.NewMemMapFs()
 	_ = afero.WriteFile(fs, "/test.grept.hcl", []byte(fmt.Sprintf(`
 	rule "must_be_true" sample {
 		condition = file("%s") == "hello world"
 	}
 `, filepath.ToSlash(temp.Name()))), 0644)
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
 
 	c, err := ParseConfig("/", context.TODO())
 	require.NoError(t, err)
@@ -85,7 +99,8 @@ func TestMustBeTrueRule_Eval(t *testing.T) {
 	assert.Empty(t, plan)
 }
 
-func TestMustBeTrueRule_Value(t *testing.T) {
+func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Value() {
+	t := s.T()
 	mustBeTrueRule := &MustBeTrueRule{
 		BaseRule:     &BaseRule{},
 		Condition:    true,

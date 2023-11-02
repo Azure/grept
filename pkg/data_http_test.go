@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,8 +12,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHttpDatasource_Load(t *testing.T) {
-	// Create a mock HTTP server
+type httpDataSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestHttpDataSuite(t *testing.T) {
+	suite.Run(t, new(httpDataSuite))
+}
+
+func (s *httpDataSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *httpDataSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *httpDataSuite) TestHttpDatasource_Load() {
+	t := s.T()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mock response
 		w.Header().Set("Content-Type", "text/plain")

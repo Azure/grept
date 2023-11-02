@@ -1,21 +1,33 @@
 package pkg
 
 import (
-	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestRenameFile_ApplyFix(t *testing.T) {
-	fs := afero.NewMemMapFs()
+type renameFileFixSuite struct {
+	suite.Suite
+	*testBase
+}
 
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
+func TestRenameFixSuite(t *testing.T) {
+	suite.Run(t, new(renameFileFixSuite))
+}
 
+func (s *renameFileFixSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *renameFileFixSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *renameFileFixSuite) TestRenameFile_ApplyFix() {
+	fs := s.fs
+	t := s.T()
 	// Create temporary file for testing
 	tmpFile, err := afero.TempFile(fs, "", "test")
 	assert.NoError(t, err)

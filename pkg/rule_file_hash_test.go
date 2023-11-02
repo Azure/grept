@@ -4,20 +4,34 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"fmt"
-	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
 )
 
-func TestFileHashRule_Check(t *testing.T) {
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
+type fileHashRuleSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestFileHashRuleSuite(t *testing.T) {
+	suite.Run(t, new(fileHashRuleSuite))
+}
+
+func (s *fileHashRuleSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *fileHashRuleSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *fileHashRuleSuite) TestFileHashRule_Check() {
+	fs := s.fs
+	t := s.T()
 	// Write some test files
 	filePaths := []string{"./file1.txt", "./file2.txt", "./file3.txt", "./pkg/sub/subfile1.txt"}
 	fileContents := []string{"hello", "world", "golang", "world"}
@@ -74,12 +88,8 @@ func TestFileHashRule_Check(t *testing.T) {
 	}
 }
 
-func TestFileHashRule_Validate(t *testing.T) {
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
+func (s *fileHashRuleSuite) TestFileHashRule_Validate() {
+	t := s.T()
 	tests := []struct {
 		name      string
 		rule      *FileHashRule
@@ -131,8 +141,9 @@ func TestFileHashRule_Validate(t *testing.T) {
 	}
 }
 
-func TestFileHashRule_HashMismatchFilesShouldBeExported(t *testing.T) {
-	fs := afero.NewMemMapFs()
+func (s *fileHashRuleSuite) TestFileHashRule_HashMismatchFilesShouldBeExported() {
+	fs := s.fs
+	t := s.T()
 	filename := "/example/sub1/testfile.txt"
 	_ = afero.WriteFile(fs, filename, []byte("test content"), 0644)
 	rule := &FileHashRule{
@@ -142,20 +153,15 @@ func TestFileHashRule_HashMismatchFilesShouldBeExported(t *testing.T) {
 		Glob: "/example/*/testfile.txt",
 		Hash: "non-matching-hash", // MD5 hash that doesn't match "test content"
 	}
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
-
 	checkErr, runtimeErr := rule.Check()
 	assert.Nil(t, runtimeErr)
 	assert.NotNil(t, checkErr)
 	assert.Contains(t, rule.HashMismatchFiles, filepath.FromSlash(filename))
 }
 
-func TestFileHashRule_FailOnHashMismatch(t *testing.T) {
-	// Create a temporary file system
-	fs := afero.NewMemMapFs()
+func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
+	fs := s.fs
+	t := s.T()
 
 	expectedContent := "hello"
 	expectedHash := "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // SHA256 of "hello"
@@ -164,11 +170,6 @@ func TestFileHashRule_FailOnHashMismatch(t *testing.T) {
 	_ = afero.WriteFile(fs, "/example/sub2/testfile", []byte("world"), 0644)
 	_ = afero.WriteFile(fs, "/example2/sub1/testfile", []byte(expectedContent), 0644)
 	_ = afero.WriteFile(fs, "/example2/sub2/testfile", []byte(expectedContent), 0644)
-
-	// Set the file system factory to use the temporary file system
-	FsFactory = func() afero.Fs {
-		return fs
-	}
 
 	tests := []struct {
 		name      string

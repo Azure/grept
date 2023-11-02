@@ -36,7 +36,10 @@ func (g *GitIgnore) Load() error {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "#") {
+		line = strings.TrimFunc(line, func(r rune) bool {
+			return r == '\t' || r == ' '
+		})
+		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
 		g.Records = append(g.Records, line)

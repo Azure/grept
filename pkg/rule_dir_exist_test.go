@@ -2,24 +2,38 @@ package pkg
 
 import (
 	"context"
-	"github.com/prashantv/gostub"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestConfig_DirExistRule(t *testing.T) {
+type dirExistRuleSuite struct {
+	suite.Suite
+	*testBase
+}
+
+func TestDirExistRuleSuite(t *testing.T) {
+	suite.Run(t, new(dirExistRuleSuite))
+}
+
+func (s *dirExistRuleSuite) SetupTest() {
+	s.testBase = newTestBase()
+}
+
+func (s *dirExistRuleSuite) TearDownTest() {
+	s.teardown()
+}
+
+func (s *dirExistRuleSuite) TestConfig_DirExistRule() {
+	fs := s.fs
+	t := s.T()
 	hcl := `  
 rule dir_exist test {  
   dir = "./testdir"  
 }`
 
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
 	err := fs.Mkdir("./testdir", 0755)
 	require.NoError(t, err)
 
@@ -37,17 +51,14 @@ rule dir_exist test {
 	assert.NoError(t, runtimeError)
 }
 
-func TestConfig_DirExistRule_CheckFailed(t *testing.T) {
+func (s *dirExistRuleSuite) TestConfig_DirExistRule_CheckFailed() {
 	hcl := `  
 rule dir_exist test {  
   dir = "./nonexistent"  
 }`
 
-	fs := afero.NewMemMapFs()
-	stub := gostub.Stub(&FsFactory, func() afero.Fs {
-		return fs
-	})
-	defer stub.Reset()
+	fs := s.fs
+	t := s.T()
 	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(hcl), 0644)
 	c, err := ParseConfig(".", context.Background())
 	if err != nil {
