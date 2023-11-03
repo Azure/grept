@@ -21,7 +21,6 @@ import (
 var _ Data = &HttpDatasource{}
 
 type HttpDatasource struct {
-	*baseBlock
 	baseData
 	Url             string            `hcl:"url"`
 	Method          string            `hcl:"method,optional"`

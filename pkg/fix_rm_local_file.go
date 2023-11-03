@@ -10,7 +10,6 @@ import (
 var _ Fix = &RmLocalFile{}
 
 type RmLocalFile struct {
-	*baseBlock
 	baseFix
 	RuleId string   `hcl:"rule_id"`
 	Paths  []string `hcl:"paths"`

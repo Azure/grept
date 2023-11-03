@@ -11,7 +11,6 @@ import (
 var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
-	*baseBlock
 	baseRule
 	Dir string `hcl:"dir"`
 }

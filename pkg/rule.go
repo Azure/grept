@@ -17,7 +17,9 @@ type Rule interface {
 	BaseValues() map[string]cty.Value
 }
 
-type baseRule struct{}
+type baseRule struct {
+	*baseBlock
+}
 
 func (br baseRule) BlockType() string {
 	return "rule"

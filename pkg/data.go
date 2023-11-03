@@ -17,7 +17,9 @@ type Data interface {
 	BaseValues() map[string]cty.Value
 }
 
-type baseData struct{}
+type baseData struct {
+	*baseBlock
+}
 
 func (bd baseData) BlockType() string {
 	return "data"

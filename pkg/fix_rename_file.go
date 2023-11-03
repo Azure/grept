@@ -9,7 +9,6 @@ import (
 var _ Fix = &RenameFile{}
 
 type RenameFile struct {
-	*baseBlock
 	baseFix
 	RuleId  string `json:"rule_id" hcl:"rule_id"`
 	OldName string `json:"old_name" hcl:"old_name"`

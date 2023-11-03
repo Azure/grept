@@ -23,7 +23,9 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-type baseFix struct{}
+type baseFix struct {
+	*baseBlock
+}
 
 func (bf baseFix) BlockType() string {
 	return "fix"

@@ -13,7 +13,6 @@ import (
 var _ Data = &GitIgnoreDatasource{}
 
 type GitIgnoreDatasource struct {
-	*baseBlock
 	baseData
 	Records []string
 }

@@ -10,7 +10,6 @@ import (
 var _ Rule = &MustBeTrueRule{}
 
 type MustBeTrueRule struct {
-	*baseBlock
 	baseRule
 	Condition    bool   `hcl:"condition"`
 	ErrorMessage string `hcl:"error_message,optional"`
