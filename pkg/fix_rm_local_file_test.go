@@ -32,7 +32,7 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileExist() {
 	tmpFile, err := afero.TempFile(fs, "", "test")
 	require.NoError(t, err)
 	fileName := tmpFile.Name()
-	rf := &RmLocalFile{
+	rf := &RmLocalFileFix{
 		baseFix: baseFix{
 			baseBlock: &baseBlock{
 				c: &Config{},
@@ -52,7 +52,7 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileExist() {
 func (s *fixRmLocalFileSuite) TestRemoveFile_FileNotExist() {
 	t := s.T()
 	fileName := "/path/to/not-exist-file"
-	rf := &RmLocalFile{
+	rf := &RmLocalFileFix{
 		baseFix: baseFix{
 			baseBlock: &baseBlock{
 				c: &Config{},

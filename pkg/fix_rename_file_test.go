@@ -34,8 +34,8 @@ func (s *renameFileFixSuite) TestRenameFile_ApplyFix() {
 	oldName := tmpFile.Name()
 	newName := oldName + "_renamed"
 
-	// Initialize RenameFile fix
-	rf := &RenameFile{
+	// Initialize RenameFileFix fix
+	rf := &RenameFileFix{
 		baseFix: baseFix{
 			baseBlock: &baseBlock{
 				c: &Config{},

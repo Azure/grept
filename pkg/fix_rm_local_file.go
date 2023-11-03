@@ -7,23 +7,23 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-var _ Fix = &RmLocalFile{}
+var _ Fix = &RmLocalFileFix{}
 
-type RmLocalFile struct {
+type RmLocalFileFix struct {
 	baseFix
 	RuleId string   `hcl:"rule_id"`
 	Paths  []string `hcl:"paths"`
 }
 
-func (r *RmLocalFile) GetRuleId() string {
+func (r *RmLocalFileFix) GetRuleId() string {
 	return r.RuleId
 }
 
-func (r *RmLocalFile) Type() string {
+func (r *RmLocalFileFix) Type() string {
 	return "rm_local_file"
 }
 
-func (r *RmLocalFile) ApplyFix() error {
+func (r *RmLocalFileFix) ApplyFix() error {
 	fs := FsFactory()
 	var err error
 	for _, path := range r.Paths {
@@ -35,7 +35,7 @@ func (r *RmLocalFile) ApplyFix() error {
 	return err
 }
 
-func (r *RmLocalFile) Eval(b *hclsyntax.Block) error {
+func (r *RmLocalFileFix) Eval(b *hclsyntax.Block) error {
 	err := r.baseBlock.Parse(b)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (r *RmLocalFile) Eval(b *hclsyntax.Block) error {
 	return err
 }
 
-func (r *RmLocalFile) Values() map[string]cty.Value {
+func (r *RmLocalFileFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
 		"paths": ToCtyValue(r.Paths),
 	}

@@ -13,7 +13,7 @@ func registerFix() {
 		}
 	}
 	fixFactories["rename_file"] = func(c *Config) block {
-		return &RenameFile{
+		return &RenameFileFix{
 			baseFix: baseFix{
 				baseBlock: &baseBlock{
 					c: c,
@@ -22,7 +22,7 @@ func registerFix() {
 		}
 	}
 	fixFactories["rm_local_file"] = func(c *Config) block {
-		return &RmLocalFile{
+		return &RmLocalFileFix{
 			baseFix: baseFix{
 				baseBlock: &baseBlock{
 					c: c,
