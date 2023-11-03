@@ -29,7 +29,7 @@ func (s *localFileFixSuite) TearDownTest() {
 func (s *localFileFixSuite) TestLocalFile_ApplyFix_CreateNewFile() {
 	fs := s.fs
 	t := s.T()
-	fix := &LocalFile{
+	fix := &LocalFileFix{
 		Paths:   []string{"/file1.txt"},
 		Content: "Hello, world!",
 	}
@@ -47,8 +47,8 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	fs := s.fs
 	t := s.T()
 	path := "/file1.txt"
-	fix := &LocalFile{
-		BaseFix: &BaseFix{RuleId: uuid.NewString()},
+	fix := &LocalFileFix{
+		baseFix: &baseFix{RuleId: uuid.NewString()},
 		Paths:   []string{path},
 		Content: "Hello, world!",
 	}
@@ -72,8 +72,8 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	fs := s.fs
 	t := s.T()
 	path := "/example/sub1/file1.txt"
-	fix := &LocalFile{
-		BaseFix: &BaseFix{RuleId: uuid.NewString()},
+	fix := &LocalFileFix{
+		baseFix: &baseFix{RuleId: uuid.NewString()},
 		Paths:   []string{path},
 		Content: "Hello, world!",
 	}

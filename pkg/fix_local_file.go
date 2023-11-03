@@ -8,16 +8,17 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-var _ Fix = &LocalFile{}
+var _ Fix = &LocalFileFix{}
 
-type LocalFile struct {
-	*BaseFix
+type LocalFileFix struct {
+	*baseBlock
+	*baseFix
 	RuleId  string   `json:"rule_id" hcl:"rule_id"`
 	Paths   []string `json:"paths" hcl:"paths"`
 	Content string   `json:"content" hcl:"content"`
 }
 
-func (lf *LocalFile) Values() map[string]cty.Value {
+func (lf *LocalFileFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
 		"rule_id": ToCtyValue(lf.RuleId),
 		"paths":   ToCtyValue(lf.Paths),
@@ -25,13 +26,11 @@ func (lf *LocalFile) Values() map[string]cty.Value {
 	}
 }
 
-func (lf *LocalFile) Type() string {
+func (lf *LocalFileFix) Type() string {
 	return "local_file"
 }
 
-var _ Fix = &LocalFile{}
-
-func (lf *LocalFile) ApplyFix() error {
+func (lf *LocalFileFix) ApplyFix() error {
 	var err error
 	for _, path := range lf.Paths {
 		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), 0644)
@@ -43,8 +42,8 @@ func (lf *LocalFile) ApplyFix() error {
 	return err
 }
 
-func (lf *LocalFile) Eval(b *hclsyntax.Block) error {
-	err := lf.BaseFix.Parse(b)
+func (lf *LocalFileFix) Eval(b *hclsyntax.Block) error {
+	err := lf.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

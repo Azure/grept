@@ -10,7 +10,8 @@ import (
 var _ Rule = &MustBeTrueRule{}
 
 type MustBeTrueRule struct {
-	*BaseRule
+	*baseBlock
+	*baseRule
 	Condition    bool   `hcl:"condition"`
 	ErrorMessage string `hcl:"error_message,optional"`
 }
@@ -27,7 +28,7 @@ func (m *MustBeTrueRule) Type() string {
 }
 
 func (m *MustBeTrueRule) Eval(b *hclsyntax.Block) error {
-	err := m.BaseRule.Parse(b)
+	err := m.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

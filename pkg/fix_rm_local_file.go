@@ -10,7 +10,8 @@ import (
 var _ Fix = &RmLocalFile{}
 
 type RmLocalFile struct {
-	*BaseFix
+	*baseBlock
+	*baseFix
 	Paths []string `hcl:"paths"`
 }
 
@@ -31,7 +32,7 @@ func (r *RmLocalFile) ApplyFix() error {
 }
 
 func (r *RmLocalFile) Eval(b *hclsyntax.Block) error {
-	err := r.BaseFix.Parse(b)
+	err := r.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

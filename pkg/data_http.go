@@ -21,7 +21,8 @@ import (
 var _ Data = &HttpDatasource{}
 
 type HttpDatasource struct {
-	*BaseData
+	*baseData
+	*baseBlock
 	Url             string            `hcl:"url"`
 	Method          string            `hcl:"method,optional"`
 	RequestBody     string            `hcl:"request_body,optional"`
@@ -95,7 +96,7 @@ func (h *HttpDatasource) Values() map[string]cty.Value {
 
 func (h *HttpDatasource) Eval(b *hclsyntax.Block) error {
 	var err error
-	if err = h.BaseData.Parse(b); err != nil {
+	if err = h.baseBlock.Parse(b); err != nil {
 		return err
 	}
 	diag := gohcl.DecodeBody(b.Body, h.EvalContext(), h)

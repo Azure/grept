@@ -4,22 +4,22 @@ var fixFactories = map[string]func(*Config) block{}
 
 func registerFix() {
 	fixFactories["local_file"] = func(c *Config) block {
-		return &LocalFile{
-			BaseFix: &BaseFix{
+		return &LocalFileFix{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
 	}
 	fixFactories["rename_file"] = func(c *Config) block {
 		return &RenameFile{
-			BaseFix: &BaseFix{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
 	}
 	fixFactories["rm_local_file"] = func(c *Config) block {
 		return &RmLocalFile{
-			BaseFix: &BaseFix{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
@@ -31,21 +31,21 @@ var ruleFactories = map[string]func(*Config) block{}
 func registerRule() {
 	ruleFactories["file_hash"] = func(c *Config) block {
 		return &FileHashRule{
-			BaseRule: &BaseRule{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
 	}
 	ruleFactories["must_be_true"] = func(c *Config) block {
 		return &MustBeTrueRule{
-			BaseRule: &BaseRule{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
 	}
 	ruleFactories["dir_exist"] = func(c *Config) block {
 		return &DirExistRule{
-			BaseRule: &BaseRule{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
@@ -57,14 +57,14 @@ var datasourceFactories = map[string]func(*Config) block{}
 func registerData() {
 	datasourceFactories["http"] = func(c *Config) block {
 		return &HttpDatasource{
-			BaseData: &BaseData{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}
 	}
 	datasourceFactories["git_ignore"] = func(c *Config) block {
 		return &GitIgnoreDatasource{
-			BaseData: &BaseData{
+			baseBlock: &baseBlock{
 				c: c,
 			},
 		}

@@ -17,7 +17,8 @@ import (
 var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
-	*BaseRule
+	*baseBlock
+	*baseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
 	Algorithm          string `hcl:"algorithm,optional"`
@@ -40,7 +41,7 @@ func (fhr *FileHashRule) Values() map[string]cty.Value {
 }
 
 func (fhr *FileHashRule) Eval(b *hclsyntax.Block) error {
-	err := fhr.BaseRule.Parse(b)
+	err := fhr.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

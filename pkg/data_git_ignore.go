@@ -13,7 +13,8 @@ import (
 var _ Data = &GitIgnoreDatasource{}
 
 type GitIgnoreDatasource struct {
-	*BaseData
+	*baseData
+	*baseBlock
 	Records []string
 }
 
@@ -59,7 +60,7 @@ func (g *GitIgnoreDatasource) Values() map[string]cty.Value {
 
 func (g *GitIgnoreDatasource) Eval(h *hclsyntax.Block) error {
 	var err error
-	if err = g.BaseData.Parse(h); err != nil {
+	if err = g.baseBlock.Parse(h); err != nil {
 		return err
 	}
 	diag := gohcl.DecodeBody(h.Body, g.EvalContext(), g)

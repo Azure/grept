@@ -9,7 +9,8 @@ import (
 var _ Fix = &RenameFile{}
 
 type RenameFile struct {
-	*BaseFix
+	*baseBlock
+	*baseFix
 	RuleId  string `json:"rule_id" hcl:"rule_id"`
 	OldName string `json:"old_name" hcl:"old_name"`
 	NewName string `json:"new_name" hcl:"new_name"`
@@ -25,7 +26,7 @@ func (rf *RenameFile) ApplyFix() error {
 }
 
 func (rf *RenameFile) Eval(b *hclsyntax.Block) error {
-	err := rf.BaseFix.Parse(b)
+	err := rf.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ func (s *configSuite) TestParseConfig() {
 	assert.Equal(t, "sha256", fhr.Algorithm)
 
 	assert.Equal(t, 1, len(config.Fixes))
-	lff, ok := config.Fixes[0].(*LocalFile)
+	lff, ok := config.Fixes[0].(*LocalFileFix)
 	require.True(t, ok)
 	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleId)
 	assert.Equal(t, "/path/to/file.txt", lff.Paths[0])
@@ -138,7 +138,7 @@ func (s *configSuite) TestEvalContextRef() {
 	config, err := ParseConfig("", nil)
 	assert.NoError(t, err)
 	require.Equal(t, 1, len(config.Fixes))
-	fix := config.Fixes[0].(*LocalFile)
+	fix := config.Fixes[0].(*LocalFileFix)
 	assert.Equal(t, "LICENSE", fix.Paths[0])
 }
 

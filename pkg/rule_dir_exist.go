@@ -11,12 +11,13 @@ import (
 var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
-	*BaseRule
+	*baseBlock
+	*baseRule
 	Dir string `hcl:"dir"`
 }
 
 func (d *DirExistRule) Eval(b *hclsyntax.Block) error {
-	err := d.BaseRule.Parse(b)
+	err := d.baseBlock.Parse(b)
 	if err != nil {
 		return err
 	}
