@@ -12,7 +12,7 @@ var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
 	*baseBlock
-	*baseRule
+	baseRule
 	Dir string `hcl:"dir"`
 }
 

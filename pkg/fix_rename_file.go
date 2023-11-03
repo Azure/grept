@@ -10,10 +10,14 @@ var _ Fix = &RenameFile{}
 
 type RenameFile struct {
 	*baseBlock
-	*baseFix
+	baseFix
 	RuleId  string `json:"rule_id" hcl:"rule_id"`
 	OldName string `json:"old_name" hcl:"old_name"`
 	NewName string `json:"new_name" hcl:"new_name"`
+}
+
+func (rf *RenameFile) GetRuleId() string {
+	return rf.RuleId
 }
 
 func (rf *RenameFile) Type() string {

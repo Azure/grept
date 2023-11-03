@@ -297,7 +297,7 @@ func (s *configSuite) TestApplyPlan_multiple_file_fix() {
 	content := `    
 	rule "file_hash" sample {    
 		glob = "/example/*/testfile"    
-		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // // SHA256 of "hello"    
+		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // SHA256 of "hello"    
 		algorithm = "sha256"    
 	}    
     

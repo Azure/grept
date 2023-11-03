@@ -12,10 +12,14 @@ var _ Fix = &LocalFileFix{}
 
 type LocalFileFix struct {
 	*baseBlock
-	*baseFix
+	baseFix
 	RuleId  string   `json:"rule_id" hcl:"rule_id"`
 	Paths   []string `json:"paths" hcl:"paths"`
 	Content string   `json:"content" hcl:"content"`
+}
+
+func (lf *LocalFileFix) GetRuleId() string {
+	return lf.RuleId
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {

@@ -18,7 +18,7 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*baseBlock
-	*baseRule
+	baseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
 	Algorithm          string `hcl:"algorithm,optional"`

@@ -23,13 +23,7 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-type baseFix struct {
-	RuleId string `json:"rule_id" hcl:"rule_id"`
-}
-
-func (bf baseFix) GetRuleId() string {
-	return bf.RuleId
-}
+type baseFix struct{}
 
 func (bf baseFix) BlockType() string {
 	return "fix"

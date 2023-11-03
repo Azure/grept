@@ -11,8 +11,13 @@ var _ Fix = &RmLocalFile{}
 
 type RmLocalFile struct {
 	*baseBlock
-	*baseFix
-	Paths []string `hcl:"paths"`
+	baseFix
+	RuleId string   `hcl:"rule_id"`
+	Paths  []string `hcl:"paths"`
+}
+
+func (r *RmLocalFile) GetRuleId() string {
+	return r.RuleId
 }
 
 func (r *RmLocalFile) Type() string {
