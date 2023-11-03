@@ -25,6 +25,14 @@ type FileHashRule struct {
 	HashMismatchFiles  []string
 }
 
+func (fhr *FileHashRule) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &FileHashRule{
+			baseRule: newBaseRule(c),
+		}
+	}
+}
+
 func (fhr *FileHashRule) Type() string {
 	return "file_hash"
 }

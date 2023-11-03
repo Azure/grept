@@ -13,3 +13,9 @@ type baseFix struct {
 func (bf baseFix) BlockType() string {
 	return "fix"
 }
+
+func newBaseFix(c *Config) baseFix {
+	return baseFix{
+		baseBlock: &baseBlock{c: c},
+	}
+}

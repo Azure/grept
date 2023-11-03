@@ -15,6 +15,14 @@ type RmLocalFileFix struct {
 	Paths  []string `hcl:"paths"`
 }
 
+func (r *RmLocalFileFix) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &RmLocalFileFix{
+			baseFix: newBaseFix(c),
+		}
+	}
+}
+
 func (r *RmLocalFileFix) GetRuleId() string {
 	return r.RuleId
 }

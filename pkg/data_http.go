@@ -31,6 +31,14 @@ type HttpDatasource struct {
 	StatusCode      int
 }
 
+func (h *HttpDatasource) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &HttpDatasource{
+			baseData: newBaseData(c),
+		}
+	}
+}
+
 func (h *HttpDatasource) Load() error {
 	tr, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {

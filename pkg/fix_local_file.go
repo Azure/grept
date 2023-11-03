@@ -17,6 +17,14 @@ type LocalFileFix struct {
 	Content string   `json:"content" hcl:"content"`
 }
 
+func (lf *LocalFileFix) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &LocalFileFix{
+			baseFix: newBaseFix(c),
+		}
+	}
+}
+
 func (lf *LocalFileFix) GetRuleId() string {
 	return lf.RuleId
 }

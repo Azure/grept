@@ -17,6 +17,14 @@ type GitIgnoreDatasource struct {
 	Records []string
 }
 
+func (g *GitIgnoreDatasource) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &GitIgnoreDatasource{
+			baseData: newBaseData(c),
+		}
+	}
+}
+
 func (g *GitIgnoreDatasource) Load() error {
 	fs := FsFactory()
 	gitIgnoreFile := "./.gitignore"

@@ -25,6 +25,7 @@ type block interface {
 	HclSyntaxBlock() *hclsyntax.Block
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
+	constructor() blockConstructor
 }
 
 func blockToString(f block) string {

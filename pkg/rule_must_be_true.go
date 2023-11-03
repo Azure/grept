@@ -15,6 +15,14 @@ type MustBeTrueRule struct {
 	ErrorMessage string `hcl:"error_message,optional"`
 }
 
+func (m *MustBeTrueRule) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &MustBeTrueRule{
+			baseRule: newBaseRule(c),
+		}
+	}
+}
+
 func (m *MustBeTrueRule) Check() (checkError error, runtimeError error) {
 	if !m.Condition {
 		checkError = fmt.Errorf("assertion failed: %s", m.ErrorMessage)

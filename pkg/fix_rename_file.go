@@ -15,6 +15,14 @@ type RenameFileFix struct {
 	NewName string `json:"new_name" hcl:"new_name"`
 }
 
+func (rf *RenameFileFix) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &RenameFileFix{
+			baseFix: newBaseFix(c),
+		}
+	}
+}
+
 func (rf *RenameFileFix) GetRuleId() string {
 	return rf.RuleId
 }

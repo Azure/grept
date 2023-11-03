@@ -15,6 +15,14 @@ type DirExistRule struct {
 	Dir string `hcl:"dir"`
 }
 
+func (d *DirExistRule) constructor() blockConstructor {
+	return func(c *Config) block {
+		return &DirExistRule{
+			baseRule: newBaseRule(c),
+		}
+	}
+}
+
 func (d *DirExistRule) Eval(b *hclsyntax.Block) error {
 	err := d.baseBlock.Parse(b)
 	if err != nil {
