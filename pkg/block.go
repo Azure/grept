@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -17,6 +17,7 @@ func init() {
 }
 
 type block interface {
+	Id() string
 	Eval(*hclsyntax.Block) error
 	Name() string
 	Type() string
@@ -26,22 +27,9 @@ type block interface {
 	BaseValues() map[string]cty.Value
 }
 
-func readRequiredStringAttribute(b *hclsyntax.Block, attributeName string, ctx *hcl.EvalContext) (string, error) {
-	if b == nil {
-		return "", fmt.Errorf("nil Block")
-	}
-	a, ok := b.Body.Attributes[attributeName]
-	if !ok {
-		return "", fmt.Errorf("no %s in the block %s, %s", attributeName, concatLabels(b.Labels), b.Range().String())
-	}
-	value, diagnostics := a.Expr.Value(ctx)
-	if diagnostics.HasErrors() {
-		return "", fmt.Errorf("cannot evaluate expr at %s, %s", a.Expr.Range().String(), diagnostics.Error())
-	}
-	if value.Type() != cty.String {
-		return "", fmt.Errorf("the attribute %s in the block %s (%s) is not a string", attributeName, concatLabels(b.Labels), a.Expr.Range().String())
-	}
-	return value.AsString(), nil
+func blockToString(f block) string {
+	marshal, _ := json.Marshal(f)
+	return string(marshal)
 }
 
 func Values[T block](blocks []T) cty.Value {
