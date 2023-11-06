@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -43,17 +41,5 @@ func (lf *LocalFileFix) ApplyFix() error {
 		}
 	}
 
-	return err
-}
-
-func (lf *LocalFileFix) Eval(b *hclsyntax.Block) error {
-	err := lf.BaseBlock.Parse(b)
-	if err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(b.Body, lf.EvalContext(), lf)
-	if diag.HasErrors() {
-		return diag
-	}
 	return err
 }

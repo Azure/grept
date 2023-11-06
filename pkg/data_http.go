@@ -6,8 +6,6 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/http/httpproxy"
 	"io"
@@ -24,7 +22,7 @@ type HttpDatasource struct {
 	*BaseBlock
 	baseData
 	Url             string            `hcl:"url"`
-	Method          string            `hcl:"method,optional"`
+	Method          string            `hcl:"method,optional" default:"GET"`
 	RequestBody     string            `hcl:"request_body,optional"`
 	RequestHeaders  map[string]string `hcl:"request_headers,optional"`
 	ResponseBody    string
@@ -92,21 +90,6 @@ func (h *HttpDatasource) Values() map[string]cty.Value {
 		"request_headers":  ToCtyValue(h.RequestHeaders),
 		"response_headers": ToCtyValue(h.ResponseHeaders),
 	}
-}
-
-func (h *HttpDatasource) Eval(b *hclsyntax.Block) error {
-	var err error
-	if err = h.BaseBlock.Parse(b); err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(b.Body, h.EvalContext(), h)
-	if diag.HasErrors() {
-		return diag
-	}
-	if h.Method == "" {
-		h.Method = "GET"
-	}
-	return nil
 }
 
 var validHttpMethods = hashset.New("GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH")

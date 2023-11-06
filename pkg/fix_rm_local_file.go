@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -32,18 +30,6 @@ func (r *RmLocalFileFix) ApplyFix() error {
 		if removeErr != nil {
 			err = multierror.Append(err, removeErr)
 		}
-	}
-	return err
-}
-
-func (r *RmLocalFileFix) Eval(b *hclsyntax.Block) error {
-	err := r.BaseBlock.Parse(b)
-	if err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(b.Body, r.EvalContext(), r)
-	if diag.HasErrors() {
-		return diag
 	}
 	return err
 }

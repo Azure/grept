@@ -5,8 +5,6 @@ import (
 	"github.com/spf13/afero"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -56,16 +54,4 @@ func (g *GitIgnoreDatasource) Values() map[string]cty.Value {
 	return map[string]cty.Value{
 		"records": ToCtyValue(g.Records),
 	}
-}
-
-func (g *GitIgnoreDatasource) Eval(h *hclsyntax.Block) error {
-	var err error
-	if err = g.BaseBlock.Parse(h); err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(h.Body, g.EvalContext(), g)
-	if diag.HasErrors() {
-		return diag
-	}
-	return nil
 }

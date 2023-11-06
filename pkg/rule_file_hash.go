@@ -6,8 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
 	"hash"
 
@@ -21,7 +19,7 @@ type FileHashRule struct {
 	baseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
-	Algorithm          string `hcl:"algorithm,optional"`
+	Algorithm          string `hcl:"algorithm,optional" default:"sha1"`
 	FailOnHashMismatch bool   `hcl:"fail_on_hash_mismatch,optional"`
 	HashMismatchFiles  []string
 }
@@ -38,27 +36,6 @@ func (fhr *FileHashRule) Values() map[string]cty.Value {
 		"fail_on_hash_mismatch": ToCtyValue(fhr.FailOnHashMismatch),
 		"hash_mismatch_files":   ToCtyValue(fhr.HashMismatchFiles),
 	}
-}
-
-func (fhr *FileHashRule) Eval(b *hclsyntax.Block) error {
-	err := fhr.BaseBlock.Parse(b)
-	if err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(b.Body, fhr.EvalContext(), fhr)
-	if diag.HasErrors() {
-		return diag
-	}
-	if fhr.Algorithm == "" {
-		fhr.Algorithm = "sha1"
-	}
-	switch fhr.Algorithm {
-	case "md5", "sha1", "sha256", "sha512":
-		// valid
-	default:
-		return fmt.Errorf("invalid algorithm: %s", fhr.Algorithm)
-	}
-	return nil
 }
 
 func (fhr *FileHashRule) Check() (error, error) {

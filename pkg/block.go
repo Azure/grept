@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/mcuadros/go-defaults"
 	"github.com/zclconf/go-cty/cty"
 	"strings"
 )
@@ -18,18 +20,32 @@ func init() {
 
 type block interface {
 	Id() string
-	Eval(*hclsyntax.Block) error
 	Name() string
 	Type() string
 	BlockType() string
 	HclSyntaxBlock() *hclsyntax.Block
+	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
+	parseBase(*hclsyntax.Block) error
 }
 
 func blockToString(f block) string {
 	marshal, _ := json.Marshal(f)
 	return string(marshal)
+}
+
+func Eval(b *hclsyntax.Block, block block) error {
+	err := block.parseBase(b)
+	if err != nil {
+		return err
+	}
+	defaults.SetDefaults(block)
+	diag := gohcl.DecodeBody(b.Body, block.EvalContext(), block)
+	if diag.HasErrors() {
+		return diag
+	}
+	return nil
 }
 
 func Values[T block](blocks []T) cty.Value {
@@ -74,7 +90,7 @@ func concatLabels(labels []string) string {
 }
 
 func refresh(b block) {
-	b.Eval(b.HclSyntaxBlock())
+	_ = Eval(b.HclSyntaxBlock(), b)
 }
 
 func blockAddress(b block) string {
@@ -104,15 +120,6 @@ func (bb *BaseBlock) Name() string {
 	return bb.name
 }
 
-func (bb *BaseBlock) Parse(b *hclsyntax.Block) error {
-	bb.hb = b
-	bb.name = b.Labels[1]
-	if bb.id == "" {
-		bb.id = uuid.NewString()
-	}
-	return nil
-}
-
 func (bb *BaseBlock) HclSyntaxBlock() *hclsyntax.Block {
 	return bb.hb
 }
@@ -129,4 +136,13 @@ func (bb *BaseBlock) EvalContext() *hcl.EvalContext {
 
 func (bb *BaseBlock) Context() context.Context {
 	return bb.c.ctx
+}
+
+func (bb *BaseBlock) parseBase(b *hclsyntax.Block) error {
+	bb.hb = b
+	bb.name = b.Labels[1]
+	if bb.id == "" {
+		bb.id = uuid.NewString()
+	}
+	return nil
 }

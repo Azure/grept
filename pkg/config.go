@@ -84,7 +84,7 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]func(*
 		}
 		b := f(c)
 		blockRegisterFunc(c, b)
-		err := b.Eval(hb)
+		err := Eval(hb, b)
 		if err != nil {
 			return fmt.Errorf("%s.%s.%s(%s) eval error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
 		}
@@ -185,7 +185,7 @@ func (c *Config) Plan() (Plan, error) {
 					return
 				}
 			}
-			if err := data.Eval(data.HclSyntaxBlock()); err != nil {
+			if err := Eval(data.HclSyntaxBlock(), data); err != nil {
 				errCh <- fmt.Errorf("data.%s.%s(%s) eval error: %+v", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err)
 				return
 			}
@@ -208,7 +208,7 @@ func (c *Config) Plan() (Plan, error) {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
-			if err := rule.Eval(rule.HclSyntaxBlock()); err != nil {
+			if err := Eval(rule.HclSyntaxBlock(), rule); err != nil {
 				errCh <- fmt.Errorf("rule.%s.%s(%s) eval error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
 				return
 			}

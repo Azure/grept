@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -14,18 +12,6 @@ type DirExistRule struct {
 	*BaseBlock
 	baseRule
 	Dir string `hcl:"dir"`
-}
-
-func (d *DirExistRule) Eval(b *hclsyntax.Block) error {
-	err := d.BaseBlock.Parse(b)
-	if err != nil {
-		return err
-	}
-	diag := gohcl.DecodeBody(b.Body, d.EvalContext(), d)
-	if diag.HasErrors() {
-		return diag
-	}
-	return nil
 }
 
 func (d *DirExistRule) Values() map[string]cty.Value {

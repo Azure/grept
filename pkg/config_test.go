@@ -3,6 +3,8 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 	"net/http"
@@ -347,4 +349,59 @@ rule must_be_true test {
 	assert.Len(t, c.Rules, 2)
 	assert.Equal(t, "file_hash", c.Rules[0].Type())
 	assert.Equal(t, "must_be_true", c.Rules[1].Type())
+}
+
+func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
+	cases := []struct {
+		desc   string
+		method string
+		want   string
+	}{
+		{
+			desc:   "Should apply default value",
+			method: "",
+			want:   "GET",
+		},
+		{
+			desc:   "User's input is as same as the default value",
+			method: "GET",
+			want:   "GET",
+		},
+		{
+			desc:   "User's input should take precedence over default value",
+			method: "POST",
+			want:   "POST",
+		},
+	}
+	for _, c := range cases {
+		s.Run(c.desc, func() {
+			assignment := fmt.Sprintf("method = \"%s\"", c.method)
+			if c.method == "" {
+				assignment = ""
+			}
+			hclConfig := fmt.Sprintf(`  
+	data "http" "example" {  
+		url = "http://example.com"  
+		request_body = "Hello" 
+		%s
+		request_headers = {  
+			"Content-Type" = "application/json"  
+			"Accept" = "application/json"  
+		}  
+	}  
+	`, assignment)
+
+			config, diag := hclsyntax.ParseConfig([]byte(hclConfig), "test.grept.hcl", hcl.InitialPos)
+			require.False(s.T(), diag.HasErrors())
+			h := &HttpDatasource{
+				BaseBlock: &BaseBlock{
+					c: &Config{ctx: context.TODO()},
+				},
+			}
+			err := Eval(config.Body.(*hclsyntax.Body).Blocks[0], h)
+			assert.NoError(s.T(), err)
+			assert.Equal(s.T(), c.want, h.Method)
+		})
+	}
+
 }
