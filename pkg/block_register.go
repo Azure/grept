@@ -1,14 +1,20 @@
 package pkg
 
-import "reflect"
+import (
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"reflect"
+)
 
-type blockConstructor = func(*Config) block
+type blockConstructor = func(*Config, *hclsyntax.Block) block
 type blockRegistry map[string]blockConstructor
 
 func registerFunc(registry blockRegistry, t block) {
-	registry[t.Type()] = func(c *Config) block {
+	registry[t.Type()] = func(c *Config, hb *hclsyntax.Block) block {
 		newBlock := reflect.New(reflect.TypeOf(t).Elem()).Elem()
-		newBaseBlock := &BaseBlock{c: c}
+		newBaseBlock := &BaseBlock{
+			c:  c,
+			hb: hb,
+		}
 		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
 		return newBlock.Addr().Interface().(block)
 	}
@@ -22,7 +28,7 @@ func registerFix() {
 	registerFunc(fixFactories, new(RmLocalFileFix))
 }
 
-var ruleFactories = map[string]func(*Config) block{}
+var ruleFactories = make(blockRegistry)
 
 func registerRule() {
 	registerFunc(ruleFactories, new(FileHashRule))
@@ -30,7 +36,7 @@ func registerRule() {
 	registerFunc(ruleFactories, new(DirExistRule))
 }
 
-var datasourceFactories = map[string]func(*Config) block{}
+var datasourceFactories = make(blockRegistry)
 
 func registerData() {
 	registerFunc(datasourceFactories, new(HttpDatasource))

@@ -25,7 +25,7 @@ func (p Plan) Apply() error {
 	var err error
 	for _, fixes := range p {
 		for _, fix := range fixes {
-			if err := Eval(fix.HclSyntaxBlock(), fix); err != nil {
+			if err := eval(fix); err != nil {
 				err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) eval error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
 			}
 		}

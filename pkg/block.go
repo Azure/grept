@@ -35,13 +35,14 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-func Eval(b *hclsyntax.Block, block block) error {
-	err := block.parseBase(b)
+func eval(block block) error {
+	hb := block.HclSyntaxBlock()
+	err := block.parseBase(hb)
 	if err != nil {
 		return err
 	}
 	defaults.SetDefaults(block)
-	diag := gohcl.DecodeBody(b.Body, block.EvalContext(), block)
+	diag := gohcl.DecodeBody(hb.Body, block.EvalContext(), block)
 	if diag.HasErrors() {
 		return diag
 	}
@@ -90,7 +91,7 @@ func concatLabels(labels []string) string {
 }
 
 func refresh(b block) {
-	_ = Eval(b.HclSyntaxBlock(), b)
+	_ = eval(b)
 }
 
 func blockAddress(b block) string {

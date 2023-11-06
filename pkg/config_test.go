@@ -395,10 +395,13 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			require.False(s.T(), diag.HasErrors())
 			h := &HttpDatasource{
 				BaseBlock: &BaseBlock{
-					c: &Config{ctx: context.TODO()},
+					c: &Config{
+						ctx: context.TODO(),
+					},
+					hb: config.Body.(*hclsyntax.Body).Blocks[0],
 				},
 			}
-			err := Eval(config.Body.(*hclsyntax.Body).Blocks[0], h)
+			err := eval(h)
 			assert.NoError(s.T(), err)
 			assert.Equal(s.T(), c.want, h.Method)
 		})
