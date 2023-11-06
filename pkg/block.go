@@ -35,14 +35,14 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-func eval(block block) error {
-	hb := block.HclSyntaxBlock()
-	err := block.parseBase(hb)
+func eval(b block) error {
+	hb := b.HclSyntaxBlock()
+	err := b.parseBase(hb)
 	if err != nil {
 		return err
 	}
-	defaults.SetDefaults(block)
-	diag := gohcl.DecodeBody(hb.Body, block.EvalContext(), block)
+	defaults.SetDefaults(b)
+	diag := gohcl.DecodeBody(hb.Body, b.EvalContext(), b)
 	if diag.HasErrors() {
 		return diag
 	}

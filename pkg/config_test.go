@@ -211,7 +211,8 @@ func (s *configSuite) TestPlanError_DatasourceError() {
 	// Define a sample config for testing
 	sampleConfig := fmt.Sprintf(`  
 	data "http" "foo" {  
-		url = "%s"  
+		url = "%s"
+		retry_max = 0
 	}  
 `, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})

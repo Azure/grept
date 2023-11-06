@@ -25,6 +25,7 @@ type HttpDatasource struct {
 	Method          string            `hcl:"method,optional" default:"GET"`
 	RequestBody     string            `hcl:"request_body,optional"`
 	RequestHeaders  map[string]string `hcl:"request_headers,optional"`
+	RetryMax        int               `hcl:"retry_max,optional" default:"4"`
 	ResponseBody    string
 	ResponseHeaders map[string]string
 	StatusCode      int
@@ -49,6 +50,7 @@ func (h *HttpDatasource) Load() error {
 	retryClient := retryablehttp.NewClient()
 	retryClient.Logger = log.New(os.Stderr, fmt.Sprintf("data.http.%s:", h.name), log.LstdFlags)
 	retryClient.HTTPClient.Transport = clonedTr
+	retryClient.RetryMax = h.RetryMax
 	request, err := retryablehttp.NewRequestWithContext(h.Context(), h.Method, h.Url, strings.NewReader(h.RequestBody))
 	if err != nil {
 		return fmt.Errorf("error creating request data.http.%s, %s", h.name, err.Error())
