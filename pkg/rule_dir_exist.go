@@ -11,6 +11,7 @@ import (
 var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
+	*baseBlock
 	baseRule
 	Dir string `hcl:"dir"`
 }
@@ -18,7 +19,7 @@ type DirExistRule struct {
 func (d *DirExistRule) constructor() blockConstructor {
 	return func(c *Config) block {
 		return &DirExistRule{
-			baseRule: newBaseRule(c),
+			baseBlock: &baseBlock{c: c},
 		}
 	}
 }

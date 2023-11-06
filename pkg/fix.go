@@ -6,16 +6,8 @@ type Fix interface {
 	GetRuleId() string
 }
 
-type baseFix struct {
-	*baseBlock
-}
+type baseFix struct{}
 
 func (bf baseFix) BlockType() string {
 	return "fix"
-}
-
-func newBaseFix(c *Config) baseFix {
-	return baseFix{
-		baseBlock: &baseBlock{c: c},
-	}
 }

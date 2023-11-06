@@ -21,6 +21,7 @@ import (
 var _ Data = &HttpDatasource{}
 
 type HttpDatasource struct {
+	*baseBlock
 	baseData
 	Url             string            `hcl:"url"`
 	Method          string            `hcl:"method,optional"`
@@ -34,7 +35,7 @@ type HttpDatasource struct {
 func (h *HttpDatasource) constructor() blockConstructor {
 	return func(c *Config) block {
 		return &HttpDatasource{
-			baseData: newBaseData(c),
+			baseBlock: &baseBlock{c: c},
 		}
 	}
 }

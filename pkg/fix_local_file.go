@@ -11,6 +11,7 @@ import (
 var _ Fix = &LocalFileFix{}
 
 type LocalFileFix struct {
+	*baseBlock
 	baseFix
 	RuleId  string   `json:"rule_id" hcl:"rule_id"`
 	Paths   []string `json:"paths" hcl:"paths"`
@@ -20,7 +21,7 @@ type LocalFileFix struct {
 func (lf *LocalFileFix) constructor() blockConstructor {
 	return func(c *Config) block {
 		return &LocalFileFix{
-			baseFix: newBaseFix(c),
+			baseBlock: &baseBlock{c: c},
 		}
 	}
 }

@@ -5,17 +5,7 @@ type Rule interface {
 	Check() (checkError error, runtimeError error)
 }
 
-type baseRule struct {
-	*baseBlock
-}
-
-func newBaseRule(c *Config) baseRule {
-	return baseRule{
-		baseBlock: &baseBlock{
-			c: c,
-		},
-	}
-}
+type baseRule struct{}
 
 func (br baseRule) BlockType() string {
 	return "rule"

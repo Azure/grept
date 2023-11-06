@@ -17,6 +17,7 @@ import (
 var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
+	*baseBlock
 	baseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
@@ -28,7 +29,7 @@ type FileHashRule struct {
 func (fhr *FileHashRule) constructor() blockConstructor {
 	return func(c *Config) block {
 		return &FileHashRule{
-			baseRule: newBaseRule(c),
+			baseBlock: &baseBlock{c: c},
 		}
 	}
 }

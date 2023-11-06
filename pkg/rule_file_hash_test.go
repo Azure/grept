@@ -147,10 +147,8 @@ func (s *fileHashRuleSuite) TestFileHashRule_HashMismatchFilesShouldBeExported()
 	filename := "/example/sub1/testfile.txt"
 	_ = afero.WriteFile(fs, filename, []byte("test content"), 0644)
 	rule := &FileHashRule{
-		baseRule: baseRule{
-			baseBlock: &baseBlock{
-				c: &Config{},
-			},
+		baseBlock: &baseBlock{
+			c: &Config{},
 		},
 		Glob: "/example/*/testfile.txt",
 		Hash: "non-matching-hash", // MD5 hash that doesn't match "test content"
@@ -182,9 +180,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is false, file content matches hash",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -196,9 +192,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is false, file content does not match hash",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/testfile",
 				Hash:               "incorrecthash",
 				Algorithm:          "sha256",
@@ -210,9 +204,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is false, one file content matches hash",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/example/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -224,9 +216,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is true, file content does not match hash",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/example/*/testfile",
 				Hash:               "incorrecthash",
 				Algorithm:          "sha256",
@@ -238,9 +228,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is true, file content matches hash exits, but still got file hash that mismatch",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/example/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -252,9 +240,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is false, all files match",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/example2/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -266,9 +252,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 		{
 			name: "FailOnHashMismatch is false, all files match",
 			rule: &FileHashRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:          &baseBlock{},
 				Glob:               "/example2/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",

@@ -13,6 +13,7 @@ import (
 var _ Data = &GitIgnoreDatasource{}
 
 type GitIgnoreDatasource struct {
+	*baseBlock
 	baseData
 	Records []string
 }
@@ -20,7 +21,7 @@ type GitIgnoreDatasource struct {
 func (g *GitIgnoreDatasource) constructor() blockConstructor {
 	return func(c *Config) block {
 		return &GitIgnoreDatasource{
-			baseData: newBaseData(c),
+			baseBlock: &baseBlock{c: c},
 		}
 	}
 }

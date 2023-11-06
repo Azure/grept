@@ -40,9 +40,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Check() {
 		{
 			name: "Condition is true",
 			rule: &MustBeTrueRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:    &baseBlock{},
 				Condition:    true,
 				ErrorMessage: "",
 			},
@@ -51,9 +49,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Check() {
 		{
 			name: "Condition is false",
 			rule: &MustBeTrueRule{
-				baseRule: baseRule{
-					baseBlock: &baseBlock{},
-				},
+				baseBlock:    &baseBlock{},
 				Condition:    false,
 				ErrorMessage: "Test error message",
 			},
@@ -106,9 +102,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
 func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Value() {
 	t := s.T()
 	mustBeTrueRule := &MustBeTrueRule{
-		baseRule: baseRule{
-			baseBlock: &baseBlock{},
-		},
+		baseBlock:    &baseBlock{},
 		Condition:    true,
 		ErrorMessage: "Test error message",
 	}
