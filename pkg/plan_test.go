@@ -17,7 +17,7 @@ func TestPlan_String(t *testing.T) {
 			plan: map[*failedRule]Fixes{
 				&failedRule{
 					Rule: &FileHashRule{
-						baseBlock: &baseBlock{
+						BaseBlock: &BaseBlock{
 							name: "test-rule",
 							id:   "1",
 						},
@@ -28,7 +28,7 @@ func TestPlan_String(t *testing.T) {
 					CheckError: fmt.Errorf("test error"),
 				}: {
 					&LocalFileFix{
-						baseBlock: &baseBlock{
+						BaseBlock: &BaseBlock{
 							name: "test-fix",
 						},
 						Paths:   []string{"test-path"},

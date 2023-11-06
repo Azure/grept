@@ -9,19 +9,11 @@ import (
 var _ Fix = &RenameFileFix{}
 
 type RenameFileFix struct {
-	*baseBlock
+	*BaseBlock
 	baseFix
 	RuleId  string `json:"rule_id" hcl:"rule_id"`
 	OldName string `json:"old_name" hcl:"old_name"`
 	NewName string `json:"new_name" hcl:"new_name"`
-}
-
-func (rf *RenameFileFix) constructor() blockConstructor {
-	return func(c *Config) block {
-		return &RenameFileFix{
-			baseBlock: &baseBlock{c: c},
-		}
-	}
 }
 
 func (rf *RenameFileFix) GetRuleId() string {
@@ -38,7 +30,7 @@ func (rf *RenameFileFix) ApplyFix() error {
 }
 
 func (rf *RenameFileFix) Eval(b *hclsyntax.Block) error {
-	err := rf.baseBlock.Parse(b)
+	err := rf.BaseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

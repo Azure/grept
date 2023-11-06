@@ -40,7 +40,7 @@ func (s *httpDataSuite) TestHttpDatasource_Load() {
 
 	// Create a HttpDatasource instance
 	h := &HttpDatasource{
-		baseBlock: &baseBlock{
+		BaseBlock: &BaseBlock{
 			c:    &Config{ctx: context.TODO()},
 			name: "test",
 		},

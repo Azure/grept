@@ -17,21 +17,13 @@ import (
 var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
-	*baseBlock
+	*BaseBlock
 	baseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
 	Algorithm          string `hcl:"algorithm,optional"`
 	FailOnHashMismatch bool   `hcl:"fail_on_hash_mismatch,optional"`
 	HashMismatchFiles  []string
-}
-
-func (fhr *FileHashRule) constructor() blockConstructor {
-	return func(c *Config) block {
-		return &FileHashRule{
-			baseBlock: &baseBlock{c: c},
-		}
-	}
 }
 
 func (fhr *FileHashRule) Type() string {
@@ -49,7 +41,7 @@ func (fhr *FileHashRule) Values() map[string]cty.Value {
 }
 
 func (fhr *FileHashRule) Eval(b *hclsyntax.Block) error {
-	err := fhr.baseBlock.Parse(b)
+	err := fhr.BaseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

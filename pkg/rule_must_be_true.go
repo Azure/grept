@@ -10,18 +10,10 @@ import (
 var _ Rule = &MustBeTrueRule{}
 
 type MustBeTrueRule struct {
-	*baseBlock
+	*BaseBlock
 	baseRule
 	Condition    bool   `hcl:"condition"`
 	ErrorMessage string `hcl:"error_message,optional"`
-}
-
-func (m *MustBeTrueRule) constructor() blockConstructor {
-	return func(c *Config) block {
-		return &MustBeTrueRule{
-			baseBlock: &baseBlock{c: c},
-		}
-	}
 }
 
 func (m *MustBeTrueRule) Check() (checkError error, runtimeError error) {
@@ -36,7 +28,7 @@ func (m *MustBeTrueRule) Type() string {
 }
 
 func (m *MustBeTrueRule) Eval(b *hclsyntax.Block) error {
-	err := m.baseBlock.Parse(b)
+	err := m.BaseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

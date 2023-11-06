@@ -25,7 +25,6 @@ type block interface {
 	HclSyntaxBlock() *hclsyntax.Block
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
-	constructor() blockConstructor
 }
 
 func blockToString(f block) string {
@@ -90,22 +89,22 @@ func blockAddress(b block) string {
 	return sb.String()
 }
 
-type baseBlock struct {
+type BaseBlock struct {
 	c    *Config
 	hb   *hclsyntax.Block
 	name string
 	id   string
 }
 
-func (bb *baseBlock) Id() string {
+func (bb *BaseBlock) Id() string {
 	return bb.id
 }
 
-func (bb *baseBlock) Name() string {
+func (bb *BaseBlock) Name() string {
 	return bb.name
 }
 
-func (bb *baseBlock) Parse(b *hclsyntax.Block) error {
+func (bb *BaseBlock) Parse(b *hclsyntax.Block) error {
 	bb.hb = b
 	bb.name = b.Labels[1]
 	if bb.id == "" {
@@ -114,20 +113,20 @@ func (bb *baseBlock) Parse(b *hclsyntax.Block) error {
 	return nil
 }
 
-func (bb *baseBlock) HclSyntaxBlock() *hclsyntax.Block {
+func (bb *BaseBlock) HclSyntaxBlock() *hclsyntax.Block {
 	return bb.hb
 }
 
-func (bb *baseBlock) BaseValues() map[string]cty.Value {
+func (bb *BaseBlock) BaseValues() map[string]cty.Value {
 	return map[string]cty.Value{
 		"id": cty.StringVal(bb.id),
 	}
 }
 
-func (bb *baseBlock) EvalContext() *hcl.EvalContext {
+func (bb *BaseBlock) EvalContext() *hcl.EvalContext {
 	return bb.c.EvalContext()
 }
 
-func (bb *baseBlock) Context() context.Context {
+func (bb *BaseBlock) Context() context.Context {
 	return bb.c.ctx
 }

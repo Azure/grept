@@ -11,19 +11,11 @@ import (
 var _ Fix = &LocalFileFix{}
 
 type LocalFileFix struct {
-	*baseBlock
+	*BaseBlock
 	baseFix
 	RuleId  string   `json:"rule_id" hcl:"rule_id"`
 	Paths   []string `json:"paths" hcl:"paths"`
 	Content string   `json:"content" hcl:"content"`
-}
-
-func (lf *LocalFileFix) constructor() blockConstructor {
-	return func(c *Config) block {
-		return &LocalFileFix{
-			baseBlock: &baseBlock{c: c},
-		}
-	}
 }
 
 func (lf *LocalFileFix) GetRuleId() string {
@@ -55,7 +47,7 @@ func (lf *LocalFileFix) ApplyFix() error {
 }
 
 func (lf *LocalFileFix) Eval(b *hclsyntax.Block) error {
-	err := lf.baseBlock.Parse(b)
+	err := lf.BaseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

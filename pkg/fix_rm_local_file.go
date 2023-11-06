@@ -10,18 +10,10 @@ import (
 var _ Fix = &RmLocalFileFix{}
 
 type RmLocalFileFix struct {
-	*baseBlock
+	*BaseBlock
 	baseFix
 	RuleId string   `hcl:"rule_id"`
 	Paths  []string `hcl:"paths"`
-}
-
-func (r *RmLocalFileFix) constructor() blockConstructor {
-	return func(c *Config) block {
-		return &RmLocalFileFix{
-			baseBlock: &baseBlock{c: c},
-		}
-	}
 }
 
 func (r *RmLocalFileFix) GetRuleId() string {
@@ -45,7 +37,7 @@ func (r *RmLocalFileFix) ApplyFix() error {
 }
 
 func (r *RmLocalFileFix) Eval(b *hclsyntax.Block) error {
-	err := r.baseBlock.Parse(b)
+	err := r.BaseBlock.Parse(b)
 	if err != nil {
 		return err
 	}

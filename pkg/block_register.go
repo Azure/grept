@@ -1,10 +1,17 @@
 package pkg
 
+import "reflect"
+
 type blockConstructor = func(*Config) block
 type blockRegistry map[string]blockConstructor
 
 func registerFunc(registry blockRegistry, t block) {
-	registry[t.Type()] = t.constructor()
+	registry[t.Type()] = func(c *Config) block {
+		newBlock := reflect.New(reflect.TypeOf(t).Elem()).Elem()
+		newBaseBlock := &BaseBlock{c: c}
+		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
+		return newBlock.Addr().Interface().(block)
+	}
 }
 
 var fixFactories = make(blockRegistry)
