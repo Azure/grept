@@ -10,9 +10,9 @@ type LocalExecFix struct {
 	*BaseBlock
 	baseFix
 	RuleId       string   `hcl:"rule_id"`
-	Inlines      []string `hcl:"inlines" validate:"conflict_with=Script RemoteScript"`
-	Script       string   `hcl:"script" validate:"conflict_with=Inlines RemoteScript"`
-	RemoteScript string   `hcl:"remote_script" validate:"conflict_with=Inlines Script"`
+	Inlines      []string `hcl:"inlines" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
+	Script       string   `hcl:"script" validate:"conflict_with=Inlines RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
+	RemoteScript string   `hcl:"remote_script" validate:"conflict_with=Inlines Script,at_least_one_of=Inlines Script RemoteScript"`
 }
 
 func (l *LocalExecFix) Type() string {

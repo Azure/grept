@@ -14,7 +14,7 @@ func TestLocalExecFixSuite(t *testing.T) {
 	suite.Run(t, new(localExecFixSuite))
 }
 
-func (s *localExecFixSuite) TestLocalExec_CommandConflictWith() {
+func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 	cases := []struct {
 		desc      string
 		f         *LocalExecFix
@@ -66,6 +66,11 @@ func (s *localExecFixSuite) TestLocalExec_CommandConflictWith() {
 				Inlines:      []string{"echo hello"},
 				RemoteScript: "https://raw.githubusercontent.com/cloudposse/build-harness/master/bin/install.sh",
 			},
+			wantError: true,
+		},
+		{
+			desc:      "No command",
+			f:         &LocalExecFix{},
 			wantError: true,
 		},
 	}

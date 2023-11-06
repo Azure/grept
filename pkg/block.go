@@ -12,13 +12,6 @@ import (
 	"strings"
 )
 
-func init() {
-	registerRule()
-	registerFix()
-	registerData()
-	_ = validate.RegisterValidation("conflict_with", ValidateConflictWith)
-}
-
 type block interface {
 	Id() string
 	Name() string

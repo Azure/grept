@@ -7,11 +7,16 @@ import (
 
 var validate = validator.New()
 
+func registerValidator() {
+	_ = validate.RegisterValidation("conflict_with", validateConflictWith)
+	_ = validate.RegisterValidation("at_least_one_of", validateAtLeastOneOf)
+}
+
 type Validatable interface {
 	Validate() error
 }
 
-func ValidateConflictWith(fl validator.FieldLevel) bool {
+func validateConflictWith(fl validator.FieldLevel) bool {
 	conflictWith := strings.Split(fl.Param(), " ")
 	parentStruct := fl.Parent()
 	fieldName := fl.FieldName()
@@ -22,11 +27,21 @@ func ValidateConflictWith(fl validator.FieldLevel) bool {
 
 	for _, anotherField := range conflictWith {
 		field := parentStruct.FieldByName(anotherField)
-		valid := field.IsValid()
-		zero := field.IsZero()
-		if valid && !zero {
+		if field.IsValid() && !field.IsZero() {
 			return false
 		}
 	}
 	return true
+}
+
+func validateAtLeastOneOf(fl validator.FieldLevel) bool {
+	atLeastOneOf := strings.Split(fl.Param(), " ")
+	parentStruct := fl.Parent()
+	for _, fieldName := range atLeastOneOf {
+		field := parentStruct.FieldByName(fieldName)
+		if field.IsValid() && !field.IsZero() {
+			return true
+		}
+	}
+	return false
 }
