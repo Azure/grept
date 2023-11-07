@@ -26,6 +26,7 @@ func registerFix() {
 	registerFunc(fixFactories, new(LocalFileFix))
 	registerFunc(fixFactories, new(RenameFileFix))
 	registerFunc(fixFactories, new(RmLocalFileFix))
+	registerFunc(fixFactories, new(LocalExecShellFix))
 }
 
 var ruleFactories = make(blockRegistry)

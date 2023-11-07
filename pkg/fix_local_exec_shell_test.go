@@ -17,19 +17,19 @@ func TestLocalExecFixSuite(t *testing.T) {
 func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 	cases := []struct {
 		desc      string
-		f         *LocalExecFix
+		f         *LocalExecShellFix
 		wantError bool
 	}{
 		{
 			desc: "Inlines only",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines: []string{"echo hello"},
 			},
 			wantError: false,
 		},
 		{
 			desc: "Script only",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines: nil,
 				Script:  "./bash.sh",
 			},
@@ -37,7 +37,7 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		},
 		{
 			desc: "RemoteScript only",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines:      nil,
 				RemoteScript: "https://raw.githubusercontent.com/cloudposse/build-harness/master/bin/install.sh",
 			},
@@ -45,7 +45,7 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		},
 		{
 			desc: "Inlines&Script",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines: []string{"echo hello"},
 				Script:  "./bash.sh",
 			},
@@ -53,7 +53,7 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		},
 		{
 			desc: "Script&RemoteScrip",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines:      nil,
 				Script:       "./bash.sh",
 				RemoteScript: "https://raw.githubusercontent.com/cloudposse/build-harness/master/bin/install.sh",
@@ -62,7 +62,7 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		},
 		{
 			desc: "RemoteScript only",
-			f: &LocalExecFix{
+			f: &LocalExecShellFix{
 				Inlines:      []string{"echo hello"},
 				RemoteScript: "https://raw.githubusercontent.com/cloudposse/build-harness/master/bin/install.sh",
 			},
@@ -70,8 +70,25 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		},
 		{
 			desc:      "No command",
-			f:         &LocalExecFix{},
+			f:         &LocalExecShellFix{},
 			wantError: true,
+		},
+		{
+			desc: "InlineShebang Only",
+			f: &LocalExecShellFix{
+				InlineShebang: "#!/bin/sh",
+			},
+			wantError: true,
+		},
+		{
+			desc: "InlineShebang with inlines",
+			f: &LocalExecShellFix{
+				InlineShebang: "#!/bin/sh",
+				Inlines: []string{
+					"echo hello",
+				},
+			},
+			wantError: false,
 		},
 	}
 	for _, c := range cases {

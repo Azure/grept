@@ -10,6 +10,7 @@ var validate = validator.New()
 func registerValidator() {
 	_ = validate.RegisterValidation("conflict_with", validateConflictWith)
 	_ = validate.RegisterValidation("at_least_one_of", validateAtLeastOneOf)
+	_ = validate.RegisterValidation("required_with", validateRequiredWith)
 }
 
 type Validatable interface {
@@ -28,6 +29,24 @@ func validateConflictWith(fl validator.FieldLevel) bool {
 	for _, anotherField := range conflictWith {
 		field := parentStruct.FieldByName(anotherField)
 		if field.IsValid() && !field.IsZero() {
+			return false
+		}
+	}
+	return true
+}
+
+func validateRequiredWith(fl validator.FieldLevel) bool {
+	requiredWith := strings.Split(fl.Param(), " ")
+	parentStruct := fl.Parent()
+	fieldName := fl.FieldName()
+	thisField := parentStruct.FieldByName(fieldName)
+	if !thisField.IsValid() || thisField.IsZero() {
+		return true
+	}
+
+	for _, anotherField := range requiredWith {
+		field := parentStruct.FieldByName(anotherField)
+		if !field.IsValid() || field.IsZero() {
 			return false
 		}
 	}
