@@ -1,8 +1,11 @@
 package pkg
 
 import (
+	"github.com/ahmetb/go-linq/v3"
+	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"runtime"
 	"testing"
 )
 
@@ -14,7 +17,7 @@ func TestLocalExecFixSuite(t *testing.T) {
 	suite.Run(t, new(localExecFixSuite))
 }
 
-func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
+func (s *localExecFixSuite) TestLocalExecShell_CommandValidate() {
 	cases := []struct {
 		desc      string
 		f         *LocalExecShellFix
@@ -76,6 +79,7 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 		{
 			desc: "InlineShebang Only",
 			f: &LocalExecShellFix{
+				Script:        "/test.sh",
 				InlineShebang: "#!/bin/sh",
 			},
 			wantError: true,
@@ -86,6 +90,32 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 				InlineShebang: "#!/bin/sh",
 				Inlines: []string{
 					"echo hello",
+				},
+			},
+			wantError: false,
+		},
+		{
+			desc: "Invalid only_on",
+			f: &LocalExecShellFix{
+				Inlines: []string{
+					"echo hello",
+				},
+				OnlyOn: []string{
+					"Linux", // should be linux
+				},
+			},
+			wantError: true,
+		},
+		{
+			desc: "Valid only_on",
+			f: &LocalExecShellFix{
+				Inlines: []string{
+					"echo hello",
+				},
+				OnlyOn: []string{
+					"linux",
+					"windows",
+					"darwin",
 				},
 			},
 			wantError: false,
@@ -101,4 +131,25 @@ func (s *localExecFixSuite) TestLocalExec_CommandValidate() {
 			}
 		})
 	}
+}
+
+func (s *localExecFixSuite) TestLocalExecShell_ShouldReturnDirectlyIfOnlyOnMismatch() {
+	quit := false
+	stub := gostub.Stub(&stopByOnlyOnStub, func() {
+		quit = true
+	})
+	defer stub.Reset()
+
+	onlyOn := []string{"linux", "windows", "darwin"}
+	linq.From(onlyOn).Where(func(i interface{}) bool {
+		return i.(string) != runtime.GOOS // exclude the current os
+	}).ToSlice(&onlyOn)
+
+	sut := &LocalExecShellFix{
+		Inlines: []string{"echo hello"},
+		OnlyOn:  onlyOn,
+	}
+	err := sut.ApplyFix()
+	assert.NoError(s.T(), err)
+	assert.True(s.T(), quit)
 }
