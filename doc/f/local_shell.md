@@ -11,6 +11,7 @@ The `local_shell` fix block in the `grept` tool is used to execute a shell comma
 - `script`: Path to a local script file to be executed. Must not be set along with `inlines` or `remote_script`.
 - `remote_script`: URL of a remote script to be downloaded and executed. Must not be set along with `inlines` or `script`.
 - `only_on`: A list of operating systems where the fix should be applied. Valid values are `windows`, `linux`, `darwin`, `openbsd`, `netbsd`, `freebsd`, `dragonfly`, `android`, `solaris`, `plan9`. If the current os doesn't in this list, `local_shell` fix would return directly without error.
+- `env`: A map of environment variables to be set when executing the script.
 
 ## Exported Attributes
 
@@ -44,3 +45,18 @@ fix "local_shell" "example" {
 ```
 
 These will execute the local script at `/path/to/local/script.sh` or the remote script at `http://example.com/script.sh` respectively if the rule with ID `example_rule` fails.
+
+You can also set environment variables for the script:
+
+```hcl
+fix "local_shell" "example" {
+  rule_id = "example_rule"
+  script  = "/path/to/local/script.sh"
+  env     = {
+    "VAR1" = "value1"
+    "VAR2" = "value2"
+  }
+}
+```
+
+This will set the environment variables `VAR1` and `VAR2` before executing the script at `/path/to/local/script.sh` if the rule with ID `example_rule` fails."

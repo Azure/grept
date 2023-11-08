@@ -3,13 +3,15 @@ package pkg
 import (
 	"bufio"
 	"fmt"
-	"github.com/ahmetb/go-linq/v3"
-	"github.com/alexellis/go-execute/v2"
-	"github.com/zclconf/go-cty/cty"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/ahmetb/go-linq/v3"
+	"github.com/alexellis/go-execute/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/zclconf/go-cty/cty"
 )
 
 var _ Fix = &LocalShellFix{}
@@ -17,13 +19,14 @@ var _ Fix = &LocalShellFix{}
 type LocalShellFix struct {
 	*BaseBlock
 	baseFix
-	RuleId         string   `hcl:"rule_id"`
-	ExecuteCommand []string `hcl:"execute_command,optional" default:"[/bin/sh,-c]"` // The command used to execute the script.
-	InlineShebang  string   `hcl:"inline_shebang,optional" validate:"required_with=Inlines"`
-	Inlines        []string `hcl:"inlines,optional" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
-	Script         string   `hcl:"script,optional" validate:"conflict_with=Inlines RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
-	RemoteScript   string   `hcl:"remote_script,optional" validate:"conflict_with=Inlines Script,at_least_one_of=Inlines Script RemoteScript,eq=|http_url"`
-	OnlyOn         []string `hcl:"only_on,optional" validate:"all_string_in_slice=windows linux darwin openbsd netbsd freebsd dragonfly android solaris plan9"`
+	RuleId         string            `hcl:"rule_id"`
+	ExecuteCommand []string          `hcl:"execute_command,optional" default:"[/bin/sh,-c]"` // The command used to execute the script.
+	InlineShebang  string            `hcl:"inline_shebang,optional" validate:"required_with=Inlines"`
+	Inlines        []string          `hcl:"inlines,optional" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
+	Script         string            `hcl:"script,optional" validate:"conflict_with=Inlines RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
+	RemoteScript   string            `hcl:"remote_script,optional" validate:"conflict_with=Inlines Script,at_least_one_of=Inlines Script RemoteScript,eq=|http_url"`
+	OnlyOn         []string          `hcl:"only_on,optional" validate:"all_string_in_slice=windows linux darwin openbsd netbsd freebsd dragonfly android solaris plan9"`
+	Env            map[string]string `hcl:"env,optional"`
 }
 
 func (l *LocalShellFix) Type() string {
@@ -41,6 +44,15 @@ func (l *LocalShellFix) Values() map[string]cty.Value {
 var stopByOnlyOnStub = func() {}
 
 func (l *LocalShellFix) ApplyFix() (err error) {
+	// user assigned env, must set these env then re-render all attributes
+	if len(l.Env) > 0 {
+		goroutineLocalEnv.Set(l.Env)
+		defer goroutineLocalEnv.Remove()
+		diag := gohcl.DecodeBody(l.HclSyntaxBlock().Body, l.EvalContext(), l)
+		if diag.HasErrors() {
+			return diag
+		}
+	}
 	if len(l.OnlyOn) > 0 && !linq.From(l.OnlyOn).Contains(runtime.GOOS) {
 		stopByOnlyOnStub()
 		return nil
@@ -71,10 +83,11 @@ func (l *LocalShellFix) ApplyFix() (err error) {
 		}
 	}
 	l.ExecuteCommand = append(l.ExecuteCommand, script)
+	env := l.flattenEnv()
 	cmd := execute.ExecTask{
 		Command:     l.ExecuteCommand[0],
 		Args:        l.ExecuteCommand[1:],
-		Env:         nil,
+		Env:         env,
 		StreamStdio: false,
 	}
 	result, err := cmd.Execute(l.Context())
@@ -149,4 +162,12 @@ func (l *LocalShellFix) createTmpFileForInlines(shebang string, inlines []string
 		return tmp.Name(), err
 	}
 	return tmp.Name(), nil
+}
+
+func (l *LocalShellFix) flattenEnv() []string {
+	var env []string
+	for k, v := range l.Env {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+	return env
 }

@@ -215,7 +215,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_Inlines() {
 	assert.Contains(t, string(out), "Hello, World!")
 }
 
-func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_cript() {
+func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_script() {
 	t := s.T()
 	if runtime.GOOS == "windows" {
 		t.Skip("cannot run this test on windows")
@@ -224,7 +224,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_cript() {
 	_ = os.Chmod(tmpScript.Name(), 0700)
 	require.NoError(t, err)
 	defer func() {
-		_ = os.RemoveAll(tmpScript.Name())
+		_ = os.Remove(tmpScript.Name())
 	}()
 	_, _ = tmpScript.WriteString(`#!/bin/sh
 		echo "Hello, World!"
@@ -317,9 +317,13 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix() {
 		rule_id = rule.must_be_true.example.id
 		inlines = [
 			"echo ${env("TMP_VAR")}>%s",
+			"echo ${env("TMP_VAR2")}>>%s",
 		]
+		env = {
+			TMP_VAR2 = "${strrev(env("TMP_VAR"))}"
+		}
 	}
-`, temp.Name())
+`, temp.Name(), temp.Name())
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
 	config, err := ParseConfig("/example", context.TODO())
 	require.NoError(t, err)
@@ -329,5 +333,119 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix() {
 	require.NoError(t, err)
 	tmpFileForRead, err := os.ReadFile(temp.Name())
 	require.NoError(t, err)
-	assert.Equal(t, strings.TrimSuffix(string(tmpFileForRead), "\n"), rand)
+	assert.Contains(t, string(tmpFileForRead), rand, "predefined env should be honored")
+	assert.Contains(t, string(tmpFileForRead), reverse(rand), "env defined in `env` map should be honored")
+}
+
+func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLocal() {
+	t := s.T()
+	if runtime.GOOS == "windows" {
+		t.Skip("cannot run this test on windows")
+	}
+	temp0, err := createTempFile(t, "test_grept")
+	defer func() {
+		_ = os.Remove(temp0.Name())
+	}()
+	temp1, err := createTempFile(t, "test_grept")
+	defer func() {
+		_ = os.Remove(temp1.Name())
+	}()
+	hcl := fmt.Sprintf(`
+	rule "must_be_true" "example" {
+		condition = false
+	}
+
+	fix "local_shell" "example0" {
+		rule_id = rule.must_be_true.example.id
+		inlines = [
+			"echo \"${env("TMP_VAR")}\">%s",
+		]
+		env = {
+			TMP_VAR = "0"
+		}
+	}
+	
+	fix "local_shell" "example1" {
+		rule_id = rule.must_be_true.example.id
+		inlines = [
+			"echo \"${env("TMP_VAR")}\">%s",
+		]
+		env = {
+			TMP_VAR = "1"
+		}
+	}
+`, temp0.Name(), temp1.Name())
+	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
+	config, err := ParseConfig("/example", context.TODO())
+	require.NoError(t, err)
+	plan, err := config.Plan()
+	require.NoError(t, err)
+	err = plan.Apply()
+	require.NoError(t, err)
+	content0, err := os.ReadFile(temp0.Name())
+	require.NoError(t, err)
+	content1, err := os.ReadFile(temp1.Name())
+	require.NoError(t, err)
+	assert.Contains(t, string(content0), "0")
+	assert.Contains(t, string(content1), "1")
+}
+
+func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_scriptWithUserAssignedEnv() {
+	t := s.T()
+	if runtime.GOOS == "windows" {
+		t.Skip("cannot run this test on windows")
+	}
+	resultFile, err := createTempFile(t, "testgrept")
+	require.NoError(t, err)
+	tmpScript, err := os.CreateTemp("", "grep-test")
+	_ = os.Chmod(tmpScript.Name(), 0700)
+	require.NoError(t, err)
+	defer func() {
+		_ = os.Remove(tmpScript.Name())
+	}()
+	_, _ = tmpScript.WriteString(fmt.Sprintf(`#!/bin/sh
+		echo $TMP_ENV>%s
+`, resultFile.Name()))
+	_ = tmpScript.Close()
+
+	rand := uuid.NewString()
+	hcl := fmt.Sprintf(`
+	rule "must_be_true" "example" {
+		condition = false
+	}
+
+	fix "local_shell" "example" {
+		rule_id = rule.must_be_true.example.id
+		script = "%s"
+		env = {
+			TMP_ENV = "%s"
+		}
+	}
+`, tmpScript.Name(), rand)
+	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
+	config, err := ParseConfig("/example", context.TODO())
+	require.NoError(t, err)
+	plan, err := config.Plan()
+	require.NoError(t, err)
+	err = plan.Apply()
+	require.NoError(t, err)
+	result, err := os.ReadFile(resultFile.Name())
+	require.NoError(t, err)
+	assert.Equal(t, strings.TrimSuffix(string(result), "\n"), rand, "user assigned env should be honored with script")
+}
+
+func createTempFile(t *testing.T, pattern string) (*os.File, error) {
+	tf, err := os.CreateTemp("", pattern)
+	require.NoError(t, err)
+	err = tf.Close()
+	require.NoError(t, err)
+	return tf, err
+}
+
+func reverse(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
 }

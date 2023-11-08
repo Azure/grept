@@ -2,10 +2,13 @@ package pkg
 
 import (
 	"github.com/hashicorp/packer/hcl2template"
+	"github.com/timandy/routine"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"os"
 )
+
+var goroutineLocalEnv = routine.NewThreadLocal()
 
 func functions(baseDir string) map[string]function.Function {
 	r := hcl2template.Functions(baseDir)
@@ -29,7 +32,15 @@ func functions(baseDir string) map[string]function.Function {
 			if !key.IsKnown() {
 				return cty.UnknownVal(cty.String), nil
 			}
-			return cty.StringVal(os.Getenv(key.AsString())), nil
+			envKey := key.AsString()
+			localEnv := goroutineLocalEnv.Get()
+			if localEnv != nil {
+				if env, ok := (localEnv.(map[string]string))[envKey]; ok {
+					return cty.StringVal(env), nil
+				}
+			}
+			env := os.Getenv(envKey)
+			return cty.StringVal(env), nil
 		},
 	})
 	return r
