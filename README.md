@@ -94,6 +94,37 @@ fix local_file license {
 
 All [built-in functions](https://developer.hashicorp.com/packer/docs/templates/hcl_templates/functions) provided by [HashiCorp Packer](https://www.packer.io/) are available.
 
+## Blocks
+
+You can find detailed explanations about different components of the `grept` tool.
+
+The documents are organized by categories: `rule` blocks, `data` blocks, and `fix` blocks. 
+
+### Rule Blocks
+
+Rule blocks define the rules that should be enforced in the repository. 
+
+- [`dir_exist`](./doc/r/dir_exist.md)
+- [`file_hash`](./doc/r/file_hash.md)
+- [`must_be_true`](./doc/r/must_be_true.md)
+
+### Data Blocks
+
+Data blocks define the data that should be collected from the repository.
+
+- [`git_ignore`](./doc/d/git_ignore.md)
+- [`http`](./doc/d/http.md)
+
+### Fix Blocks
+
+Fix blocks define the actions that should be taken when a rule fails.
+
+- [`local_file`](./doc/f/local_file.md)
+- [`rename_file`](./doc/f/rename_file.md)
+- [`rm_local_file`](./doc/f/rm_local_file.md)
+
+For each block type, you can find detailed information about the block's attributes, exported attributes, and usage examples.
+
 ## Contributing
 
 Contributions to `grept` are welcome! Please submit a pull request or issue on the [grept GitHub page](https://github.com/Azure/grept). 
