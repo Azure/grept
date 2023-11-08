@@ -18,7 +18,7 @@ type LocalShellFix struct {
 	*BaseBlock
 	baseFix
 	RuleId         string   `hcl:"rule_id"`
-	ExecuteCommand []string `hcl:"execute_command" default:"['/bin/sh', '-c']"` // The command used to execute the script.
+	ExecuteCommand []string `hcl:"execute_command,optional" default:"[/bin/sh,-c]"` // The command used to execute the script.
 	InlineShebang  string   `hcl:"inline_shebang,optional" validate:"required_with=Inlines"`
 	Inlines        []string `hcl:"inlines,optional" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
 	Script         string   `hcl:"script,optional" validate:"conflict_with=Inlines RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
@@ -48,6 +48,11 @@ func (l *LocalShellFix) ApplyFix() (err error) {
 	script := l.Script
 	if l.RemoteScript != "" {
 		script, err = l.downloadFile(l.RemoteScript)
+		if script != "" {
+			defer func() {
+				_ = os.RemoveAll(script)
+			}()
+		}
 		defer func() {
 			_ = os.RemoveAll(script)
 		}()
@@ -96,13 +101,17 @@ func (l *LocalShellFix) downloadFile(url string) (string, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return out.Name(), err
 	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return "", err
+		return out.Name(), err
+	}
+	err = os.Chmod(out.Name(), 0700)
+	if err != nil {
+		return out.Name(), err
 	}
 
 	return out.Name(), nil
