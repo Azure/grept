@@ -120,6 +120,7 @@ Data blocks define the data that should be collected from the repository.
 Fix blocks define the actions that should be taken when a rule fails.
 
 - [`local_file`](./doc/f/local_file.md)
+- [`local_shell`](./doc/f/local_shell.md)
 - [`rename_file`](./doc/f/rename_file.md)
 - [`rm_local_file`](./doc/f/rm_local_file.md)
 
