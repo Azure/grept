@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var validate = validator.New()
+var validate = validator.New(validator.WithRequiredStructEnabled())
 
 func registerValidator() {
 	_ = validate.RegisterValidation("conflict_with", validateConflictWith)
