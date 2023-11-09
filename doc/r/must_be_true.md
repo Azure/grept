@@ -4,7 +4,7 @@ The `must_be_true` rule block in the `grept` tool is used to enforce that a cert
 
 ## Attributes
 
-- `expression`: The expression that should evaluate to true.
+- `condition`: The expression that should evaluate to true.
 - `error_message`: The error message that will be displayed if the rule fails.
 
 ## Exported Attributes
@@ -17,7 +17,7 @@ Here's an example of how to use the `must_be_true` rule block in your configurat
 
 ```hcl
 rule "must_be_true" "example" {
-  expression    = (2 + 2) == 4
+  condition     = (2 + 2) == 4
   error_message = "The expression must be true"
 }
 ```

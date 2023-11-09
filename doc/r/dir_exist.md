@@ -4,8 +4,7 @@ The `dir_exist` rule block in the `grept` tool is used to enforce that a certain
 
 ## Attributes
 
-- `path`: The path of the directory that should exist.
-- `error_message`: The error message that will be displayed if the rule fails.
+- `dir`: The path of the directory that should exist.
 
 ## Exported Attributes
 
@@ -17,9 +16,7 @@ Here's an example of how to use the `dir_exist` rule block in your configuration
 
 ```hcl
 rule "dir_exist" "example" {
-  id             = "example_rule"
-  path           = "/path/to/dir"
-  error_message  = "The directory /path/to/dir must exist"
+  dir = "/path/to/dir"
 }
 ```
 

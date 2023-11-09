@@ -94,6 +94,10 @@ fix local_file license {
 
 All [built-in functions](https://developer.hashicorp.com/packer/docs/templates/hcl_templates/functions) provided by [HashiCorp Packer](https://www.packer.io/) are available.
 
+We've provided the following new functions:
+
+- `env`: To read environment variable, like `env("GITHUB_REPOSITORY")`.
+
 ## Blocks
 
 You can find detailed explanations about different components of the `grept` tool.
