@@ -11,12 +11,14 @@ var _ Rule = &DirExistRule{}
 type DirExistRule struct {
 	*BaseBlock
 	baseRule
-	Dir string `hcl:"dir"`
+	Dir         string `hcl:"dir"`
+	FailOnExist bool   `hcl:"fail_on_exist,optional"`
 }
 
 func (d *DirExistRule) Values() map[string]cty.Value {
 	return map[string]cty.Value{
-		"dir": ToCtyValue(d.Dir),
+		"dir":            ToCtyValue(d.Dir),
+		"faile_on_exist": ToCtyValue(d.FailOnExist),
 	}
 }
 
@@ -31,7 +33,11 @@ func (d *DirExistRule) Check() (checkError error, runtimeError error) {
 		runtimeError = err
 		return
 	}
-	if !exists {
+	if d.FailOnExist && exists {
+		checkError = fmt.Errorf("directory exists: %s", d.Dir)
+		return
+	}
+	if !d.FailOnExist && !exists {
 		checkError = fmt.Errorf("directory does not exist: %s", d.Dir)
 	}
 	return
