@@ -124,6 +124,7 @@ Fix blocks define the actions that should be taken when a rule fails.
 - [`local_shell`](./doc/f/local_shell.md)
 - [`rename_file`](./doc/f/rename_file.md)
 - [`rm_local_file`](./doc/f/rm_local_file.md)
+- [`yaml_transform`](./doc/f/yaml_transform.md)
 
 For each block type, you can find detailed information about the block's attributes, exported attributes, and usage examples.
 

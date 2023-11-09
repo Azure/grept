@@ -116,6 +116,9 @@ func (bb *BaseBlock) Name() string {
 }
 
 func (bb *BaseBlock) HclSyntaxBlock() *hclsyntax.Block {
+	if bb.hb == nil {
+		return new(hclsyntax.Block)
+	}
 	return bb.hb
 }
 
@@ -126,10 +129,16 @@ func (bb *BaseBlock) BaseValues() map[string]cty.Value {
 }
 
 func (bb *BaseBlock) EvalContext() *hcl.EvalContext {
+	if bb.c == nil {
+		return new(hcl.EvalContext)
+	}
 	return bb.c.EvalContext()
 }
 
 func (bb *BaseBlock) Context() context.Context {
+	if bb.c == nil {
+		return context.TODO()
+	}
 	return bb.c.ctx
 }
 

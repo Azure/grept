@@ -28,6 +28,7 @@ func registerFix() {
 	registerFunc(fixFactories, new(RmLocalFileFix))
 	registerFunc(fixFactories, new(LocalShellFix))
 	registerFunc(fixFactories, new(GitIgnoreFix))
+	registerFunc(fixFactories, new(YamlTransformFix))
 }
 
 var ruleFactories = make(blockRegistry)
