@@ -26,7 +26,7 @@ func (r *RmLocalFileFix) ApplyFix() error {
 	fs := FsFactory()
 	var err error
 	for _, path := range r.Paths {
-		removeErr := fs.Remove(path)
+		removeErr := fs.RemoveAll(path)
 		if removeErr != nil {
 			err = multierror.Append(err, removeErr)
 		}

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -48,7 +49,6 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileExist() {
 }
 
 func (s *fixRmLocalFileSuite) TestRemoveFile_FileNotExist() {
-	t := s.T()
 	fileName := "/path/to/not-exist-file"
 	rf := &RmLocalFileFix{
 		BaseBlock: &BaseBlock{
@@ -59,6 +59,28 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileNotExist() {
 
 	err := rf.ApplyFix()
 
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), filepath.FromSlash(fileName))
+	s.NoError(err)
+}
+
+func TestRemoveFile_RemoveFolder(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "test_grept")
+	require.NoError(t, err)
+	defer func() {
+		_ = os.RemoveAll(tmpDir)
+	}()
+	err = os.WriteFile(filepath.Join(tmpDir, "test"), []byte("hello"), 0600)
+	require.NoError(t, err)
+	rf := &RmLocalFileFix{
+		BaseBlock: &BaseBlock{
+			c: &Config{},
+		},
+		Paths: []string{tmpDir},
+	}
+
+	err = rf.ApplyFix()
+
+	require.NoError(t, err)
+	exists, err := afero.DirExists(FsFactory(), tmpDir)
+	require.NoError(t, err)
+	assert.False(t, exists)
 }
