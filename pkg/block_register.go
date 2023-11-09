@@ -34,6 +34,7 @@ func registerFix() {
 var ruleFactories = make(blockRegistry)
 
 func registerRule() {
+	registerFunc(ruleFactories, new(FileExistRule))
 	registerFunc(ruleFactories, new(FileHashRule))
 	registerFunc(ruleFactories, new(MustBeTrueRule))
 	registerFunc(ruleFactories, new(DirExistRule))
