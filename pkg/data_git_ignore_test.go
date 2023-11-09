@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -26,11 +25,9 @@ func TestGitIgnoreData(t *testing.T) {
 }
 
 func (s *gitIgnoreSuite) TestGitIgnore_Load() {
-	// Set up a in-memory filesystem with a .gitignore file
-	fs := s.fs
 	t := s.T()
 	ignoreContent := "# This is a comment\n*.log\n"
-	_ = afero.WriteFile(fs, ".gitignore", []byte(ignoreContent), 0644)
+	s.dummyFsWithFiles([]string{".gitignore"}, []string{ignoreContent})
 
 	// create GitIgnoreDatasource instance and load .gitignore content
 	gitIgnore := &GitIgnoreDatasource{
@@ -44,8 +41,8 @@ func (s *gitIgnoreSuite) TestGitIgnore_Load() {
 	require.NoError(t, err)
 
 	// only non-comment lines should be in Records
-	assert.Len(t, gitIgnore.Records, 1)
-	assert.Equal(t, "*.log", gitIgnore.Records[0])
+	s.Len(gitIgnore.Records, 1)
+	s.Equal("*.log", gitIgnore.Records[0])
 }
 
 func (s *gitIgnoreSuite) TestGitIgnore_NoGitIgnoreFile() {
@@ -64,20 +61,16 @@ func (s *gitIgnoreSuite) TestGitIgnore_NoGitIgnoreFile() {
 }
 
 func (s *gitIgnoreSuite) TestGitIgnore_TabSpaceNewLine() {
-	fs := s.fs
-	t := s.T()
-
 	content := "\t\n   \n \t \n\t \t\n\n\r\n"
-	_ = afero.WriteFile(fs, ".gitignore", []byte(content), 0644)
+	s.dummyFsWithFiles([]string{".gitignore"}, []string{content})
 
 	gitIgnore := &GitIgnoreDatasource{
 		BaseBlock: &BaseBlock{
 			c: &Config{},
 		},
 	}
-
 	err := gitIgnore.Load()
 
-	require.NoError(t, err)
-	assert.Empty(t, gitIgnore.Records)
+	require.NoError(s.T(), err)
+	s.Empty(gitIgnore.Records)
 }
