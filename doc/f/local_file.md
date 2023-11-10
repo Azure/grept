@@ -4,7 +4,7 @@ The `local_file` fix block in the `grept` tool is used to write a specified cont
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `paths`: A list of file paths where the content should be written.
 - `content`: The content to be written to the files.
 
@@ -18,9 +18,9 @@ Here's an example of how to use the `local_file` fix block in your configuration
 
 ```hcl
 fix "local_file" "example" {
-  rule_id = "example_rule"
-  paths   = ["/path/to/file1", "/path/to/file2"]
-  content = "Example content"
+  rule_ids = ["example_rule"]
+  paths    = ["/path/to/file1", "/path/to/file2"]
+  content  = "Example content"
 }
 ```
 

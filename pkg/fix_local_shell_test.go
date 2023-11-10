@@ -314,7 +314,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix() {
 	}
 
 	fix "local_shell" "example" {
-		rule_id = rule.must_be_true.example.id
+		rule_ids = [rule.must_be_true.example.id]
 		inlines = [
 			"echo ${env("TMP_VAR")}>%s",
 			"echo ${env("TMP_VAR2")}>>%s",
@@ -356,7 +356,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLo
 	}
 
 	fix "local_shell" "example0" {
-		rule_id = rule.must_be_true.example.id
+		rule_ids = [rule.must_be_true.example.id]
 		inlines = [
 			"echo \"${env("TMP_VAR")}\">%s",
 		]
@@ -366,7 +366,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLo
 	}
 	
 	fix "local_shell" "example1" {
-		rule_id = rule.must_be_true.example.id
+		rule_ids = [rule.must_be_true.example.id]
 		inlines = [
 			"echo \"${env("TMP_VAR")}\">%s",
 		]
@@ -415,7 +415,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_scriptWithUserAssignedEnv
 	}
 
 	fix "local_shell" "example" {
-		rule_id = rule.must_be_true.example.id
+		rule_ids = [rule.must_be_true.example.id]
 		script = "%s"
 		env = {
 			TMP_ENV = "%s"

@@ -41,7 +41,7 @@ func (s *dagSuite) TestDag_DagVertex() {
 	}  
   
 	fix "local_file" hello_world{  
-		rule_id = rule.file_hash.sample.id
+		rule_ids = [rule.file_hash.sample.id]
 		paths = ["/path/to/file.txt"]  
 		content = "Hello, world!"
 	}  
@@ -72,7 +72,7 @@ func (s *dagSuite) TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceB
 	}  
   
 	fix "local_file" hello_world{  
-		rule_id = rule.file_hash.sample.id
+		rule_ids = [rule.file_hash.sample.id]
 		paths = ["/path/to/file.txt"]  
 		content = "Hello, world!"
 	}  

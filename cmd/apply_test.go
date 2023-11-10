@@ -38,7 +38,7 @@ func TestApplyFunc(t *testing.T) {
 		fix "local_file" "test" {    
 			paths = ["test.txt"]    
 			content = data.http.test.response_body    
-			rule_id = rule.file_hash.test.id    
+			rule_ids = [rule.file_hash.test.id]    
 		}    
 	`
 

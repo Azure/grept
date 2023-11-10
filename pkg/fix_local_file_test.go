@@ -49,7 +49,7 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	path := "/file1.txt"
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
-		RuleId:    uuid.NewString(),
+		RuleIds:   []string{uuid.NewString()},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
 	}
@@ -75,7 +75,7 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	path := "/example/sub1/file1.txt"
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
-		RuleId:    uuid.NewString(),
+		RuleIds:   []string{uuid.NewString()},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
 	}

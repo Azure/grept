@@ -19,7 +19,7 @@ var _ Fix = &LocalShellFix{}
 type LocalShellFix struct {
 	*BaseBlock
 	baseFix
-	RuleId         string            `hcl:"rule_id"`
+	RuleIds        []string          `hcl:"rule_ids" json:"rule_ids"`
 	ExecuteCommand []string          `hcl:"execute_command,optional" default:"[/bin/sh,-c]"` // The command used to execute the script.
 	InlineShebang  string            `hcl:"inline_shebang,optional" validate:"required_with=Inlines"`
 	Inlines        []string          `hcl:"inlines,optional" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
@@ -35,6 +35,7 @@ func (l *LocalShellFix) Type() string {
 
 func (l *LocalShellFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
+		"rule_ids":      ToCtyValue(l.RuleIds),
 		"inlines":       ToCtyValue(l.Inlines),
 		"script":        ToCtyValue(l.Script),
 		"remote_script": ToCtyValue(l.RemoteScript),
@@ -101,8 +102,8 @@ func (l *LocalShellFix) ApplyFix() (err error) {
 	return nil
 }
 
-func (l *LocalShellFix) GetRuleId() string {
-	return l.RuleId
+func (l *LocalShellFix) GetRuleIds() []string {
+	return l.RuleIds
 }
 
 func (l *LocalShellFix) downloadFile(url string) (string, error) {

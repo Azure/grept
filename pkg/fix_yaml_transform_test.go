@@ -31,7 +31,7 @@ func (y *yamlTransformSuite) TestMultipleTransform() {
 		condition = false
 	}
 	fix "yaml_transform" example {
-		rule_id = rule.must_be_true.example.id
+		rule_ids = [rule.must_be_true.example.id]
 		file_path = "fake.yaml"
 		transform {
 			yaml_path = "/on/pull_request"

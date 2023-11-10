@@ -22,8 +22,8 @@ Here's an example of how to use the `http` data block in your configuration file
 
 ```hcl
 data "http" "example" {
-  url          = "https://example.com/api"
-  method       = "POST"
+  url    = "https://example.com/api"
+  method = "POST"
   request_body = jsonencode({
     query = "example"
   })

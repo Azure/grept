@@ -4,7 +4,7 @@ The `rename_file` fix block in the `grept` tool is used to rename a local file. 
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `old_name`: The current name of the file to be renamed.
 - `new_name`: The new name for the file.
 

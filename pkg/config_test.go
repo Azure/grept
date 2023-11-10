@@ -41,7 +41,7 @@ func (s *configSuite) TestParseConfig() {
 	}  
   
 	fix "local_file" hello_world{  
-		rule_id = rule.file_hash.sample.id
+		rule_ids = [rule.file_hash.sample.id]
 		paths = ["/path/to/file.txt"]  
 		content = "Hello, world!"
 	}  
@@ -63,7 +63,7 @@ func (s *configSuite) TestParseConfig() {
 	assert.Equal(t, 1, len(config.Fixes))
 	lff, ok := config.Fixes[0].(*LocalFileFix)
 	require.True(t, ok)
-	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleId)
+	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleIds[0])
 	assert.Equal(t, "/path/to/file.txt", lff.Paths[0])
 	assert.Equal(t, "Hello, world!", lff.Content)
 }
@@ -130,7 +130,7 @@ func (s *configSuite) TestEvalContextRef() {
 	}  
   
 	fix "local_file" hello_world{  
-		rule_id = rule.file_hash.sample.id
+		rule_ids = [rule.file_hash.sample.id]
 		paths = [rule.file_hash.sample.glob]  
 		content = "Hello, world!"
 	}
@@ -305,7 +305,7 @@ func (s *configSuite) TestApplyPlan_multiple_file_fix() {
 	}    
     
 	fix "local_file" hello_world{    
-		rule_id = rule.file_hash.sample.id  
+		rule_ids = [rule.file_hash.sample.id]  
 		paths = rule.file_hash.sample.hash_mismatch_files  
 		content = "hello"  
 	}    
@@ -407,5 +407,34 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			assert.Equal(s.T(), c.want, h.Method)
 		})
 	}
+}
 
+func (s *configSuite) TestAnyRuleFailShouldTriggerFix() {
+	hclConfig := `  
+	rule "must_be_true" true {
+		condition = true
+	}
+	rule "must_be_true" false {
+		condition = false
+	}
+	fix "local_file" file {
+		rule_ids = [rule.must_be_true.true.id, rule.must_be_true.false.id]
+		paths = ["/file"]
+		content = ""
+	}
+	`
+
+	dir := "."
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	// Parse the configuration
+	config, err := ParseConfig(dir, nil)
+	s.NoError(err)
+	plan, err := config.Plan()
+	s.NoError(err)
+	err = plan.Apply()
+	s.NoError(err)
+	exists, err := afero.Exists(s.fs, "/file")
+	s.NoError(err)
+	s.True(exists)
 }

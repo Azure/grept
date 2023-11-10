@@ -4,7 +4,7 @@ The `local_shell` fix block in the `grept` tool is used to execute a shell comma
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `execute_command`: The command used to execute the script. Defaults to `['/bin/sh', '-c']`.
 - `inline_shebang`: The shebang line to be used when executing inline scripts. Defaults to `/bin/sh -e`. Must be set along with `inlines`.
 - `inlines`: A list of inline scripts to be executed. Must not be set along with `script` or `remote_script`.
@@ -23,8 +23,8 @@ Here's an example of how to use the `local_shell` fix block in your configuratio
 
 ```hcl
 fix "local_shell" "example" {
-  rule_id         = "example_rule"
-  inlines         = ["echo 'This is an inline script'", "ls -l"]
+  rule_ids = ["example_rule"]
+  inlines  = ["echo 'This is an inline script'", "ls -l"]
 }
 ```
 
@@ -34,13 +34,13 @@ Alternatively, you can provide a local or remote script to be executed:
 
 ```hcl
 fix "local_shell" "example" {
-  rule_id = "example_rule"
-  script = "/path/to/local/script.sh"
+  rule_ids = ["example_rule"]
+  script   = "/path/to/local/script.sh"
 }
 
 fix "local_shell" "example" {
-  rule_id = "example_rule"
-  remote_script = "http://example.com/script.sh"
+  rule_ids       = ["example_rule"]
+  remote_script  = "http://example.com/script.sh"
 }
 ```
 
@@ -50,9 +50,9 @@ You can also set environment variables for the script:
 
 ```hcl
 fix "local_shell" "example" {
-  rule_id = "example_rule"
-  script  = "/path/to/local/script.sh"
-  env     = {
+  rule_ids = ["example_rule"]
+  script   = "/path/to/local/script.sh"
+  env = {
     "VAR1" = "value1"
     "VAR2" = "value2"
   }

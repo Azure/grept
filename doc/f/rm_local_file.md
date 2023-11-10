@@ -4,7 +4,7 @@ The `rm_local_file` fix block in the `grept` tool is used to remove a local file
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `paths`: The list of paths of the files or directories to be removed. If a path points a directory, all sub folders and files in that directory would be deleted. If a path points to a non-exist file or directory, no error would be thrown.
 
 ## Exported Attributes
@@ -17,7 +17,7 @@ Here's an example of how to use the `rm_local_file` fix block in your configurat
 
 ```hcl
 fix "rm_local_file" "example" {
-  rule_id  = "example_rule"
+  rule_ids = ["example_rule"]
   paths    = ["/path/to/file"]
 }
 ```

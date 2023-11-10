@@ -24,7 +24,7 @@ You can then access the records exported by this block in your rules or fixes. F
 
 ```hcl
 rule "must_be_true" "example" {
-  condition = contains(data.git_ignore.example.records, "/bin")
+  condition     = contains(data.git_ignore.example.records, "/bin")
   error_message = "The /bin directory should be ignored"
 }
 ```

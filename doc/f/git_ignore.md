@@ -4,7 +4,7 @@ The `git_ignore` fix block in the `grept` tool is used to manage the `.gitignore
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `exist`: A list of entries that must be present in the `.gitignore` file.
 - `not_exist`: A list of entries that must not be present in the `.gitignore` file.
 
@@ -18,9 +18,9 @@ Here's an example of how to use the `git_ignore` fix block in your configuration
 
 ```hcl
 fix "git_ignore" "example" {
-  rule_id   = "example_rule"
-  exist     = ["*.log", "tmp/"]
-  not_exist = ["*.bak"]
+  rule_ids   = ["example_rule"]
+  exist      = ["*.log", "tmp/"]
+  not_exist  = ["*.bak"]
 }
 ```
 
@@ -30,8 +30,8 @@ You can also use the `exist` attribute alone to ensure certain entries are prese
 
 ```hcl
 fix "git_ignore" "example" {
-  rule_id = "example_rule"
-  exist   = ["*.log", "tmp/"]
+  rule_ids = ["example_rule"]
+  exist    = ["*.log", "tmp/"]
 }
 ```
 
@@ -39,8 +39,8 @@ Or use the `not_exist` attribute alone to ensure certain entries are not present
 
 ```hcl
 fix "git_ignore" "example" {
-  rule_id   = "example_rule"
-  not_exist = ["*.bak"]
+  rule_ids   = ["example_rule"]
+  not_exist  = ["*.bak"]
 }
 ```
 

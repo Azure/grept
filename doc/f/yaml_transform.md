@@ -6,7 +6,7 @@ The `yaml_transform` fix block in the `grept` tool is used to manipulate the con
 
 ## Attributes
 
-- `rule_id`: The ID of the rule this fix is associated with.
+- `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `file_path`: The path to the YAML file to be transformed. The file should have a `.yaml` or `.yml` extension.
 - `transform`: A list of transformations to be applied to the YAML file. Each transformation is a block with the following attributes:
   - `yaml_path`: The path to the node in the YAML file to be transformed. The path uses JSON Pointer syntax.
@@ -22,14 +22,14 @@ Here's an example of how to use the `yaml_transform` fix block in your configura
 
 ```hcl
 fix "yaml_transform" "example" {
-  rule_id  = "example_rule"
-  file_path = "./path/to/file.yaml"
+  rule_ids   = ["example_rule"]
+  file_path  = "./path/to/file.yaml"
   transform {
-    yaml_path = "/path/to/node"
+    yaml_path    = "/path/to/node"
     string_value = "new value"
   }
   transform {
-    yaml_path = "/path/to/another/node"
+    yaml_path    = "/path/to/another/node"
     string_value = "another new value"
   }
 }
@@ -75,7 +75,7 @@ You can set `checkout` step's action version like this:
 
 ```hcl
 fix "yaml_transform" "example" {
-  rule_id  = "example_rule"
+  rule_ids  = ["example_rule"]
   file_path = "./path/to/file.yaml"
   transform {
     yaml_path    = "/jobs/prepr-check/steps/~{"name":"checkout"}/uses"

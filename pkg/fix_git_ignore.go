@@ -15,7 +15,7 @@ var _ Fix = &GitIgnoreFix{}
 type GitIgnoreFix struct {
 	*BaseBlock
 	baseFix
-	RuleId   string   `hcl:"rule_id"`
+	RuleIds  []string `hcl:"rule_ids" json:"rule_ids"`
 	Exist    []string `hcl:"exist,optional" validate:"at_least_one_of=Exist NotExist"`
 	NotExist []string `hcl:"not_exist,optional" validate:"at_least_one_of=Exist NotExist"`
 }
@@ -26,7 +26,7 @@ func (g *GitIgnoreFix) Type() string {
 
 func (g *GitIgnoreFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
-		"rule_id":   ToCtyValue(g.RuleId),
+		"rule_ids":  ToCtyValue(g.RuleIds),
 		"exist":     ToCtyValue(g.Exist),
 		"not_exist": ToCtyValue(g.NotExist),
 	}
@@ -88,8 +88,8 @@ func (g *GitIgnoreFix) ApplyFix() error {
 	return nil
 }
 
-func (g *GitIgnoreFix) GetRuleId() string {
-	return g.RuleId
+func (g *GitIgnoreFix) GetRuleIds() []string {
+	return g.RuleIds
 }
 
 func (g *GitIgnoreFix) trimLine(line string) string {

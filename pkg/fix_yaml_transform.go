@@ -18,14 +18,14 @@ var _ Fix = &YamlTransformFix{}
 type YamlTransformFix struct {
 	*BaseBlock
 	baseFix
-	RuleId    string          `hcl:"rule_id"`
-	FilePath  string          `hcl:"file_path" validate:"endswith=.yaml|endswith=.yml"`
+	RuleIds   []string        `hcl:"rule_ids" json:"rule_ids"`
+	FilePath  string          `hcl:"file_path" json:"file_path" validate:"endswith=.yaml|endswith=.yml"`
 	Transform []YamlTransform `hcl:"transform,block"`
 }
 
 type YamlTransform struct {
-	YamlPath    string `hcl:"yaml_path"`
-	StringValue string `hcl:"string_value"`
+	YamlPath    string `hcl:"yaml_path" json:"yaml_path"`
+	StringValue string `hcl:"string_value" json:"string_value"`
 }
 
 func (y *YamlTransformFix) Type() string {
@@ -41,7 +41,7 @@ func (y *YamlTransformFix) Values() map[string]cty.Value {
 		}))
 	}
 	return map[string]cty.Value{
-		"rule_id":   ToCtyValue(y.RuleId),
+		"rule_id":   ToCtyValue(y.RuleIds),
 		"file_path": ToCtyValue(y.FilePath),
 		"transform": cty.ListVal(transforms),
 	}
@@ -81,6 +81,6 @@ func (y *YamlTransformFix) ApplyFix() error {
 	return nil
 }
 
-func (y *YamlTransformFix) GetRuleId() string {
-	return y.RuleId
+func (y *YamlTransformFix) GetRuleIds() []string {
+	return y.RuleIds
 }

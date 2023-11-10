@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"github.com/ahmetb/go-linq/v3"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -230,7 +231,7 @@ func (c *Config) Plan() (Plan, error) {
 			// Find fixes for this rule
 			for _, fix := range c.Fixes {
 				refresh(fix)
-				if fix.GetRuleId() == rule.Id() {
+				if linq.From(fix.GetRuleIds()).Contains(rule.Id()) {
 					plan[fr] = append(plan[fr], fix)
 				}
 			}
