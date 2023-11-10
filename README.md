@@ -94,9 +94,21 @@ fix local_file license {
 
 All [built-in functions](https://developer.hashicorp.com/packer/docs/templates/hcl_templates/functions) provided by [HashiCorp Packer](https://www.packer.io/) are available.
 
+All [`toxxx` functions provided by Terraform `1.5.7`](https://github.com/hashicorp/terraform/blob/v1.5.7/internal/lang/functions.go#L133-L138) are supported:
+
+* `tostring`
+* `tonumber`
+* `tobool`
+* `toset`
+* `tolist`
+* `tomap`
+
+**Terraform `1.5.7` still uses MPL 2.0 License!**
+
 We've provided the following new functions:
 
 - `env`: To read environment variable, like `env("GITHUB_REPOSITORY")`.
+- `compliment`: Return the compliment of multiple lists.
 
 ## Blocks
 
