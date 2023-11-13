@@ -24,7 +24,7 @@ func TestFunction_Getenv(t *testing.T) {
 	`
 	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(sampleConfig), 0644)
 	// Parse the config
-	config, err := ParseConfig(".", nil)
+	config, err := ParseConfig("", "", nil)
 	require.NoError(t, err)
 	http := config.DataSources[0].(*HttpDatasource)
 	assert.Equal(t, content, http.Url)
@@ -49,7 +49,7 @@ func TestFunction_Compliment(t *testing.T) {
 	`
 	_ = afero.WriteFile(fs, "test.grept.hcl", []byte(sampleConfig), 0644)
 	// Parse the config
-	config, err := ParseConfig(".", nil)
+	config, err := ParseConfig("", "", nil)
 	require.NoError(t, err)
 	for _, rule := range config.Rules {
 		err, rErr := rule.Check()

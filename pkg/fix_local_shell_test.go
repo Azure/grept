@@ -325,7 +325,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix() {
 	}
 `, temp.Name(), temp.Name())
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("/example", context.TODO())
+	config, err := ParseConfig("", "/example", context.TODO())
 	require.NoError(t, err)
 	plan, err := config.Plan()
 	require.NoError(t, err)
@@ -376,7 +376,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLo
 	}
 `, temp0.Name(), temp1.Name())
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("/example", context.TODO())
+	config, err := ParseConfig("", "/example", context.TODO())
 	require.NoError(t, err)
 	plan, err := config.Plan()
 	require.NoError(t, err)
@@ -423,7 +423,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_scriptWithUserAssignedEnv
 	}
 `, tmpScript.Name(), rand)
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("/example", context.TODO())
+	config, err := ParseConfig("", "/example", context.TODO())
 	require.NoError(t, err)
 	plan, err := config.Plan()
 	require.NoError(t, err)

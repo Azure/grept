@@ -92,7 +92,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
 	}
 `, filepath.ToSlash(temp.Name()))), 0644)
 
-	c, err := ParseConfig("/", context.TODO())
+	c, err := ParseConfig("/", "/", context.TODO())
 	require.NoError(t, err)
 	plan, err := c.Plan()
 	require.NoError(t, err)

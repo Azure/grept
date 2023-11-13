@@ -49,7 +49,7 @@ func (s *dagSuite) TestDag_DagVertex() {
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
-	config, err := ParseConfig("", nil)
+	config, err := ParseConfig("", "", nil)
 	assert.NoError(t, err)
 	assert.Len(t, config.dag.GetVertices(), 3)
 
@@ -80,7 +80,7 @@ func (s *dagSuite) TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceB
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
-	config, err := ParseConfig("", nil)
+	config, err := ParseConfig("", "", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, config.dag.GetSize())
 	roots := config.dag.GetRoots()
@@ -103,7 +103,7 @@ func (s *dagSuite) TestDag_CycleDependencyShouldCauseError() {
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
-	_, err := ParseConfig("", nil)
+	_, err := ParseConfig("", "", nil)
 	require.NotNil(t, err)
 	// The error message must contain both of two blocks' address so we're sure that it's about the loop.
 	assert.Contains(t, err.Error(), "data.http.sample")

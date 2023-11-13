@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Azure/grept/pkg"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func NewPlanCmd() *cobra.Command {
@@ -31,7 +32,11 @@ func planFunc() func(*cobra.Command, []string) error {
 			return fmt.Errorf("error getting config %s: %+v", cfgDir, err)
 		}
 
-		config, err := pkg.ParseConfig(configPath, c.Context())
+		pwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("error getting os wd: %+v", err)
+		}
+		config, err := pkg.ParseConfig(pwd, configPath, c.Context())
 		if err != nil {
 			return fmt.Errorf("error parsing config: %+v\n", err)
 		}

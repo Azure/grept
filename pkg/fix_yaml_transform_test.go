@@ -44,7 +44,7 @@ func (y *yamlTransformSuite) TestMultipleTransform() {
 	}
 `
 	y.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("/example", context.TODO())
+	config, err := ParseConfig("", "/example", context.TODO())
 	y.NoError(err)
 	y.Len(config.Fixes, 1)
 	f, ok := config.Fixes[0].(*YamlTransformFix)

@@ -93,17 +93,17 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockC
 	}
 }
 
-func ParseConfig(dir string, ctx context.Context) (*Config, error) {
+func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	config := &Config{
-		basedir: dir,
+		basedir: baseDir,
 		ctx:     ctx,
 	}
 
 	var err error
-	blocks, err := config.loadHclBlocks(dir)
+	blocks, err := config.loadHclBlocks(cfgDir)
 	if err != nil {
 		return nil, err
 	}
