@@ -18,9 +18,9 @@ Here's an example of how to use the `rename_file` fix block in your configuratio
 
 ```hcl
 fix "rename_file" "example" {
-  rule_id  = "example_rule"
-  old_name = "/path/to/old_file"
-  new_name = "/path/to/new_file"
+  rule_ids  = ["example_rule"]
+  old_name  = "/path/to/old_file"
+  new_name  = "/path/to/new_file"
 }
 ```
 
