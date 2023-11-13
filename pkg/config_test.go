@@ -462,3 +462,9 @@ func (s *configSuite) TestMultipleRulesTriggerSameFixShouldExecuteOnlyOnce() {
 	s.NoError(err)
 	s.Len(plan.Fixes, 1)
 }
+
+func (s *configSuite) TestEmptyConfigFolderShouldThrowError() {
+	_, err := ParseConfig("/", "/", context.TODO())
+	s.NotNil(err)
+	s.Contains(err.Error(), "no `.grept.hcl` file found")
+}

@@ -136,6 +136,9 @@ func (c *Config) loadHclBlocks(dir string) ([]*hclsyntax.Block, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no `.grept.hcl` file found at %s", dir)
+	}
 
 	var blocks []*hclsyntax.Block
 
