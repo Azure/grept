@@ -41,7 +41,7 @@ func planFunc() func(*cobra.Command, []string) error {
 			return fmt.Errorf("error generating plan: %s\n", err.Error())
 		}
 
-		if len(plan) == 0 {
+		if len(plan.FailedRules) == 0 {
 			fmt.Println("All rule checks successful, nothing to do.")
 			return nil
 		}

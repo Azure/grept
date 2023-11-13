@@ -96,7 +96,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
 	require.NoError(t, err)
 	plan, err := c.Plan()
 	require.NoError(t, err)
-	assert.Empty(t, plan)
+	assert.Empty(t, plan.FailedRules)
 }
 
 func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Value() {

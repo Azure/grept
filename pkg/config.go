@@ -169,10 +169,10 @@ func (c *Config) loadHclBlocks(dir string) ([]*hclsyntax.Block, error) {
 	return blocks, err
 }
 
-func (c *Config) Plan() (Plan, error) {
+func (c *Config) Plan() (*Plan, error) {
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(c.DataSources))
-	plan := make(Plan)
+	plan := newPlan()
 
 	// Load all datasources
 	for _, data := range c.DataSources {
@@ -222,17 +222,17 @@ func (c *Config) Plan() (Plan, error) {
 				// This rule passes check, no need to fix it
 				return
 			}
-			fr := &failedRule{
+			fr := &FailedRule{
 				Rule:       rule,
 				CheckError: checkErr,
 			}
+			plan.addRule(fr)
 
-			plan[fr] = make(Fixes, 0)
 			// Find fixes for this rule
 			for _, fix := range c.Fixes {
 				refresh(fix)
 				if linq.From(fix.GetRuleIds()).Contains(rule.Id()) {
-					plan[fr] = append(plan[fr], fix)
+					plan.addFix(fix)
 				}
 			}
 		}(rule)

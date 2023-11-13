@@ -4,41 +4,49 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"strings"
+	"sync"
 )
 
-type Plan map[*failedRule]Fixes
+type Plan struct {
+	FailedRules []*FailedRule
+	Fixes       map[string]Fix
+	mu          sync.Mutex
+}
 
-func (p Plan) String() string {
-	sb := strings.Builder{}
-	for fr, fixes := range p {
-		sb.WriteString(fr.String())
-		sb.WriteString("\n")
-		for _, f := range fixes {
-			sb.WriteString("  ")
-			sb.WriteString(fmt.Sprintf("fix.%s.%s would be apply:\n %s", f.Type(), f.Name(), blockToString(f)))
-		}
+func newPlan() *Plan {
+	return &Plan{
+		Fixes: make(map[string]Fix),
 	}
+}
+
+func (p *Plan) String() string {
+	sb := strings.Builder{}
+	for _, r := range p.FailedRules {
+		sb.WriteString(r.String())
+		sb.WriteString("\n")
+	}
+	for _, f := range p.Fixes {
+		sb.WriteString("  ")
+		sb.WriteString(fmt.Sprintf("fix.%s.%s would be apply:\n %s", f.Type(), f.Name(), blockToString(f)))
+	}
+
 	return sb.String()
 }
 
-func (p Plan) Apply() error {
+func (p *Plan) Apply() error {
 	var err error
-	for _, fixes := range p {
-		for _, fix := range fixes {
-			if err := eval(fix); err != nil {
-				err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) eval error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
-			}
+	for _, fix := range p.Fixes {
+		if err = eval(fix); err != nil {
+			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) eval error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, fixes := range p {
-		for _, fix := range fixes {
-			if applyErr := fix.ApplyFix(); applyErr != nil {
-				err = multierror.Append(err, applyErr)
-			}
+	for _, fix := range p.Fixes {
+		if applyErr := fix.ApplyFix(); applyErr != nil {
+			err = multierror.Append(err, applyErr)
 		}
 	}
 	if err != nil {
@@ -47,11 +55,23 @@ func (p Plan) Apply() error {
 	return nil
 }
 
-type failedRule struct {
-	Rule       Rule
+func (p *Plan) addRule(fr *FailedRule) {
+	p.mu.Lock()
+	p.FailedRules = append(p.FailedRules, fr)
+	p.mu.Unlock()
+}
+
+func (p *Plan) addFix(f Fix) {
+	p.mu.Lock()
+	p.Fixes[f.Id()] = f
+	p.mu.Unlock()
+}
+
+type FailedRule struct {
+	Rule
 	CheckError error
 }
 
-func (fr *failedRule) String() string {
+func (fr *FailedRule) String() string {
 	return fmt.Sprintf("rule.%s.%s check return failure: %s", fr.Rule.Type(), fr.Rule.Name(), fr.CheckError.Error())
 }

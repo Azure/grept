@@ -260,7 +260,7 @@ func (s *configSuite) TestPlanError_FileHashRuleError() {
 	// Test the Plan method
 	plan, runtimeErr := config.Plan()
 	assert.NoError(t, runtimeErr)
-	assert.Len(t, plan, 1)
+	assert.Len(t, plan.FailedRules, 1)
 }
 
 func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
@@ -292,7 +292,8 @@ func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
 
 	plan, err := config.Plan()
 	assert.Nil(t, err)
-	assert.Empty(t, plan)
+	assert.Empty(t, plan.FailedRules)
+	assert.Empty(t, plan.Fixes)
 }
 
 func (s *configSuite) TestApplyPlan_multiple_file_fix() {
@@ -437,4 +438,30 @@ func (s *configSuite) TestAnyRuleFailShouldTriggerFix() {
 	exists, err := afero.Exists(s.fs, "/file")
 	s.NoError(err)
 	s.True(exists)
+}
+
+func (s *configSuite) TestMultipleRulesTriggerSameFixShouldExecuteOnlyOnce() {
+	hclConfig := `  
+	rule "must_be_true" one {
+		condition = false
+	}
+	rule "must_be_true" two {
+		condition = false
+	}
+	fix "local_file" file {
+		rule_ids = [rule.must_be_true.one.id, rule.must_be_true.two.id]
+		paths = ["/file"]
+		content = ""
+	}
+	`
+
+	dir := "."
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	// Parse the configuration
+	config, err := ParseConfig(dir, nil)
+	s.NoError(err)
+	plan, err := config.Plan()
+	s.NoError(err)
+	s.Len(plan.Fixes, 1)
 }

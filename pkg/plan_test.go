@@ -9,25 +9,28 @@ import (
 func TestPlan_String(t *testing.T) {
 	tests := []struct {
 		name string
-		plan Plan
+		plan *Plan
 		want []string
 	}{
 		{
 			name: "Test Plan String",
-			plan: map[*failedRule]Fixes{
-				&failedRule{
-					Rule: &FileHashRule{
-						BaseBlock: &BaseBlock{
-							name: "test-rule",
-							id:   "1",
+			plan: &Plan{
+				FailedRules: []*FailedRule{
+					{
+						Rule: &FileHashRule{
+							BaseBlock: &BaseBlock{
+								name: "test-rule",
+								id:   "1",
+							},
+							Glob:      "test-glob",
+							Hash:      "test-hash",
+							Algorithm: "sha1",
 						},
-						Glob:      "test-glob",
-						Hash:      "test-hash",
-						Algorithm: "sha1",
+						CheckError: fmt.Errorf("test error"),
 					},
-					CheckError: fmt.Errorf("test error"),
-				}: {
-					&LocalFileFix{
+				},
+				Fixes: map[string]Fix{
+					"test_id": &LocalFileFix{
 						BaseBlock: &BaseBlock{
 							name: "test-fix",
 						},
