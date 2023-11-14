@@ -18,7 +18,7 @@ require (
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/timandy/routine v1.1.2
 	github.com/vmware-labs/go-yaml-edit v0.3.0
