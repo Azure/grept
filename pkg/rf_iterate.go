@@ -43,14 +43,14 @@ func iterator(keyword string, addressLength int) refIterator {
 }
 
 func name(t hcl.Traverser) string {
-	switch t.(type) {
+	switch tp := t.(type) {
 	case hcl.TraverseRoot:
 		{
-			return t.(hcl.TraverseRoot).Name
+			return tp.Name
 		}
 	case hcl.TraverseAttr:
 		{
-			return t.(hcl.TraverseAttr).Name
+			return tp.Name
 		}
 	default:
 		{

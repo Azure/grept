@@ -343,10 +343,12 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLo
 		t.Skip("cannot run this test on windows")
 	}
 	temp0, err := createTempFile(t, "test_grept")
+	s.NoError(err)
 	defer func() {
 		_ = os.Remove(temp0.Name())
 	}()
 	temp1, err := createTempFile(t, "test_grept")
+	s.NoError(err)
 	defer func() {
 		_ = os.Remove(temp1.Name())
 	}()

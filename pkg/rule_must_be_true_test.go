@@ -81,6 +81,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
 	_, err = temp.WriteString(expectedContent)
 	require.NoError(t, err)
 	err = temp.Close()
+	require.NoError(t, err)
 	defer func() {
 		s := temp.Name()
 		_ = os.Remove(s)

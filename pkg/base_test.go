@@ -24,7 +24,7 @@ func (t *testBase) teardown() {
 }
 
 func (t *testBase) dummyFsWithFiles(fileNames []string, contents []string) {
-	for i, _ := range fileNames {
+	for i := range fileNames {
 		_ = afero.WriteFile(t.fs, fileNames[i], []byte(contents[i]), 0644)
 	}
 }
