@@ -12,7 +12,7 @@ var _ hclsyntax.Walker = dagWalker{}
 
 type dagWalker struct {
 	dag       *dag.DAG
-	rootBlock block
+	rootBlock *hclsyntax.Block
 }
 
 func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {

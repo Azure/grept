@@ -46,6 +46,10 @@ Omitting `[path-to-config-folder]` will use the current folder instead.
 
 You can use the `-a` or `--auto` flag to apply fixes without confirmation.
 
+```
+grept apply -a [path-to-config-folder]
+```
+
 The config folder path support multiple different types:
 
 - [Local paths](https://developer.hashicorp.com/terraform/language/modules/sources#local-paths)
@@ -64,10 +68,6 @@ grept apply git::https://github.com/lonegunmanb/grept-example-config.git//mit-ex
 ```
 
 You can check [Terraform Module sources](https://developer.hashicorp.com/terraform/language/modules/sources) document for more details.
-
-```
-grept apply -a [path-to-config-folder]
-```
 
 ## Example
 
@@ -103,7 +103,7 @@ All [`toxxx` functions provided by Terraform `1.5.7`](https://github.com/hashico
 * `tolist`
 * `tomap`
 
-**Terraform `1.5.7` still uses MPL 2.0 License!**
+**Terraform `1.5.7` still used MPL 2.0 License!**
 
 We've provided the following new functions:
 
@@ -152,4 +152,4 @@ Contributions to `grept` are welcome! Please submit a pull request or issue on t
 
 `grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/main/LICENSE).
 
-This tool used [HashiCorp Packer](https://www.packer.io/)'s built-in functions, but I've already locked Packer's version at v1.9.3 so it was a MPL license library.
+This tool used [HashiCorp Packer](https://www.packer.io/)'s built-in functions, and all `toxxx` functions from [HashiCorp Terraform](https://www.terraform.io), but I've already locked Packer's version at v1.9.3, and Terraform function code is copied from version `1.5.7` so they're both MPL license library.
