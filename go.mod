@@ -15,6 +15,7 @@ require (
 	github.com/hashicorp/packer v1.8.0
 	github.com/heimdalr/dag v1.3.1
 	github.com/mcuadros/go-defaults v1.2.0
+	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.7.0
@@ -24,7 +25,7 @@ require (
 	github.com/vmware-labs/yaml-jsonpointer v0.1.0
 	github.com/zclconf/go-cty v1.14.1
 	golang.org/x/net v0.17.0
-	golang.org/x/text v0.13.0
+	golang.org/x/text v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -112,7 +113,6 @@ require (
 	github.com/mitchellh/iochan v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/peterh/liner v1.2.2 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
