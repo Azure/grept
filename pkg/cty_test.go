@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 
@@ -163,6 +164,60 @@ func TestGoTypeToCtyType(t *testing.T) {
 			if got := GoTypeToCtyType(tt.goType); got != tt.wantCtyType {
 				t.Errorf("GoTypeToCtyType() = %v, want %v", got, tt.wantCtyType)
 			}
+		})
+	}
+}
+
+func TestCtyValueToString(t *testing.T) {
+	tests := []struct {
+		name string
+		val  cty.Value
+		want string
+	}{
+		{
+			name: "string",
+			val:  cty.StringVal("hello"),
+			want: "hello",
+		},
+		{
+			name: "number",
+			val:  cty.NumberIntVal(123),
+			want: "123",
+		},
+		{
+			name: "bool",
+			val:  cty.BoolVal(true),
+			want: "true",
+		},
+		{
+			name: "nil",
+			val:  cty.NilVal,
+			want: "nil",
+		},
+		{
+			name: "list",
+			val:  cty.ListVal([]cty.Value{cty.StringVal("a"), cty.StringVal("b")}),
+			want: "[a, b]",
+		},
+		{
+			name: "map",
+			val:  cty.MapVal(map[string]cty.Value{"key": cty.StringVal("value")}),
+			want: "{key: value}",
+		},
+		{
+			name: "object",
+			val: cty.ObjectVal(map[string]cty.Value{
+				"key":  cty.StringVal("value"),
+				"key1": cty.NumberIntVal(1),
+			}),
+			want: "{key: value, key1: 1}",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CtyValueToString(tt.val)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

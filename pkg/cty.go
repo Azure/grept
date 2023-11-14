@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 )
@@ -90,4 +92,40 @@ func GoTypeToCtyType(goType reflect.Type) cty.Type {
 
 func Int(i int) *int {
 	return &i
+}
+
+func CtyValueToString(val cty.Value) string {
+	switch val.Type() {
+	case cty.String:
+		return val.AsString()
+	case cty.Number:
+		bf := val.AsBigFloat()
+		return bf.Text('f', -1)
+	case cty.Bool:
+		return fmt.Sprintf("%t", val.True())
+	case cty.NilType:
+		return "nil"
+	default:
+		if val.Type().IsListType() || val.Type().IsSetType() || val.Type().IsTupleType() {
+			strs := make([]string, 0, val.LengthInt())
+			it := val.ElementIterator()
+			for it.Next() {
+				_, v := it.Element()
+				strs = append(strs, CtyValueToString(v))
+			}
+			return "[" + strings.Join(strs, ", ") + "]"
+		} else if val.Type().IsMapType() || val.Type().IsObjectType() {
+			strs := make([]string, 0, val.LengthInt())
+			it := val.ElementIterator()
+			for it.Next() {
+				k, v := it.Element()
+				strs = append(strs, fmt.Sprintf("%s: %s", k.AsString(), CtyValueToString(v)))
+			}
+			return "{" + strings.Join(strs, ", ") + "}"
+		} else {
+			// For other types, use the GoString method, which will give a
+			// string representation of the internal structure of the value.
+			return val.GoString()
+		}
+	}
 }

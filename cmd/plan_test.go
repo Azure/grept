@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func TestPlanFunc_NoCheckFailure(t *testing.T) {
+func TestPlanFunc_WithSuccessfulCheck(t *testing.T) {
 	expectedContent := "Mock server response"
 	// Create a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func TestPlanFunc_NoCheckFailure(t *testing.T) {
 	assert.Contains(t, output, "All rule checks successful, nothing to do.")
 }
 
-func TestPlanFunc_CheckFailure(t *testing.T) {
+func TestPlanFunc_WithFailedCheck(t *testing.T) {
 	expectedContent := "Mock server response"
 	// Create a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
