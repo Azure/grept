@@ -216,14 +216,7 @@ func (s *configSuite) TestPlanError_DatasourceError() {
 `, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 	// Parse the config
-	config, err := ParseConfig("", "", nil)
-	require.NoError(t, err)
-
-	config.ctx = context.TODO()
-
-	// Test the Plan method
-	plan, err := config.Plan()
-	assert.Empty(t, plan)
+	_, err := ParseConfig("", "", context.TODO())
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error making request")
 	assert.Contains(t, err.Error(), "data.http.foo")
@@ -467,4 +460,27 @@ func (s *configSuite) TestEmptyConfigFolderShouldThrowError() {
 	_, err := ParseConfig("/", "/", context.TODO())
 	s.NotNil(err)
 	s.Contains(err.Error(), "no `.grept.hcl` file found")
+}
+
+func (s *configSuite) TestParseConfigBeforePlan_UnknownValueShouldNotTriggerError() {
+	t := s.T()
+	expectedContent := "{\"hello\": \"world\"}"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(expectedContent))
+	}))
+	defer server.Close()
+
+	sampleConfig := fmt.Sprintf(`  
+	data "http" "foo" {  
+		url = "%s"  
+	}  
+  
+	rule "must_be_true" "bar" {
+		condition = yamldecode(data.http.foo.response_body).hello == "world"
+	}  
+	`, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	_, err := ParseConfig("/", "", nil)
+	require.NoError(t, err)
 }

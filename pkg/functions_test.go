@@ -5,16 +5,22 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 func TestFunction_Getenv(t *testing.T) {
-	// Create a mock file system and write a file
+	content := "Expected content"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(content))
+	}))
+	defer server.Close()
+
 	fs := afero.NewMemMapFs()
 	stub := gostub.Stub(&FsFactory, func() afero.Fs { return fs })
 	defer stub.Reset()
-	content := "Expected content"
-	t.Setenv("TEST_URL", content)
+	t.Setenv("TEST_URL", server.URL)
 
 	// Define a sample config for testing
 	sampleConfig := `  
@@ -27,7 +33,7 @@ func TestFunction_Getenv(t *testing.T) {
 	config, err := ParseConfig("", "", nil)
 	require.NoError(t, err)
 	http := config.DataSources[0].(*HttpDatasource)
-	assert.Equal(t, content, http.Url)
+	assert.Equal(t, server.URL, http.Url)
 }
 
 func TestFunction_Compliment(t *testing.T) {

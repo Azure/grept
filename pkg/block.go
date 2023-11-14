@@ -88,15 +88,11 @@ func refresh(b block) {
 	_ = eval(b)
 }
 
-func blockAddress(b block) string {
+func blockAddress(b *hclsyntax.Block) string {
 	sb := strings.Builder{}
-	sb.WriteString(b.BlockType())
+	sb.WriteString(b.Type)
 	sb.WriteString(".")
-	if t := b.Type(); t != "" {
-		sb.WriteString(t)
-		sb.WriteString(".")
-	}
-	sb.WriteString(b.Name())
+	sb.WriteString(concatLabels(b.Labels))
 	return sb.String()
 }
 
