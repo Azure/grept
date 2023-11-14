@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/hashicorp/go-getter/v2 v2.2.1
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.4
+	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/packer v1.8.0
 	github.com/heimdalr/dag v1.3.1
