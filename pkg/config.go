@@ -132,7 +132,7 @@ func (c *Config) parseBlocks(blocks []*hclsyntax.Block) error {
 
 func (c *Config) loadHclBlocks(dir string) ([]*hclsyntax.Block, error) {
 	fs := FsFactory()
-	matches, err := afero.Glob(fs, fmt.Sprintf(filepath.Join(dir, "*.grept.hcl")))
+	matches, err := afero.Glob(fs, filepath.Join(dir, "*.grept.hcl"))
 	if err != nil {
 		return nil, err
 	}
