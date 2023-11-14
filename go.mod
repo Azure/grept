@@ -15,6 +15,7 @@ require (
 	github.com/hashicorp/packer v1.8.0
 	github.com/heimdalr/dag v1.3.1
 	github.com/mcuadros/go-defaults v1.2.0
+	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.7.0
@@ -23,8 +24,8 @@ require (
 	github.com/vmware-labs/go-yaml-edit v0.3.0
 	github.com/vmware-labs/yaml-jsonpointer v0.1.0
 	github.com/zclconf/go-cty v1.14.1
-	golang.org/x/net v0.17.0
-	golang.org/x/text v0.13.0
+	golang.org/x/net v0.18.0
+	golang.org/x/text v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -112,7 +113,6 @@ require (
 	github.com/mitchellh/iochan v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/peterh/liner v1.2.2 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
@@ -125,9 +125,9 @@ require (
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.1 // indirect
 	go.mongodb.org/mongo-driver v1.5.1 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/api v0.126.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
