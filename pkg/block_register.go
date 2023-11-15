@@ -23,6 +23,7 @@ func registerFunc(registry blockRegistry, t block) {
 var fixFactories = make(blockRegistry)
 
 func registerFix() {
+	registerFunc(fixFactories, new(CopyFileFix))
 	registerFunc(fixFactories, new(LocalFileFix))
 	registerFunc(fixFactories, new(RenameFileFix))
 	registerFunc(fixFactories, new(RmLocalFileFix))

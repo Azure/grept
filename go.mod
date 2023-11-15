@@ -1,6 +1,6 @@
 module github.com/Azure/grept
 
-go 1.21
+go 1.21.4
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
