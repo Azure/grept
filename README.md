@@ -136,6 +136,7 @@ Data blocks define the data that should be collected from the repository.
 
 Fix blocks define the actions that should be taken when a rule fails.
 
+- [`copy_file`](./doc/f/copy_file.md)
 - [`git_ignore`](./doc/f/git_ignore.md)
 - [`local_file`](./doc/f/local_file.md)
 - [`local_shell`](./doc/f/local_shell.md)
