@@ -49,7 +49,7 @@ func (l *LocalShellFix) ApplyFix() (err error) {
 	// user assigned env, must set these env then re-render all attributes
 	if len(l.Env) > 0 {
 		hclfuncs.GoroutineLocalEnv.Set(l.Env)
-		hclfuncs.GoroutineLocalEnv.Remove()
+		defer hclfuncs.GoroutineLocalEnv.Remove()
 		diag := gohcl.DecodeBody(l.HclSyntaxBlock().Body, l.EvalContext(), l)
 		if diag.HasErrors() {
 			return diag
