@@ -518,8 +518,9 @@ github.com/urfave/cli v0.0.0-20171014202726-7bc6a0acffa5/go.mod h1:70zkFmudgCuE/
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmware-labs/go-yaml-edit v0.3.0 h1:ZfMz110UY6Ke0XoYpoKEWOiKc4sAAlwP/84bQqT59U8=
 github.com/vmware-labs/go-yaml-edit v0.3.0/go.mod h1:i1snH1VfQ0wYok9WjH2nZct3e0KMqT9YqRfR9bWhTsI=
-github.com/vmware-labs/yaml-jsonpointer v0.1.0 h1:NH8aPX9cPqzI+3ti6L2QyMPl5Wy294G/BrtND0moyZ4=
 github.com/vmware-labs/yaml-jsonpointer v0.1.0/go.mod h1:JDtZ8Hd3hkVzyCAoBXxOSfP9aVfUMAG9OSPfgQTvCQk=
+github.com/vmware-labs/yaml-jsonpointer v0.1.1 h1:gO9fa7NgCEGUM/+MhpHlrmh3kNTMzFTmoeBmWSagLz0=
+github.com/vmware-labs/yaml-jsonpointer v0.1.1/go.mod h1:JDtZ8Hd3hkVzyCAoBXxOSfP9aVfUMAG9OSPfgQTvCQk=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
