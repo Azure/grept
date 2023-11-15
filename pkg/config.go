@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ahmetb/go-linq/v3"
+	"github.com/lonegunmanb/hclfuncs"
 	"path/filepath"
 	"sync"
 
@@ -53,7 +54,7 @@ type Config struct {
 
 func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
-		Functions: functions(c.basedir),
+		Functions: hclfuncs.Functions(c.basedir),
 		Variables: map[string]cty.Value{
 			"data": Values(c.DataSources),
 			"rule": Values(c.Rules),
