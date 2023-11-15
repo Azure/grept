@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/heimdalr/dag v1.3.1
-	github.com/lonegunmanb/hclfuncs v0.2.0
+	github.com/lonegunmanb/hclfuncs v0.3.0
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware-labs/go-yaml-edit v0.3.0
-	github.com/vmware-labs/yaml-jsonpointer v0.1.0
+	github.com/vmware-labs/yaml-jsonpointer v0.1.1
 	github.com/zclconf/go-cty v1.14.1
 	golang.org/x/net v0.18.0
 	golang.org/x/text v0.14.0
@@ -29,6 +29,7 @@ require (
 )
 
 require (
+	codeberg.org/6543/go-yaml2json v1.0.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect

@@ -36,6 +36,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
+codeberg.org/6543/go-yaml2json v1.0.0 h1:heGqo9VEi7gY2yNqjj7X4ADs5nzlFIbGsJtgYDLrnig=
+codeberg.org/6543/go-yaml2json v1.0.0/go.mod h1:mz61q14LWF4ZABrgMEDMmk3t9dPi6zgR1uBh2VKV2RQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -365,6 +367,8 @@ github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
 github.com/lonegunmanb/hclfuncs v0.2.0 h1:DxACi28lZW0cF2Ddkvl1t+bC2PIldo2Ya9iAwMrYwiw=
 github.com/lonegunmanb/hclfuncs v0.2.0/go.mod h1:9jxB7jaLWKNYWvvaTlobw7I5FAEm9Q4dQ6nyE//EaMs=
+github.com/lonegunmanb/hclfuncs v0.3.0 h1:V1DasUrthudqiP7va7NgFW8jJlO+oKHLH7FR76wxQpg=
+github.com/lonegunmanb/hclfuncs v0.3.0/go.mod h1:vO9Ki5r2DenWeESTlVmQHxeaqXKVu5DHtBcf3y2WoLw=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.6 h1:8yTIVnZgCoiM1TgqoeTl+LfU5Jg6/xL3QhGQnimLYnA=
@@ -520,6 +524,8 @@ github.com/vmware-labs/go-yaml-edit v0.3.0 h1:ZfMz110UY6Ke0XoYpoKEWOiKc4sAAlwP/8
 github.com/vmware-labs/go-yaml-edit v0.3.0/go.mod h1:i1snH1VfQ0wYok9WjH2nZct3e0KMqT9YqRfR9bWhTsI=
 github.com/vmware-labs/yaml-jsonpointer v0.1.0 h1:NH8aPX9cPqzI+3ti6L2QyMPl5Wy294G/BrtND0moyZ4=
 github.com/vmware-labs/yaml-jsonpointer v0.1.0/go.mod h1:JDtZ8Hd3hkVzyCAoBXxOSfP9aVfUMAG9OSPfgQTvCQk=
+github.com/vmware-labs/yaml-jsonpointer v0.1.1 h1:gO9fa7NgCEGUM/+MhpHlrmh3kNTMzFTmoeBmWSagLz0=
+github.com/vmware-labs/yaml-jsonpointer v0.1.1/go.mod h1:JDtZ8Hd3hkVzyCAoBXxOSfP9aVfUMAG9OSPfgQTvCQk=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

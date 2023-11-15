@@ -103,12 +103,13 @@ All [`toxxx` functions provided by Terraform `1.5.7`](https://github.com/hashico
 * `tolist`
 * `tomap`
 
-**Terraform `1.5.7` still used MPL 2.0 License!**
-
 We've provided the following new functions:
 
 - `env`: To read environment variable, like `env("GITHUB_REPOSITORY")`.
 - `compliment`: Return the compliment of multiple lists.
+- `yaml2json`: Convert yaml to corresponding json string.
+
+It seems like [`go-cty-yaml`](https://github.com/zclconf/go-cty-yaml) has a [bug](https://github.com/zclconf/go-cty-yaml/issues/11), so please do not use `yamldecode` function to parse and check Github action yaml files. I added this `yaml2json` function so you can convert yaml string to json first, then use `jsondecode` function to unmarshal it and check whether the github action file meets your requirement.
 
 ## Blocks
 
@@ -151,5 +152,3 @@ Contributions to `grept` are welcome! Please submit a pull request or issue on t
 ## License
 
 `grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/main/LICENSE).
-
-This tool used [HashiCorp Packer](https://www.packer.io/)'s built-in functions, and all `toxxx` functions from [HashiCorp Terraform](https://www.terraform.io), but I've already locked Packer's version at v1.9.3, and Terraform function code is copied from version `1.5.7` so they're both MPL license library.
