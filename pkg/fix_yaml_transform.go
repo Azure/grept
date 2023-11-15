@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	yaml "github.com/lonegunmanb/atomatt-yaml"
+	yamled "github.com/lonegunmanb/go-yaml-edit"
+	"github.com/lonegunmanb/go-yaml-edit/splice"
+	yptr "github.com/lonegunmanb/yaml-jsonpointer"
 	"github.com/spf13/afero"
-	yamled "github.com/vmware-labs/go-yaml-edit"
-	"github.com/vmware-labs/go-yaml-edit/splice"
-	yptr "github.com/vmware-labs/yaml-jsonpointer"
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/text/transform"
-	"gopkg.in/yaml.v3"
 )
 
 var _ Fix = &YamlTransformFix{}

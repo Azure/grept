@@ -1,6 +1,6 @@
 module github.com/Azure/grept
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
@@ -13,15 +13,16 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/heimdalr/dag v1.3.1
+	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
+	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
 	github.com/lonegunmanb/hclfuncs v0.3.0
+	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	github.com/vmware-labs/go-yaml-edit v0.3.0
-	github.com/vmware-labs/yaml-jsonpointer v0.1.1
 	github.com/zclconf/go-cty v1.14.1
 	golang.org/x/net v0.18.0
 	golang.org/x/text v0.14.0
@@ -95,5 +96,3 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace gopkg.in/yaml.v3 => github.com/atomatt/yaml v0.0.0-20200228174225-55c5cf55e3ee
