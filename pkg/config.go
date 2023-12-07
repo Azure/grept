@@ -20,25 +20,6 @@ import (
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
 
-type parserFactory func(c *Config) func(*hclsyntax.Block) error
-
-var ruleParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
-	return c.parseFunc("rule", ruleFactories, func(cc *Config, b block) {
-		cc.Rules = append(cc.Rules, b.(Rule))
-	})
-
-}
-var fixParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
-	return c.parseFunc("fix", fixFactories, func(cc *Config, b block) {
-		cc.Fixes = append(cc.Fixes, b.(Fix))
-	})
-}
-var dataParser parserFactory = func(c *Config) func(*hclsyntax.Block) error {
-	return c.parseFunc("data", datasourceFactories, func(cc *Config, b block) {
-		cc.DataSources = append(cc.DataSources, b.(Data))
-	})
-}
-
 type Datas []Data
 type Rules []Rule
 type Fixes []Fix
@@ -62,7 +43,7 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 	}
 }
 
-func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockConstructor, blockRegisterFunc func(*Config, block)) func(*hclsyntax.Block) error {
+func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockConstructor) func(*hclsyntax.Block) error {
 	return func(hb *hclsyntax.Block) error {
 		if hb.Type != expectedBlockType {
 			return nil
@@ -76,7 +57,6 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockC
 			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
 		}
 		b := f(c, hb)
-		blockRegisterFunc(c, b)
 		err := eval(b)
 		if err != nil {
 			return fmt.Errorf("%s.%s.%s(%s) eval error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
@@ -121,6 +101,13 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 			continue
 		}
 		blocks = append(blocks, b)
+		if r, isRule := b.(Rule); isRule {
+			config.Rules = append(config.Rules, r)
+		} else if d, isData := b.(Data); isData {
+			config.DataSources = append(config.DataSources, d)
+		} else if f, isFix := b.(Fix); isFix {
+			config.Fixes = append(config.Fixes, f)
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -132,17 +119,6 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		return nil, err
 	}
 	return config, nil
-}
-
-func (c *Config) parseBlocks(eval parserFactory, blocks []*hclsyntax.Block) error {
-	var err error
-	for _, b := range blocks {
-		parseError := eval(c)(b)
-		if parseError != nil {
-			err = multierror.Append(err, parseError)
-		}
-	}
-	return err
 }
 
 func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
@@ -192,22 +168,39 @@ func (c *Config) Plan() (*Plan, error) {
 	for _, v := range c.dag.GetVertices() {
 		hclBlocks = append(hclBlocks, v.(block).HclSyntaxBlock())
 	}
-	parseErr := c.parseBlocks(dataParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
+	var err error
+	for _, d := range c.DataSources {
+		evalErr := eval(d)
+		if evalErr != nil {
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
+		}
 	}
-	err := c.loadAllDataSources()
+	if err != nil {
+		return nil, err
+	}
+	err = c.loadAllDataSources()
 	if err != nil {
 		return nil, err
 	}
 
-	parseErr = c.parseBlocks(ruleParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
+	for _, r := range c.Rules {
+		evalErr := eval(r)
+		if evalErr != nil {
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
+		}
 	}
-	parseErr = c.parseBlocks(fixParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range c.Fixes {
+		evalErr := eval(f)
+		if evalErr != nil {
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
+		}
+	}
+	if err != nil {
+		return nil, err
 	}
 	var wg sync.WaitGroup
 	plan := newPlan()
