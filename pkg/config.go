@@ -21,20 +21,50 @@ import (
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
 
 type Config struct {
-	ctx           context.Context
-	basedir       string
-	DatasOperator *BlocksOperator
-	RulesOperator *BlocksOperator
-	FixesOperator *BlocksOperator
-	dag           *dag.DAG
+	ctx            context.Context
+	basedir        string
+	blockOperators map[string]*BlocksOperator
+	dag            *dag.DAG
+}
+
+func (c *Config) DatasOperator() *BlocksOperator {
+	return c.blockOperators["data"]
+}
+
+func (c *Config) RulesOperator() *BlocksOperator {
+	return c.blockOperators["rule"]
+}
+
+func (c *Config) FixesOperator() *BlocksOperator {
+	return c.blockOperators["fix"]
+}
+
+func (c *Config) DataBlocks() []Data {
+	return contravariance[Data](c.DatasOperator().blocks)
+}
+
+func (c *Config) RuleBlocks() []Rule {
+	return contravariance[Rule](c.RulesOperator().blocks)
+}
+
+func (c *Config) FixBlocks() []Fix {
+	return contravariance[Fix](c.FixesOperator().blocks)
+}
+
+func contravariance[T block](blocks []block) []T {
+	var r []T
+	for _, b := range blocks {
+		r = append(r, b.(T))
+	}
+	return r
 }
 
 func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Functions: hclfuncs.Functions(c.basedir),
 		Variables: map[string]cty.Value{
-			"data": Values(c.DatasOperator.blocks),
-			"rule": Values(c.RulesOperator.blocks),
+			"data": Values(c.DataBlocks()),
+			"rule": Values(c.RuleBlocks()),
 		},
 	}
 }
@@ -74,17 +104,24 @@ func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
 	return f(c, hb), nil
 }
 
+func newEmptyConfig() *Config {
+	return &Config{
+		ctx: context.TODO(),
+		blockOperators: map[string]*BlocksOperator{
+			"data": &BlocksOperator{},
+			"rule": &BlocksOperator{},
+			"fix":  &BlocksOperator{},
+		},
+	}
+}
+
 func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	config := &Config{
-		basedir:       baseDir,
-		ctx:           ctx,
-		DatasOperator: &BlocksOperator{},
-		RulesOperator: &BlocksOperator{},
-		FixesOperator: &BlocksOperator{},
-	}
+	config := newEmptyConfig()
+	config.basedir = baseDir
+	config.ctx = ctx
 
 	var err error
 	hclBlocks, err := config.loadHclBlocks(cfgDir)
@@ -101,11 +138,11 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		}
 		blocks = append(blocks, b)
 		if r, isRule := b.(Rule); isRule {
-			config.RulesOperator.addBlock(r)
+			config.RulesOperator().addBlock(r)
 		} else if d, isData := b.(Data); isData {
-			config.DatasOperator.addBlock(d)
+			config.DatasOperator().addBlock(d)
 		} else if f, isFix := b.(Fix); isFix {
-			config.FixesOperator.addBlock(f)
+			config.FixesOperator().addBlock(f)
 		}
 	}
 	if err != nil {
@@ -163,12 +200,8 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 }
 
 func (c *Config) Plan() (*Plan, error) {
-	var hclBlocks hclsyntax.Blocks
-	for _, v := range c.dag.GetVertices() {
-		hclBlocks = append(hclBlocks, v.(block).HclSyntaxBlock())
-	}
 	var err error
-	for _, d := range c.DatasOperator.blocks {
+	for _, d := range c.DataBlocks() {
 		evalErr := eval(d)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
@@ -182,7 +215,7 @@ func (c *Config) Plan() (*Plan, error) {
 		return nil, err
 	}
 
-	for _, r := range c.RulesOperator.blocks {
+	for _, r := range c.RuleBlocks() {
 		evalErr := eval(r)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
@@ -192,7 +225,7 @@ func (c *Config) Plan() (*Plan, error) {
 		return nil, err
 	}
 
-	for _, f := range c.FixesOperator.blocks {
+	for _, f := range c.FixBlocks() {
 		evalErr := eval(f)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
@@ -203,10 +236,10 @@ func (c *Config) Plan() (*Plan, error) {
 	}
 	var wg sync.WaitGroup
 	plan := newPlan()
-	errCh := make(chan error, len(c.RulesOperator.blocks))
+	errCh := make(chan error, len(c.RuleBlocks()))
 
 	// eval all rules
-	for _, rule := range c.RulesOperator.blocks {
+	for _, rule := range c.RuleBlocks() {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
@@ -230,7 +263,7 @@ func (c *Config) Plan() (*Plan, error) {
 			plan.addRule(fr)
 
 			// Find fixes for this rule
-			for _, f := range c.FixesOperator.blocks {
+			for _, f := range c.FixBlocks() {
 				fix := f.(Fix)
 				refresh(f)
 
@@ -254,9 +287,9 @@ func (c *Config) Plan() (*Plan, error) {
 
 func (c *Config) loadAllDataSources() error {
 	var wg sync.WaitGroup
-	errCh := make(chan error, len(c.DatasOperator.blocks))
+	errCh := make(chan error, len(c.DataBlocks()))
 	// Load all datasources
-	for _, data := range c.DatasOperator.blocks {
+	for _, data := range c.DataBlocks() {
 		wg.Add(1)
 		go func(data Data) {
 			defer wg.Done()
