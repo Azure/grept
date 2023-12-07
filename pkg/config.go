@@ -85,6 +85,19 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockC
 	}
 }
 
+func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
+	blockFactories := factories[hb.Type]
+	blockType := ""
+	if len(hb.Labels) > 0 {
+		blockType = hb.Labels[0]
+	}
+	f, ok := blockFactories[blockType]
+	if !ok {
+		return nil, fmt.Errorf("unregistered %s: %s", hb.Type, blockType)
+	}
+	return f(c, hb), nil
+}
+
 func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -95,7 +108,20 @@ func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	}
 
 	var err error
-	blocks, err := config.loadHclBlocks(cfgDir)
+	hclBlocks, err := config.loadHclBlocks(cfgDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var blocks []block
+	for _, hb := range hclBlocks {
+		b, wrapError := wrapBlock(config, hb)
+		if wrapError != nil {
+			err = multierror.Append(wrapError)
+			continue
+		}
+		blocks = append(blocks, b)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +132,7 @@ func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		return nil, err
 	}
 
-	parseErr := config.parseBlocks(dataParser, blocks)
+	parseErr := config.parseBlocks(dataParser, hclBlocks)
 	if parseErr != nil {
 		return nil, parseErr
 	}
@@ -115,11 +141,11 @@ func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		return nil, err
 	}
 
-	parseErr = config.parseBlocks(ruleParser, blocks)
+	parseErr = config.parseBlocks(ruleParser, hclBlocks)
 	if parseErr != nil {
 		return nil, parseErr
 	}
-	parseErr = config.parseBlocks(fixParser, blocks)
+	parseErr = config.parseBlocks(fixParser, hclBlocks)
 	if parseErr != nil {
 		return nil, parseErr
 	}
@@ -263,17 +289,17 @@ func (c *Config) loadAllDataSources() error {
 	return nil
 }
 
-func (c *Config) walkDag(blocks hclsyntax.Blocks) (*dag.DAG, error) {
+func (c *Config) walkDag(blocks []block) (*dag.DAG, error) {
 	g := dag.NewDAG()
 	var walkErr error
 	for _, b := range blocks {
-		err := g.AddVertexByID(blockAddress(b), b)
+		err := g.AddVertexByID(blockAddress(b.HclSyntaxBlock()), b)
 		if err != nil {
 			walkErr = multierror.Append(walkErr, err)
 		}
 	}
 	for _, b := range blocks {
-		diag := hclsyntax.Walk(b.Body, dagWalker{dag: g, rootBlock: b})
+		diag := hclsyntax.Walk(b.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: b})
 		if diag.HasErrors() {
 			walkErr = multierror.Append(walkErr, diag.Errs()...)
 		}
