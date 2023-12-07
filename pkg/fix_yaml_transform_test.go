@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
@@ -44,14 +45,20 @@ func (y *yamlTransformSuite) TestMultipleTransform() {
 	}
 `
 	y.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("", "/example", context.TODO())
+	config, err := NewConfig("", "/example", context.TODO())
+	y.NoError(err)
+	_, err = config.Plan()
 	y.NoError(err)
 	y.Len(config.Fixes, 1)
 	f, ok := config.Fixes[0].(*YamlTransformFix)
 	y.True(ok)
 	y.Len(f.Transform, 2)
-	y.Equal("/on/pull_request", f.Transform[0].YamlPath)
-	y.Equal("/permissions/contents", f.Transform[1].YamlPath)
+	var paths []string
+	linq.From(f.Transform).Select(func(i interface{}) interface{} {
+		return i.(YamlTransform).YamlPath
+	}).ToSlice(&paths)
+	y.Contains(paths, "/on/pull_request")
+	y.Contains(paths, "/permissions/contents")
 }
 
 func (y *yamlTransformSuite) TestTransformingYaml() {

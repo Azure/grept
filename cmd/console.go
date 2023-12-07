@@ -42,7 +42,7 @@ func replFunc() func(*cobra.Command, []string) error {
 		if err != nil {
 			return fmt.Errorf("error getting os wd: %+v", err)
 		}
-		config, err := pkg.ParseConfig(pwd, configPath, c.Context())
+		config, err := pkg.NewConfig(pwd, configPath, c.Context())
 		if err != nil {
 			return fmt.Errorf("error parsing config: %+v", err)
 		}
