@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"net/http"
@@ -129,9 +128,9 @@ func assertEdge(t *testing.T, dag *dag.DAG, src, dest string) {
 func assertVertex(t *testing.T, dag *dag.DAG, address string) {
 	b, err := dag.GetVertex(address)
 	assert.NoError(t, err)
-	bb, ok := b.(*hclsyntax.Block)
+	bb, ok := b.(block)
 	require.True(t, ok)
 	split := strings.Split(address, ".")
 	name := split[len(split)-1]
-	assert.Equal(t, name, bb.Labels[1])
+	assert.Equal(t, name, bb.HclSyntaxBlock().Labels[1])
 }

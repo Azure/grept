@@ -20,6 +20,11 @@ func registerFunc(registry blockRegistry, t block) {
 	}
 }
 
+var factories = map[string]blockRegistry{
+	"data": datasourceFactories,
+	"rule": ruleFactories,
+	"fix":  fixFactories,
+}
 var fixFactories = make(blockRegistry)
 
 func registerFix() {
