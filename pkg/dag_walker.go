@@ -12,7 +12,7 @@ var _ hclsyntax.Walker = dagWalker{}
 
 type dagWalker struct {
 	dag       *dag.DAG
-	rootBlock *hclsyntax.Block
+	rootBlock block
 }
 
 func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
@@ -27,7 +27,7 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 				}
 				if ref := refIter(traversal, i); ref != nil {
 					src := *ref
-					dest := blockAddress(d.rootBlock)
+					dest := blockAddress(d.rootBlock.HclSyntaxBlock())
 					dests, err := d.dag.GetChildren(src)
 					if err != nil {
 						diag = diag.Append(&hcl.Diagnostic{
