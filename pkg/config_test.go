@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
@@ -50,9 +51,10 @@ func (s *configSuite) TestParseConfig() {
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 	t := s.T()
 
-	config, err := ParseConfig("", "", nil)
-	assert.NoError(t, err)
-
+	config, err := NewConfig("", "", nil)
+	require.NoError(t, err)
+	_, err = config.Plan()
+	require.NoError(t, err)
 	assert.Equal(t, 1, len(config.Rules))
 	fhr, ok := config.Rules[0].(*FileHashRule)
 	require.True(t, ok)
@@ -79,7 +81,7 @@ func (s *configSuite) TestUnregisteredFix() {
 
 	t := s.T()
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	_, err := ParseConfig("", "", nil)
+	_, err := NewConfig("", "", nil)
 	require.NotNil(t, err)
 	expectedError := "unregistered fix: unregistered_fix"
 	assert.Contains(t, err.Error(), expectedError)
@@ -96,7 +98,7 @@ func (s *configSuite) TestUnregisteredRule() {
 
 	t := s.T()
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	_, err := ParseConfig("", "", nil)
+	_, err := NewConfig("", "", nil)
 	require.NotNil(t, err)
 
 	expectedError := "unregistered rule: unregistered_rule"
@@ -114,7 +116,7 @@ func (s *configSuite) TestInvalidBlockType() {
 
 	t := s.T()
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	_, err := ParseConfig("", "", nil)
+	_, err := NewConfig("", "", nil)
 	require.NotNil(t, err)
 
 	expectedError := "invalid block type: invalid_block"
@@ -137,8 +139,10 @@ func (s *configSuite) TestEvalContextRef() {
 `
 	t := s.T()
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
-	config, err := ParseConfig("", "", nil)
-	assert.NoError(t, err)
+	config, err := NewConfig("", "", nil)
+	require.NoError(t, err)
+	_, err = config.Plan()
+	require.NoError(t, err)
 	require.Equal(t, 1, len(config.Fixes))
 	fix := config.Fixes[0].(*LocalFileFix)
 	assert.Equal(t, "LICENSE", fix.Paths[0])
@@ -156,7 +160,9 @@ func (s *configSuite) TestFunctionInEvalContext() {
 	`, fileContent)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{fileContent, configStr})
 
-	config, err := ParseConfig("/", ".", nil)
+	config, err := NewConfig("/", ".", nil)
+	require.NoError(t, err)
+	_, err = config.Plan()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(config.Rules))
 	rule, ok := config.Rules[0].(*FileHashRule)
@@ -182,9 +188,10 @@ func (s *configSuite) TestParseConfigHttpBlock() {
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	// Parse the configuration
-	config, err := ParseConfig("", "", nil)
-	assert.NoError(t, err, "ParseConfig should not return an error")
-
+	config, err := NewConfig("", "", nil)
+	require.NoError(t, err, "NewConfig should not return an error")
+	_, err = config.Plan()
+	require.NoError(t, err)
 	// Check the parsed configuration
 	assert.Equal(t, 1, len(config.DataSources), "There should be one data source")
 
@@ -216,8 +223,10 @@ func (s *configSuite) TestPlanError_DatasourceError() {
 `, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 	// Parse the config
-	_, err := ParseConfig("", "", context.TODO())
-	assert.NotNil(t, err)
+	c, err := NewConfig("", "", context.TODO())
+	require.Nil(t, err)
+	_, err = c.Plan()
+	require.NotNil(t, err)
 	assert.Contains(t, err.Error(), "error making request")
 	assert.Contains(t, err.Error(), "data.http.foo")
 }
@@ -244,7 +253,7 @@ func (s *configSuite) TestPlanError_FileHashRuleError() {
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{"Different content", sampleConfig})
 	// Parse the config
-	config, err := ParseConfig("/", "", nil)
+	config, err := NewConfig("/", "", nil)
 	require.NoError(t, err)
 
 	config.ctx = context.TODO()
@@ -277,7 +286,7 @@ func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{expectedContent, sampleConfig})
 
-	config, err := ParseConfig("/", "", nil)
+	config, err := NewConfig("/", "", nil)
 	require.NoError(t, err)
 
 	config.ctx = context.TODO()
@@ -306,7 +315,7 @@ func (s *configSuite) TestApplyPlan_multiple_file_fix() {
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl", "/example/sub1/testfile", "/example/sub2/testfile"}, []string{content, "world", "world"})
 
-	config, err := ParseConfig("/", "", nil)
+	config, err := NewConfig("/", "", nil)
 	require.NoError(t, err)
 
 	plan, err := config.Plan()
@@ -338,11 +347,17 @@ rule must_be_true test {
 `
 
 	s.dummyFsWithFiles([]string{"/test.grept.hcl"}, []string{hcl})
-	c, err := ParseConfig("", "/", context.TODO())
+	c, err := NewConfig("", "/", context.TODO())
 	assert.NoError(t, err)
+	_, err = c.Plan()
+	require.NoError(t, err)
 	assert.Len(t, c.Rules, 2)
-	assert.Equal(t, "file_hash", c.Rules[0].Type())
-	assert.Equal(t, "must_be_true", c.Rules[1].Type())
+	var types []string
+	linq.From(c.Rules).Select(func(i interface{}) interface{} {
+		return i.(Rule).Type()
+	}).ToSlice(&types)
+	assert.Contains(t, types, "file_hash")
+	assert.Contains(t, types, "must_be_true")
 }
 
 func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
@@ -420,7 +435,7 @@ func (s *configSuite) TestAnyRuleFailShouldTriggerFix() {
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	// Parse the configuration
-	config, err := ParseConfig("", "", nil)
+	config, err := NewConfig("", "", nil)
 	s.NoError(err)
 	plan, err := config.Plan()
 	s.NoError(err)
@@ -449,7 +464,7 @@ func (s *configSuite) TestMultipleRulesTriggerSameFixShouldExecuteOnlyOnce() {
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	// Parse the configuration
-	config, err := ParseConfig("", "", nil)
+	config, err := NewConfig("", "", nil)
 	s.NoError(err)
 	plan, err := config.Plan()
 	s.NoError(err)
@@ -457,7 +472,7 @@ func (s *configSuite) TestMultipleRulesTriggerSameFixShouldExecuteOnlyOnce() {
 }
 
 func (s *configSuite) TestEmptyConfigFolderShouldThrowError() {
-	_, err := ParseConfig("/", "/", context.TODO())
+	_, err := NewConfig("/", "/", context.TODO())
 	s.NotNil(err)
 	s.Contains(err.Error(), "no `.grept.hcl` file found")
 }
@@ -481,6 +496,6 @@ func (s *configSuite) TestParseConfigBeforePlan_UnknownValueShouldNotTriggerErro
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 
-	_, err := ParseConfig("/", "", nil)
+	_, err := NewConfig("/", "", nil)
 	require.NoError(t, err)
 }

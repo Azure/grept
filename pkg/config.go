@@ -98,7 +98,7 @@ func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
 	return f(c, hb), nil
 }
 
-func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
+func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -131,26 +131,7 @@ func ParseConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	parseErr := config.parseBlocks(dataParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
-	}
-	err = config.loadAllDataSources()
-	if err != nil {
-		return nil, err
-	}
-
-	parseErr = config.parseBlocks(ruleParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
-	}
-	parseErr = config.parseBlocks(fixParser, hclBlocks)
-	if parseErr != nil {
-		return nil, parseErr
-	}
-
-	return config, parseErr
+	return config, nil
 }
 
 func (c *Config) parseBlocks(eval parserFactory, blocks []*hclsyntax.Block) error {
@@ -207,6 +188,27 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 }
 
 func (c *Config) Plan() (*Plan, error) {
+	var hclBlocks hclsyntax.Blocks
+	for _, v := range c.dag.GetVertices() {
+		hclBlocks = append(hclBlocks, v.(block).HclSyntaxBlock())
+	}
+	parseErr := c.parseBlocks(dataParser, hclBlocks)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+	err := c.loadAllDataSources()
+	if err != nil {
+		return nil, err
+	}
+
+	parseErr = c.parseBlocks(ruleParser, hclBlocks)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+	parseErr = c.parseBlocks(fixParser, hclBlocks)
+	if parseErr != nil {
+		return nil, parseErr
+	}
 	var wg sync.WaitGroup
 	plan := newPlan()
 	errCh := make(chan error, len(c.Rules))
@@ -248,7 +250,7 @@ func (c *Config) Plan() (*Plan, error) {
 	wg.Wait()
 	close(errCh)
 
-	err := readError(errCh)
+	err = readError(errCh)
 	if err != nil {
 		return nil, fmt.Errorf("the following blocks throw errors: %+v", err)
 	}

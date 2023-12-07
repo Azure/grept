@@ -67,7 +67,9 @@ rule dir_exist test {
 		s.Run(c.desc, func() {
 			code := fmt.Sprintf(hcl, c.dir, c.failOnExist)
 			_ = afero.WriteFile(s.fs, fmt.Sprintf("/%s/test.grept.hcl", c.desc), []byte(code), 0644)
-			config, err := ParseConfig("", fmt.Sprintf("/%s", c.desc), context.Background())
+			config, err := NewConfig("", fmt.Sprintf("/%s", c.desc), context.Background())
+			s.NoError(err)
+			_, err = config.Plan()
 			s.NoError(err)
 			s.Len(config.Rules, 1)
 			rule, ok := config.Rules[0].(*DirExistRule)
