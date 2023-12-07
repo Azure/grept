@@ -167,8 +167,9 @@ func (s *configSuite) TestFunctionInEvalContext() {
 	require.Len(t, config.RuleBlocks(), 1)
 	rule, ok := config.RuleBlocks()[0].(*FileHashRule)
 	require.True(t, ok)
-	_, err = rule.Check()
+	err = rule.Check()
 	assert.NoError(t, err)
+	assert.Nil(t, rule.CheckError())
 }
 
 func (s *configSuite) TestParseConfigHttpBlock() {

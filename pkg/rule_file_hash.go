@@ -16,7 +16,7 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*BaseBlock
-	baseRule
+	BaseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
 	Algorithm          string `hcl:"algorithm,optional" default:"sha1"`
@@ -38,23 +38,24 @@ func (fhr *FileHashRule) Values() map[string]cty.Value {
 	}
 }
 
-func (fhr *FileHashRule) Check() (error, error) {
+func (fhr *FileHashRule) Check() error {
 	// Use Glob to find files matching the path pattern
 	fs := FsFactory()
 	files, err := afero.Glob(fs, fhr.Glob)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if len(files) == 0 {
-		return fmt.Errorf("no files match path pattern: %s", fhr.Glob), nil
+		logCheckError(fhr, fmt.Errorf("no files match path pattern: %s", fhr.Glob))
+		return nil
 	}
 	matchFound := false
 
 	for _, file := range files {
 		fileData, err := afero.ReadFile(fs, file)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// Calculate the hash of the file data
@@ -82,14 +83,15 @@ func (fhr *FileHashRule) Check() (error, error) {
 	}
 
 	if !fhr.FailOnHashMismatch && matchFound {
-		return nil, nil
+		return nil
 	}
 
 	if len(fhr.HashMismatchFiles) == 0 {
-		return nil, nil
+		return nil
 	}
 
-	return fmt.Errorf("file with glob %s and  different hash than %s found", fhr.Glob, fhr.Hash), nil
+	logCheckError(fhr, fmt.Errorf("file with glob %s and  different hash than %s found", fhr.Glob, fhr.Hash))
+	return nil
 }
 
 func (fhr *FileHashRule) Validate() error {

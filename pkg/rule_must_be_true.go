@@ -9,16 +9,16 @@ var _ Rule = &MustBeTrueRule{}
 
 type MustBeTrueRule struct {
 	*BaseBlock
-	baseRule
+	BaseRule
 	Condition    bool   `hcl:"condition"`
 	ErrorMessage string `hcl:"error_message,optional"`
 }
 
-func (m *MustBeTrueRule) Check() (checkError error, runtimeError error) {
+func (m *MustBeTrueRule) Check() error {
 	if !m.Condition {
-		checkError = fmt.Errorf("assertion failed: %s", m.ErrorMessage)
+		logCheckError(m, fmt.Errorf("assertion failed: %s", m.ErrorMessage))
 	}
-	return
+	return nil
 }
 
 func (m *MustBeTrueRule) Type() string {
