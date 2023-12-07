@@ -20,25 +20,21 @@ import (
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
 
-type Datas []Data
-type Rules []Rule
-type Fixes []Fix
-
 type Config struct {
-	ctx         context.Context
-	basedir     string
-	DataSources Datas
-	Rules       Rules
-	Fixes       Fixes
-	dag         *dag.DAG
+	ctx           context.Context
+	basedir       string
+	DatasOperator *BlocksOperator
+	RulesOperator *BlocksOperator
+	FixesOperator *BlocksOperator
+	dag           *dag.DAG
 }
 
 func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Functions: hclfuncs.Functions(c.basedir),
 		Variables: map[string]cty.Value{
-			"data": Values(c.DataSources),
-			"rule": Values(c.Rules),
+			"data": Values(c.DatasOperator.blocks),
+			"rule": Values(c.RulesOperator.blocks),
 		},
 	}
 }
@@ -83,8 +79,11 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		ctx = context.Background()
 	}
 	config := &Config{
-		basedir: baseDir,
-		ctx:     ctx,
+		basedir:       baseDir,
+		ctx:           ctx,
+		DatasOperator: &BlocksOperator{},
+		RulesOperator: &BlocksOperator{},
+		FixesOperator: &BlocksOperator{},
 	}
 
 	var err error
@@ -102,11 +101,11 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		}
 		blocks = append(blocks, b)
 		if r, isRule := b.(Rule); isRule {
-			config.Rules = append(config.Rules, r)
+			config.RulesOperator.addBlock(r)
 		} else if d, isData := b.(Data); isData {
-			config.DataSources = append(config.DataSources, d)
+			config.DatasOperator.addBlock(d)
 		} else if f, isFix := b.(Fix); isFix {
-			config.Fixes = append(config.Fixes, f)
+			config.FixesOperator.addBlock(f)
 		}
 	}
 	if err != nil {
@@ -169,7 +168,7 @@ func (c *Config) Plan() (*Plan, error) {
 		hclBlocks = append(hclBlocks, v.(block).HclSyntaxBlock())
 	}
 	var err error
-	for _, d := range c.DataSources {
+	for _, d := range c.DatasOperator.blocks {
 		evalErr := eval(d)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
@@ -183,7 +182,7 @@ func (c *Config) Plan() (*Plan, error) {
 		return nil, err
 	}
 
-	for _, r := range c.Rules {
+	for _, r := range c.RulesOperator.blocks {
 		evalErr := eval(r)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
@@ -193,7 +192,7 @@ func (c *Config) Plan() (*Plan, error) {
 		return nil, err
 	}
 
-	for _, f := range c.Fixes {
+	for _, f := range c.FixesOperator.blocks {
 		evalErr := eval(f)
 		if evalErr != nil {
 			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
@@ -204,10 +203,10 @@ func (c *Config) Plan() (*Plan, error) {
 	}
 	var wg sync.WaitGroup
 	plan := newPlan()
-	errCh := make(chan error, len(c.Rules))
+	errCh := make(chan error, len(c.RulesOperator.blocks))
 
 	// eval all rules
-	for _, rule := range c.Rules {
+	for _, rule := range c.RulesOperator.blocks {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
@@ -231,13 +230,15 @@ func (c *Config) Plan() (*Plan, error) {
 			plan.addRule(fr)
 
 			// Find fixes for this rule
-			for _, fix := range c.Fixes {
-				refresh(fix)
+			for _, f := range c.FixesOperator.blocks {
+				fix := f.(Fix)
+				refresh(f)
+
 				if linq.From(fix.GetRuleIds()).Contains(rule.Id()) {
 					plan.addFix(fix)
 				}
 			}
-		}(rule)
+		}(rule.(Rule))
 	}
 
 	wg.Wait()
@@ -253,9 +254,9 @@ func (c *Config) Plan() (*Plan, error) {
 
 func (c *Config) loadAllDataSources() error {
 	var wg sync.WaitGroup
-	errCh := make(chan error, len(c.DataSources))
+	errCh := make(chan error, len(c.DatasOperator.blocks))
 	// Load all datasources
-	for _, data := range c.DataSources {
+	for _, data := range c.DatasOperator.blocks {
 		wg.Add(1)
 		go func(data Data) {
 			defer wg.Done()
@@ -273,7 +274,7 @@ func (c *Config) loadAllDataSources() error {
 			if err := data.Load(); err != nil {
 				errCh <- fmt.Errorf("data.%s.%s(%s) throws error: %s", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err.Error())
 			}
-		}(data)
+		}(data.(Data))
 	}
 	wg.Wait()
 	close(errCh)
