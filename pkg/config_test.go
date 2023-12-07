@@ -55,15 +55,15 @@ func (s *configSuite) TestParseConfig() {
 	require.NoError(t, err)
 	_, err = config.Plan()
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(config.RulesOperator.blocks))
-	fhr, ok := config.RulesOperator.blocks[0].(*FileHashRule)
+	assert.Len(t, config.RuleBlocks(), 1)
+	fhr, ok := config.RuleBlocks()[0].(*FileHashRule)
 	require.True(t, ok)
 	assert.Equal(t, "*.txt", fhr.Glob)
 	assert.Equal(t, "abc123", fhr.Hash)
 	assert.Equal(t, "sha256", fhr.Algorithm)
 
-	assert.Equal(t, 1, len(config.FixesOperator.blocks))
-	lff, ok := config.FixesOperator.blocks[0].(*LocalFileFix)
+	assert.Len(t, config.FixBlocks(), 1)
+	lff, ok := config.FixBlocks()[0].(*LocalFileFix)
 	require.True(t, ok)
 	assert.Regexp(t, `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`, lff.RuleIds[0])
 	assert.Equal(t, "/path/to/file.txt", lff.Paths[0])
@@ -143,8 +143,8 @@ func (s *configSuite) TestEvalContextRef() {
 	require.NoError(t, err)
 	_, err = config.Plan()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(config.FixesOperator.blocks))
-	fix := config.FixesOperator.blocks[0].(*LocalFileFix)
+	require.Len(t, config.FixBlocks(), 1)
+	fix := config.FixBlocks()[0].(*LocalFileFix)
 	assert.Equal(t, "LICENSE", fix.Paths[0])
 }
 
@@ -164,8 +164,8 @@ func (s *configSuite) TestFunctionInEvalContext() {
 	require.NoError(t, err)
 	_, err = config.Plan()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(config.RulesOperator.blocks))
-	rule, ok := config.RulesOperator.blocks[0].(*FileHashRule)
+	require.Len(t, config.RuleBlocks(), 1)
+	rule, ok := config.RuleBlocks()[0].(*FileHashRule)
 	require.True(t, ok)
 	_, err = rule.Check()
 	assert.NoError(t, err)
@@ -193,9 +193,9 @@ func (s *configSuite) TestParseConfigHttpBlock() {
 	_, err = config.Plan()
 	require.NoError(t, err)
 	// Check the parsed configuration
-	assert.Equal(t, 1, len(config.DatasOperator.blocks), "There should be one data source")
+	assert.Len(t, config.DataBlocks(), 1, "There should be one data source")
 
-	httpData, ok := config.DatasOperator.blocks[0].(*HttpDatasource)
+	httpData, ok := config.DataBlocks()[0].(*HttpDatasource)
 	assert.True(t, ok)
 	assert.Equal(t, "http://example.com", httpData.Url)
 	assert.Equal(t, "GET", httpData.Method)
@@ -351,9 +351,9 @@ rule must_be_true test {
 	assert.NoError(t, err)
 	_, err = c.Plan()
 	require.NoError(t, err)
-	assert.Len(t, c.RulesOperator.blocks, 2)
+	assert.Len(t, c.RuleBlocks(), 2)
 	var types []string
-	linq.From(c.RulesOperator.blocks).Select(func(i interface{}) interface{} {
+	linq.From(c.RuleBlocks()).Select(func(i interface{}) interface{} {
 		return i.(Rule).Type()
 	}).ToSlice(&types)
 	assert.Contains(t, types, "file_hash")
@@ -404,12 +404,7 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			require.False(s.T(), diag.HasErrors())
 			h := &HttpDatasource{
 				BaseBlock: &BaseBlock{
-					c: &Config{
-						ctx:           context.TODO(),
-						DatasOperator: &BlocksOperator{},
-						RulesOperator: &BlocksOperator{},
-						FixesOperator: &BlocksOperator{},
-					},
+					c:  newEmptyConfig(),
 					hb: config.Body.(*hclsyntax.Body).Blocks[0],
 				},
 			}
