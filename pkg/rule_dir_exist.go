@@ -10,7 +10,7 @@ var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
 	*BaseBlock
-	baseRule
+	BaseRule
 	Dir         string `hcl:"dir"`
 	FailOnExist bool   `hcl:"fail_on_exist,optional"`
 }
@@ -26,19 +26,19 @@ func (d *DirExistRule) Type() string {
 	return "dir_exist"
 }
 
-func (d *DirExistRule) Check() (checkError error, runtimeError error) {
+func (d *DirExistRule) Check() error {
 	fs := FsFactory()
 	exists, err := afero.Exists(fs, d.Dir)
 	if err != nil {
-		runtimeError = err
-		return
+		return err
 	}
 	if d.FailOnExist && exists {
-		checkError = fmt.Errorf("directory exists: %s", d.Dir)
-		return
+		logCheckError(d, fmt.Errorf("directory exists: %s", d.Dir))
+		return nil
 	}
 	if !d.FailOnExist && !exists {
-		checkError = fmt.Errorf("directory does not exist: %s", d.Dir)
+		logCheckError(d, fmt.Errorf("directory does not exist: %s", d.Dir))
+		return nil
 	}
-	return
+	return nil
 }

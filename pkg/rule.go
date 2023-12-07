@@ -1,12 +1,29 @@
 package pkg
 
+import "reflect"
+
 type Rule interface {
 	block
-	Check() (checkError error, runtimeError error)
+	Check() error
+	CheckError() error
 }
 
-type baseRule struct{}
+type BaseRule struct {
+	checkErr error
+}
 
-func (br baseRule) BlockType() string {
+func (br BaseRule) BlockType() string {
 	return "rule"
+}
+
+func (br BaseRule) CheckError() error {
+	return br.checkErr
+}
+
+func logCheckError[T Rule](rule T, checkErr error) {
+	newBaseRule := BaseRule{
+		checkErr: checkErr,
+	}
+	baseRuleField := reflect.ValueOf(rule).Elem().FieldByName("BaseRule")
+	baseRuleField.Set(reflect.ValueOf(newBaseRule))
 }

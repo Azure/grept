@@ -80,7 +80,8 @@ func (s *fileHashRuleSuite) TestFileHashRule_Check() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checkError, _ := tt.rule.Check()
+			_ = tt.rule.Check()
+			checkError := tt.rule.CheckError()
 			if (checkError != nil) != tt.wantError {
 				t.Errorf("FileHashRule.Check() error = %v, wantError %v", checkError, tt.wantError)
 			}
@@ -153,8 +154,9 @@ func (s *fileHashRuleSuite) TestFileHashRule_HashMismatchFilesShouldBeExported()
 		Glob: "/example/*/testfile.txt",
 		Hash: "non-matching-hash", // MD5 hash that doesn't match "test content"
 	}
-	checkErr, runtimeErr := rule.Check()
+	runtimeErr := rule.Check()
 	assert.Nil(t, runtimeErr)
+	checkErr := rule.CheckError()
 	assert.NotNil(t, checkErr)
 	assert.Contains(t, rule.HashMismatchFiles, filepath.FromSlash(filename))
 }
@@ -265,10 +267,11 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checkErr, runtimeErr := tt.rule.Check()
+			runtimeErr := tt.rule.Check()
 			if runtimeErr != nil {
 				t.Errorf("FileHashRule.Check() runtime error = %+v", runtimeErr)
 			}
+			checkErr := tt.rule.CheckError()
 			if (checkErr != nil) != tt.wantErr {
 				t.Errorf("FileHashRule.Check() error = %+v, wantErr %+v", checkErr, tt.wantErr)
 			}
