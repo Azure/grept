@@ -247,11 +247,12 @@ func (c *Config) Plan() (*Plan, error) {
 				errCh <- fmt.Errorf("rule.%s.%s(%s) eval error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
 				return
 			}
-			checkErr, runtimeErr := rule.Check()
+			runtimeErr := rule.Check()
 			if runtimeErr != nil {
 				errCh <- runtimeErr
 				return
 			}
+			checkErr := rule.CheckError()
 			if checkErr == nil {
 				// This rule passes check, no need to fix it
 				return

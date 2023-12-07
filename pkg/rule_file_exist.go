@@ -10,7 +10,7 @@ var _ Rule = &FileExistRule{}
 
 type FileExistRule struct {
 	*BaseBlock
-	baseRule
+	BaseRule
 	Glob       string `hcl:"glob"`
 	MatchFiles []string
 }
@@ -26,15 +26,16 @@ func (f *FileExistRule) Values() map[string]cty.Value {
 	}
 }
 
-func (f *FileExistRule) Check() (checkError error, runtimeError error) {
+func (f *FileExistRule) Check() error {
 	fs := FsFactory()
 	finds, err := afero.Glob(fs, f.Glob)
 	if err != nil {
-		return nil, fmt.Errorf("error on glob files %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on glob files %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclSyntaxBlock().Range().String())
 	}
 	if len(finds) == 0 {
-		return fmt.Errorf("no match on glob %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclSyntaxBlock().Range().String()), nil
+		logCheckError(f, fmt.Errorf("no match on glob %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclSyntaxBlock().Range().String()))
+		return nil
 	}
 	f.MatchFiles = finds
-	return nil, nil
+	return nil
 }

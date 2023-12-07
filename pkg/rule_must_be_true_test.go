@@ -59,9 +59,9 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Check() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err, runTimeErr := tt.rule.Check()
+			runTimeErr := tt.rule.Check()
 			require.NoError(t, runTimeErr)
-
+			err := tt.rule.CheckError()
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "assertion failed")
