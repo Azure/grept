@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/lonegunmanb/hclfuncs"
-	"path/filepath"
-	"sync"
-
 	"github.com/emirpasic/gods/sets"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/heimdalr/dag"
+	"github.com/lonegunmanb/hclfuncs"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
+	"path/filepath"
 )
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
@@ -242,10 +240,6 @@ func (c *Config) Plan() (*Plan, error) {
 }
 
 func (c *Config) planBlock(b block, errCh chan error) {
-	c.execBlock(b, errCh, true)
-}
-
-func (c *Config) execBlock(b block, errCh chan error, skipFix bool) {
 	if linq.From(b.getUpstreams()).AnyWith(func(i interface{}) bool {
 		return !i.(block).getExecSuccess()
 	}) {
@@ -265,50 +259,16 @@ func (c *Config) execBlock(b block, errCh chan error, skipFix bool) {
 			return
 		}
 	}
-	if _, ok := b.(Fix); ok && skipFix {
-		c.blockOperators[b.BlockType()].notifyOnExecuted(b, true)
-		return
-	}
-	execErr := b.Execute()
-	if execErr != nil {
-		errCh <- fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
-		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-		return
+	pa, ok := b.(planAction)
+	if ok {
+		execErr := pa.ExecuteDuringPlan()
+		if execErr != nil {
+			errCh <- fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
+			c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+			return
+		}
 	}
 	c.blockOperators[b.BlockType()].notifyOnExecuted(b, true)
-}
-
-func (c *Config) loadAllDataSources() error {
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(c.DataBlocks()))
-	// Execute all datasources
-	for _, data := range c.DataBlocks() {
-		wg.Add(1)
-		go func(data Data) {
-			defer wg.Done()
-
-			if v, ok := data.(Validatable); ok {
-				if err := v.Validate(); err != nil {
-					errCh <- fmt.Errorf("data.%s.%s is not valid: %s", data.Type(), data.Name(), err.Error())
-					return
-				}
-			}
-			if err := decode(data); err != nil {
-				errCh <- fmt.Errorf("data.%s.%s(%s) decode error: %+v", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err)
-				return
-			}
-			if err := data.Execute(); err != nil {
-				errCh <- fmt.Errorf("data.%s.%s(%s) throws error: %s", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err.Error())
-			}
-		}(data.(Data))
-	}
-	wg.Wait()
-	close(errCh)
-	err := readError(errCh)
-	if err != nil {
-		return fmt.Errorf("the following blocks throw errors: %+v", err)
-	}
-	return nil
 }
 
 func (c *Config) walkDag(blocks []block) (*dag.DAG, error) {

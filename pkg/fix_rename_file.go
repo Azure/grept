@@ -22,7 +22,7 @@ func (rf *RenameFileFix) Type() string {
 	return "rename_file"
 }
 
-func (rf *RenameFileFix) Execute() error {
+func (rf *RenameFileFix) Apply() error {
 	fs := FsFactory()
 	return fs.Rename(rf.OldName, rf.NewName)
 }

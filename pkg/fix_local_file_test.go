@@ -34,10 +34,10 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_CreateNewFile() {
 		Content: "Hello, world!",
 	}
 
-	err := fix.Execute()
+	err := fix.Apply()
 	assert.NoError(t, err)
 
-	// Execute that the file was created with the correct content
+	// ExecuteDuringPlan that the file was created with the correct content
 	content, err := afero.ReadFile(fs, fix.Paths[0])
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
@@ -55,15 +55,15 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	}
 
 	// Create the file first
-	err := fix.Execute()
+	err := fix.Apply()
 	assert.NoError(t, err)
 
 	// Now overwrite it
 	fix.Content = "New content"
-	err = fix.Execute()
+	err = fix.Apply()
 	assert.NoError(t, err)
 
-	// Execute that the file was overwritten with the correct content
+	// ExecuteDuringPlan that the file was overwritten with the correct content
 	content, err := afero.ReadFile(fs, path)
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
@@ -81,15 +81,15 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	}
 
 	// Create the file first
-	err := fix.Execute()
+	err := fix.Apply()
 	assert.NoError(t, err)
 
 	// Now overwrite it
 	fix.Content = "New content"
-	err = fix.Execute()
+	err = fix.Apply()
 	assert.NoError(t, err)
 
-	// Execute that the file was overwritten with the correct content
+	// ExecuteDuringPlan that the file was overwritten with the correct content
 	content, err := afero.ReadFile(fs, path)
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))

@@ -14,7 +14,7 @@ type MustBeTrueRule struct {
 	ErrorMessage string `hcl:"error_message,optional"`
 }
 
-func (m *MustBeTrueRule) Execute() error {
+func (m *MustBeTrueRule) ExecuteDuringPlan() error {
 	if !m.Condition {
 		logCheckError(m, fmt.Errorf("assertion failed: %s", m.ErrorMessage))
 	}
