@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"encoding/json"
+	"github.com/emirpasic/gods/sets"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -24,6 +25,9 @@ type block interface {
 	Execute() error
 	parseBase(*hclsyntax.Block) error
 	setOperator(o *BlocksOperator)
+	initPendingUpstreams([]block)
+	getPendingUpstreams() []block
+	notifyOnExecuted(block)
 }
 
 func blockToString(f block) string {
@@ -99,11 +103,12 @@ func blockAddress(b *hclsyntax.Block) string {
 }
 
 type BaseBlock struct {
-	c        *Config
-	hb       *hclsyntax.Block
-	name     string
-	id       string
-	operator *BlocksOperator
+	c                *Config
+	hb               *hclsyntax.Block
+	name             string
+	id               string
+	operator         *BlocksOperator
+	pendingUpstreams sets.Set
 }
 
 func (bb *BaseBlock) Id() string {
@@ -152,4 +157,24 @@ func (bb *BaseBlock) parseBase(b *hclsyntax.Block) error {
 
 func (bb *BaseBlock) setOperator(o *BlocksOperator) {
 	bb.operator = o
+}
+
+func (bb *BaseBlock) initPendingUpstreams(blocks []block) {
+	for _, b := range blocks {
+		if !bb.pendingUpstreams.Contains(b) {
+			bb.pendingUpstreams.Add(b)
+		}
+	}
+}
+
+func (bb *BaseBlock) getPendingUpstreams() []block {
+	var pu []block
+	for _, v := range bb.pendingUpstreams.Values() {
+		pu = append(pu, v.(block))
+	}
+	return pu
+}
+
+func (bb *BaseBlock) notifyOnExecuted(b block) {
+	bb.pendingUpstreams.Remove(b)
 }
