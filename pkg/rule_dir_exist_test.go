@@ -74,7 +74,7 @@ rule dir_exist test {
 			s.Len(config.RuleBlocks(), 1)
 			rule, ok := config.RuleBlocks()[0].(*DirExistRule)
 			s.True(ok)
-			runtimeError := rule.Execute()
+			runtimeError := rule.ExecuteDuringPlan()
 			s.NoError(runtimeError)
 			checkError := rule.CheckError()
 			if c.wantError {

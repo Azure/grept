@@ -24,7 +24,6 @@ type block interface {
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
-	Execute() error
 	parseBase(*hclsyntax.Block) error
 	setOperator(o *BlocksOperator)
 	addUpstream(block)

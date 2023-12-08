@@ -40,7 +40,7 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileExist() {
 		Paths: []string{fileName},
 	}
 
-	err = rf.Execute()
+	err = rf.Apply()
 
 	require.NoError(t, err)
 	exists, err := afero.Exists(fs, fileName)
@@ -57,7 +57,7 @@ func (s *fixRmLocalFileSuite) TestRemoveFile_FileNotExist() {
 		Paths: []string{fileName},
 	}
 
-	err := rf.Execute()
+	err := rf.Apply()
 
 	s.NoError(err)
 }
@@ -77,7 +77,7 @@ func TestRemoveFile_RemoveFolder(t *testing.T) {
 		Paths: []string{tmpDir},
 	}
 
-	err = rf.Execute()
+	err = rf.Apply()
 
 	require.NoError(t, err)
 	exists, err := afero.DirExists(FsFactory(), tmpDir)

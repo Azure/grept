@@ -45,7 +45,7 @@ func (p *Plan) Apply() error {
 	}
 
 	for _, fix := range p.Fixes {
-		if applyErr := fix.Execute(); applyErr != nil {
+		if applyErr := fix.Apply(); applyErr != nil {
 			err = multierror.Append(err, applyErr)
 		}
 	}

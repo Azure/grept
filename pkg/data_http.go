@@ -31,7 +31,7 @@ type HttpDatasource struct {
 	StatusCode      int
 }
 
-func (h *HttpDatasource) Execute() error {
+func (h *HttpDatasource) ExecuteDuringPlan() error {
 	tr, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
 		return fmt.Errorf("error http: can't configure http transport")
