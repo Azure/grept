@@ -32,7 +32,7 @@ func (lf *LocalFileFix) Type() string {
 	return "local_file"
 }
 
-func (lf *LocalFileFix) Execute() error {
+func (lf *LocalFileFix) Apply() error {
 	var err error
 	for _, path := range lf.Paths {
 		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), 0644)

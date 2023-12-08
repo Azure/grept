@@ -3,6 +3,7 @@ package pkg
 type Fix interface {
 	block
 	GetRuleIds() []string
+	Apply() error
 }
 
 type baseFix struct{}
