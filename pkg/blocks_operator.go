@@ -19,6 +19,13 @@ func (o *BlocksOperator) addBlock(b block) {
 	o.wg.Add(1)
 }
 
-func (o *BlocksOperator) notifyOnEvaluated(b block) {
+func (o *BlocksOperator) notifyOnExecuted(b block, success bool) {
+	for _, next := range b.getDownstreams() {
+		next.notifyOnExecuted(b, success)
+	}
 	o.wg.Done()
+}
+
+func (o *BlocksOperator) blocksCount() int {
+	return len(o.blocks)
 }
