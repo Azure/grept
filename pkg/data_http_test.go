@@ -48,9 +48,9 @@ func (s *httpDataSuite) TestHttpDatasource_Load() {
 		Method: "GET",
 	}
 
-	err := h.Load()
+	err := h.Execute()
 
-	// Assert no error from Load function
+	// Assert no error from Execute function
 	require.NoError(t, err)
 	// Assert the response body
 	assert.Equal(t, "Hello, client\n", h.ResponseBody)

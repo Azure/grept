@@ -47,7 +47,7 @@ func (y *YamlTransformFix) Values() map[string]cty.Value {
 	}
 }
 
-func (y *YamlTransformFix) ApplyFix() error {
+func (y *YamlTransformFix) Execute() error {
 	fs := FsFactory()
 	yf, err := afero.ReadFile(fs, y.FilePath)
 	if err != nil {

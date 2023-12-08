@@ -36,7 +36,7 @@ func (s *gitIgnoreSuite) TestGitIgnore_Load() {
 		},
 	}
 
-	err := gitIgnore.Load()
+	err := gitIgnore.Execute()
 
 	require.NoError(t, err)
 
@@ -55,7 +55,7 @@ func (s *gitIgnoreSuite) TestGitIgnore_NoGitIgnoreFile() {
 		},
 	}
 
-	err := gitIgnore.Load()
+	err := gitIgnore.Execute()
 	require.NoError(t, err)
 	assert.Len(t, gitIgnore.Records, 0)
 }
@@ -69,7 +69,7 @@ func (s *gitIgnoreSuite) TestGitIgnore_TabSpaceNewLine() {
 			c: &Config{},
 		},
 	}
-	err := gitIgnore.Load()
+	err := gitIgnore.Execute()
 
 	require.NoError(s.T(), err)
 	s.Empty(gitIgnore.Records)

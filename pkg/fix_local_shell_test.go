@@ -180,7 +180,7 @@ func (s *localExecFixSuite) TestLocalExecShell_ShouldReturnDirectlyIfOnlyOnMisma
 		Inlines: []string{"echo hello"},
 		OnlyOn:  onlyOn,
 	}
-	err := sut.ApplyFix()
+	err := sut.Execute()
 	assert.NoError(s.T(), err)
 	assert.True(s.T(), quit)
 }
@@ -206,12 +206,12 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_Inlines() {
 	stub := gostub.Stub(&os.Stdout, w)
 	defer stub.Reset()
 
-	err := fix.ApplyFix()
+	err := fix.Execute()
 	require.NoError(t, err)
 	_ = w.Close()
 
 	out, _ := io.ReadAll(r)
-	// Check that the command output was as expected
+	// Execute that the command output was as expected
 	assert.Contains(t, string(out), "Hello, World!")
 }
 
@@ -247,12 +247,12 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_script() {
 	stub := gostub.Stub(&os.Stdout, w)
 	defer stub.Reset()
 
-	err = fix.ApplyFix()
+	err = fix.Execute()
 	require.NoError(t, err)
 	_ = w.Close()
 
 	out, _ := io.ReadAll(r)
-	// Check that the command output was as expected
+	// Execute that the command output was as expected
 	assert.Contains(t, string(out), "Hello, World!")
 }
 
@@ -285,12 +285,12 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_RemoteScript() {
 	stub := gostub.Stub(&os.Stdout, w)
 	defer stub.Reset()
 
-	err := fix.ApplyFix()
+	err := fix.Execute()
 	require.NoError(t, err)
 	_ = w.Close()
 
 	out, _ := io.ReadAll(r)
-	// Check that the command output was as expected
+	// Execute that the command output was as expected
 	assert.Contains(t, string(out), "Hello, World!")
 }
 

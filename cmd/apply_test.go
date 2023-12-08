@@ -71,7 +71,7 @@ func TestApplyFunc(t *testing.T) {
 
 	assert.Contains(t, output, "Plan applied successfully.")
 
-	// Check if the fix was applied
+	// Execute if the fix was applied
 	fixedContent, _ := afero.ReadFile(mockFs, "test.txt")
 	assert.Equal(t, expectedContent, string(fixedContent))
 }

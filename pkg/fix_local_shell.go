@@ -45,7 +45,7 @@ func (l *LocalShellFix) Values() map[string]cty.Value {
 
 var stopByOnlyOnStub = func() {}
 
-func (l *LocalShellFix) ApplyFix() (err error) {
+func (l *LocalShellFix) Execute() (err error) {
 	// user assigned env, must set these env then re-render all attributes
 	if len(l.Env) > 0 {
 		hclfuncs.GoroutineLocalEnv.Set(l.Env)

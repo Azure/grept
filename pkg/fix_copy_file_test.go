@@ -38,7 +38,7 @@ func (s *copyFileFixSuite) TestCopyFileFix() {
 		Src:     "/example/test",
 		Dest:    "/example/test2",
 	}
-	err := sut.ApplyFix()
+	err := sut.Execute()
 	s.NoError(err)
 	content, err := afero.ReadFile(s.fs, "/example/test2")
 	s.NoError(err)
