@@ -146,6 +146,10 @@ Fix blocks define the actions that should be taken when a rule fails.
 
 For each block type, you can find detailed information about the block's attributes, exported attributes, and usage examples.
 
+## Locals
+
+You can define and use `locals` block in `grept` just like [Terraform](https://developer.hashicorp.com/terraform/language/values/locals).
+
 ## Contributing
 
 Contributions to `grept` are welcome! Please submit a pull request or issue on the [grept GitHub page](https://github.com/Azure/grept). 
