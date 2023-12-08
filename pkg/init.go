@@ -4,5 +4,6 @@ func init() {
 	registerRule()
 	registerFix()
 	registerData()
+	registerLocal()
 	registerValidator()
 }

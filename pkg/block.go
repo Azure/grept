@@ -53,6 +53,19 @@ func decode(b block) error {
 	return nil
 }
 
+func LocalsValues(blocks []Local) cty.Value {
+	if len(blocks) == 0 {
+		return cty.EmptyObjectVal
+	}
+	res := map[string]cty.Value{}
+	for _, b := range blocks {
+		for _, v := range b.Values() {
+			res[b.Name()] = v
+		}
+	}
+	return cty.ObjectVal(res)
+}
+
 func Values[T block](blocks []T) cty.Value {
 	if len(blocks) == 0 {
 		return cty.EmptyObjectVal
@@ -86,6 +99,9 @@ func Values[T block](blocks []T) cty.Value {
 func concatLabels(labels []string) string {
 	sb := strings.Builder{}
 	for i, l := range labels {
+		if l == "" {
+			continue
+		}
 		sb.WriteString(l)
 		if i != len(labels)-1 {
 			sb.WriteString(".")
