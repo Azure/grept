@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 )
 
-var validBlockTypes sets.Set = hashset.New("data", "rule", "fix")
+var validBlockTypes sets.Set = hashset.New("data", "rule", "fix", "local")
 
 type Config struct {
 	ctx            context.Context
@@ -38,6 +38,10 @@ func (c *Config) FixesOperator() *BlocksOperator {
 	return c.blockOperators["fix"]
 }
 
+func (c *Config) LocalsOperator() *BlocksOperator {
+	return c.blockOperators["local"]
+}
+
 func (c *Config) DataBlocks() []Data {
 	return contravariance[Data](c.DatasOperator().blocks)
 }
@@ -48,6 +52,10 @@ func (c *Config) RuleBlocks() []Rule {
 
 func (c *Config) FixBlocks() []Fix {
 	return contravariance[Fix](c.FixesOperator().blocks)
+}
+
+func (c *Config) LocalBlocks() []Local {
+	return contravariance[Local](c.LocalsOperator().blocks)
 }
 
 func (c *Config) blocksCount() int {
@@ -70,8 +78,9 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Functions: hclfuncs.Functions(c.basedir),
 		Variables: map[string]cty.Value{
-			"data": Values(c.DataBlocks()),
-			"rule": Values(c.RuleBlocks()),
+			"data":  Values(c.DataBlocks()),
+			"rule":  Values(c.RuleBlocks()),
+			"local": LocalsValues(c.LocalBlocks()),
 		},
 	}
 }
@@ -98,27 +107,15 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockC
 	}
 }
 
-func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
-	blockFactories := factories[hb.Type]
-	blockType := ""
-	if len(hb.Labels) > 0 {
-		blockType = hb.Labels[0]
-	}
-	f, ok := blockFactories[blockType]
-	if !ok {
-		return nil, fmt.Errorf("unregistered %s: %s", hb.Type, blockType)
-	}
-	return f(c, hb), nil
-}
-
 func newEmptyConfig() *Config {
 	c := &Config{
 		ctx: context.TODO(),
 	}
 	c.blockOperators = map[string]*BlocksOperator{
-		"data": NewBlocksOperator(c),
-		"rule": NewBlocksOperator(c),
-		"fix":  NewBlocksOperator(c),
+		"data":  NewBlocksOperator(c),
+		"rule":  NewBlocksOperator(c),
+		"fix":   NewBlocksOperator(c),
+		"local": NewBlocksOperator(c),
 	}
 	return c
 }
@@ -160,48 +157,6 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	return config, nil
 }
 
-func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
-	fs := FsFactory()
-	matches, err := afero.Glob(fs, filepath.Join(dir, "*.grept.hcl"))
-	if err != nil {
-		return nil, err
-	}
-	if len(matches) == 0 {
-		return nil, fmt.Errorf("no `.grept.hcl` file found at %s", dir)
-	}
-
-	var blocks []*hclsyntax.Block
-
-	for _, filename := range matches {
-		content, fsErr := afero.ReadFile(fs, filename)
-		if fsErr != nil {
-			err = multierror.Append(err, fsErr)
-			continue
-		}
-		file, diag := hclsyntax.ParseConfig(content, filename, hcl.InitialPos)
-		if diag.HasErrors() {
-			err = multierror.Append(err, diag.Errs()...)
-			continue
-		}
-		body := file.Body.(*hclsyntax.Body)
-		for _, b := range body.Blocks {
-			blocks = append(blocks, b)
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// First loop: parse all rule blocks
-	for _, b := range blocks {
-		if !validBlockTypes.Contains(b.Type) {
-			err = multierror.Append(err, fmt.Errorf("invalid block type: %s %s", b.Type, b.Range().String()))
-			continue
-		}
-	}
-	return blocks, err
-}
-
 func (c *Config) Plan() (*Plan, error) {
 	c.execErrChan = make(chan error, c.blocksCount())
 	for _, n := range c.dag.GetRoots() {
@@ -211,9 +166,9 @@ func (c *Config) Plan() (*Plan, error) {
 		}()
 	}
 
-	c.DatasOperator().wg.Wait()
-	c.RulesOperator().wg.Wait()
-	c.FixesOperator().wg.Wait()
+	for _, operator := range c.blockOperators {
+		operator.wg.Wait()
+	}
 	close(c.execErrChan)
 	err := readError(c.execErrChan)
 	if err != nil {
@@ -295,4 +250,87 @@ func readError(errors chan error) error {
 		err = multierror.Append(err, e)
 	}
 	return err
+}
+
+func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
+	blockFactories := factories[hb.Type]
+	blockType := ""
+	if len(hb.Labels) > 0 {
+		blockType = hb.Labels[0]
+	}
+	f, ok := blockFactories[blockType]
+	if !ok {
+		return nil, fmt.Errorf("unregistered %s: %s", hb.Type, blockType)
+	}
+	return f(c, hb), nil
+}
+
+func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
+	fs := FsFactory()
+	matches, err := afero.Glob(fs, filepath.Join(dir, "*.grept.hcl"))
+	if err != nil {
+		return nil, err
+	}
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no `.grept.hcl` file found at %s", dir)
+	}
+
+	var blocks []*hclsyntax.Block
+
+	for _, filename := range matches {
+		content, fsErr := afero.ReadFile(fs, filename)
+		if fsErr != nil {
+			err = multierror.Append(err, fsErr)
+			continue
+		}
+		file, diag := hclsyntax.ParseConfig(content, filename, hcl.InitialPos)
+		if diag.HasErrors() {
+			err = multierror.Append(err, diag.Errs()...)
+			continue
+		}
+		body := file.Body.(*hclsyntax.Body)
+		for _, b := range body.Blocks {
+			var bs []*hclsyntax.Block = readRawHclBlock(b)
+			blocks = append(blocks, bs...)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// First loop: parse all rule blocks
+	for _, b := range blocks {
+		if !validBlockTypes.Contains(b.Type) {
+			err = multierror.Append(err, fmt.Errorf("invalid block type: %s %s", b.Type, b.Range().String()))
+			continue
+		}
+	}
+	return blocks, err
+}
+
+func readRawHclBlock(b *hclsyntax.Block) []*hclsyntax.Block {
+	if b.Type != "locals" {
+		return []*hclsyntax.Block{b}
+	}
+	var newBlocks []*hclsyntax.Block
+	for _, attr := range b.Body.Attributes {
+		newBlocks = append(newBlocks, &hclsyntax.Block{
+			Type:   "local",
+			Labels: []string{"", attr.Name},
+			Body: &hclsyntax.Body{
+				Attributes: map[string]*hclsyntax.Attribute{
+					"value": {
+						Name:        "value",
+						Expr:        attr.Expr,
+						SrcRange:    attr.SrcRange,
+						NameRange:   attr.NameRange,
+						EqualsRange: attr.EqualsRange,
+					},
+				},
+				SrcRange: attr.NameRange,
+				EndRange: attr.SrcRange,
+			},
+		})
+	}
+	return newBlocks
 }
