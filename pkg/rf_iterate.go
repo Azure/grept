@@ -9,10 +9,13 @@ import (
 type refIterator func(t []hcl.Traverser, i int) *string
 
 var refIters = map[string]refIterator{
-	"data": dataIterator,
-	"rule": ruleIterator,
-	"fix":  fixIterator,
+	"data":  dataIterator,
+	"rule":  ruleIterator,
+	"fix":   fixIterator,
+	"local": localIterator,
 }
+
+var localIterator = iterator("local", 2)
 var dataIterator = iterator("data", 3)
 var ruleIterator = iterator("rule", 3)
 var fixIterator = iterator("fix", 3)

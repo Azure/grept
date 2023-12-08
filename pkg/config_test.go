@@ -498,3 +498,74 @@ func (s *configSuite) TestParseConfigBeforePlan_UnknownValueShouldNotTriggerErro
 	_, err := NewConfig("/", "", nil)
 	require.NoError(t, err)
 }
+
+func (s *configSuite) TestLocalsBlockShouldBeParsedIntoMultipleLocalBlocks() {
+	code := `
+locals {
+  a = "a"
+  b = 1
+}
+`
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{code})
+	c, err := NewConfig("/", "", nil)
+	s.NoError(err)
+	s.Len(c.LocalBlocks(), 2)
+}
+
+func (s *configSuite) TestLocalWithRuleAndFix() {
+	hcl := `
+	locals {
+		path = "LICENSE"
+	}
+
+	rule "file_hash" sample {  
+		glob = local.path  
+		hash = "abc123"  
+		algorithm = "sha256"  
+	}  
+  
+	fix "local_file" hello_world{  
+		rule_ids = [rule.file_hash.sample.id]
+		paths = [local.path]  
+		content = "Hello, world!"
+	}
+`
+	t := s.T()
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hcl})
+	config, err := NewConfig("", "", nil)
+	require.NoError(t, err)
+	_, err = config.Plan()
+	require.NoError(t, err)
+	require.Len(t, config.FixBlocks(), 1)
+	fix := config.FixBlocks()[0].(*LocalFileFix)
+	assert.Equal(t, "LICENSE", fix.Paths[0])
+}
+
+func (s *configSuite) TestLocalBetweenDataAndRule() {
+	expectedContent := "world"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(expectedContent))
+	}))
+	defer server.Close()
+
+	sampleConfig := fmt.Sprintf(`  
+	locals{
+		content = data.http.foo.response_body
+	}
+	
+	data "http" "foo" {  
+		url = "%s"  
+	}
+  
+	rule "must_be_true" "bar" {
+		condition = local.content == "world"
+	}  
+	`, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	c, err := NewConfig("/", "", nil)
+	s.NoError(err)
+	_, err = c.Plan()
+	s.NoError(err)
+	s.True(c.RuleBlocks()[0].(*MustBeTrueRule).Condition)
+}

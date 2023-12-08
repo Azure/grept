@@ -17,10 +17,17 @@ func registerFunc(registry blockRegistry, t block) {
 	}
 }
 
+var localFactories = make(blockRegistry)
+
+func registerLocal() {
+	registerFunc(localFactories, new(LocalBlock))
+}
+
 var factories = map[string]blockRegistry{
-	"data": datasourceFactories,
-	"rule": ruleFactories,
-	"fix":  fixFactories,
+	"data":  datasourceFactories,
+	"rule":  ruleFactories,
+	"fix":   fixFactories,
+	"local": localFactories,
 }
 var fixFactories = make(blockRegistry)
 
