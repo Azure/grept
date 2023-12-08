@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"reflect"
 )
@@ -12,8 +13,9 @@ func registerFunc(registry blockRegistry, t block) {
 	registry[t.Type()] = func(c *Config, hb *hclsyntax.Block) block {
 		newBlock := reflect.New(reflect.TypeOf(t).Elem()).Elem()
 		newBaseBlock := &BaseBlock{
-			c:  c,
-			hb: hb,
+			c:                c,
+			hb:               hb,
+			pendingUpstreams: hashset.New(),
 		}
 		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
 		return newBlock.Addr().Interface().(block)

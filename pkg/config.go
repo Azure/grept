@@ -105,14 +105,15 @@ func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
 }
 
 func newEmptyConfig() *Config {
-	return &Config{
+	c := &Config{
 		ctx: context.TODO(),
-		blockOperators: map[string]*BlocksOperator{
-			"data": &BlocksOperator{},
-			"rule": &BlocksOperator{},
-			"fix":  &BlocksOperator{},
-		},
 	}
+	c.blockOperators = map[string]*BlocksOperator{
+		"data": NewBlocksOperator(c),
+		"rule": NewBlocksOperator(c),
+		"fix":  NewBlocksOperator(c),
+	}
+	return c
 }
 
 func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
