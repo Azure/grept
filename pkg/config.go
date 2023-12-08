@@ -85,28 +85,6 @@ func (c *Config) EvalContext() *hcl.EvalContext {
 	}
 }
 
-func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockConstructor) func(*hclsyntax.Block) error {
-	return func(hb *hclsyntax.Block) error {
-		if hb.Type != expectedBlockType {
-			return nil
-		}
-		if len(hb.Labels) != 2 {
-			return fmt.Errorf("invalid labels for %s %s, expect labels with length 2 (%s)", expectedBlockType, concatLabels(hb.Labels), hb.Range().String())
-		}
-		t := hb.Labels[0]
-		f, ok := factories[t]
-		if !ok {
-			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
-		}
-		b := f(c, hb)
-		err := decode(b)
-		if err != nil {
-			return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
-		}
-		return nil
-	}
-}
-
 func newEmptyConfig() *Config {
 	c := &Config{
 		ctx: context.TODO(),
