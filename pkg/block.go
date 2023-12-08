@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/emirpasic/gods/sets"
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -11,6 +12,7 @@ import (
 	"github.com/mcuadros/go-defaults"
 	"github.com/zclconf/go-cty/cty"
 	"strings"
+	"sync"
 )
 
 type block interface {
@@ -25,9 +27,12 @@ type block interface {
 	Execute() error
 	parseBase(*hclsyntax.Block) error
 	setOperator(o *BlocksOperator)
-	initPendingUpstreams([]block)
+	addUpstream(block)
 	getPendingUpstreams() []block
-	notifyOnExecuted(block)
+	getUpstreams() []block
+	getDownstreams() []block
+	notifyOnExecuted(b block, success bool)
+	getExecSuccess() bool
 }
 
 func blockToString(f block) string {
@@ -90,10 +95,6 @@ func concatLabels(labels []string) string {
 	return sb.String()
 }
 
-func refresh(b block) {
-	_ = decode(b)
-}
-
 func blockAddress(b *hclsyntax.Block) string {
 	sb := strings.Builder{}
 	sb.WriteString(b.Type)
@@ -109,6 +110,19 @@ type BaseBlock struct {
 	id               string
 	operator         *BlocksOperator
 	pendingUpstreams sets.Set
+	blockAddress     string
+	execSuccess      bool
+	mu               sync.Mutex
+}
+
+func newBaseBlock(c *Config, hb *hclsyntax.Block) *BaseBlock {
+	return &BaseBlock{
+		c:                c,
+		hb:               hb,
+		pendingUpstreams: hashset.New(),
+		blockAddress:     blockAddress(hb),
+		execSuccess:      true,
+	}
 }
 
 func (bb *BaseBlock) Id() string {
@@ -159,12 +173,10 @@ func (bb *BaseBlock) setOperator(o *BlocksOperator) {
 	bb.operator = o
 }
 
-func (bb *BaseBlock) initPendingUpstreams(blocks []block) {
-	for _, b := range blocks {
-		if !bb.pendingUpstreams.Contains(b) {
-			bb.pendingUpstreams.Add(b)
-		}
-	}
+func (bb *BaseBlock) addUpstream(ub block) {
+	bb.mu.Lock()
+	defer bb.mu.Unlock()
+	bb.pendingUpstreams.Add(ub)
 }
 
 func (bb *BaseBlock) getPendingUpstreams() []block {
@@ -175,6 +187,39 @@ func (bb *BaseBlock) getPendingUpstreams() []block {
 	return pu
 }
 
-func (bb *BaseBlock) notifyOnExecuted(b block) {
+func (bb *BaseBlock) getUpstreams() []block {
+	var blocks []block
+	children, _ := bb.c.dag.GetAncestors(bb.blockAddress)
+	for _, c := range children {
+		blocks = append(blocks, c.(block))
+	}
+	return blocks
+}
+
+func (bb *BaseBlock) getDownstreams() []block {
+	var blocks []block
+	children, _ := bb.c.dag.GetChildren(bb.blockAddress)
+	for _, c := range children {
+		blocks = append(blocks, c.(block))
+	}
+	return blocks
+}
+
+func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
+	bb.mu.Lock()
 	bb.pendingUpstreams.Remove(b)
+	bb.mu.Unlock()
+	if !success {
+		bb.execSuccess = false
+	}
+	if bb.pendingUpstreams.Empty() {
+		go func() {
+			self, _ := bb.c.dag.GetVertex(bb.blockAddress)
+			bb.c.planBlock(self.(block), bb.c.execErrChan)
+		}()
+	}
+}
+
+func (bb *BaseBlock) getExecSuccess() bool {
+	return bb.execSuccess
 }

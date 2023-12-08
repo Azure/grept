@@ -37,6 +37,10 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 						})
 						continue
 					}
+
+					srcBlock, _ := d.dag.GetVertex(src)
+					d.rootBlock.addUpstream(srcBlock.(block))
+
 					if _, edgeExist := dests[dest]; !edgeExist {
 						err := d.dag.AddEdge(src, dest)
 						if err != nil {
