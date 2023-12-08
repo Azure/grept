@@ -167,7 +167,7 @@ func (s *configSuite) TestFunctionInEvalContext() {
 	require.Len(t, config.RuleBlocks(), 1)
 	rule, ok := config.RuleBlocks()[0].(*FileHashRule)
 	require.True(t, ok)
-	err = rule.Check()
+	err = rule.Execute()
 	assert.NoError(t, err)
 	assert.Nil(t, rule.CheckError())
 }
@@ -193,7 +193,7 @@ func (s *configSuite) TestParseConfigHttpBlock() {
 	require.NoError(t, err, "NewConfig should not return an error")
 	_, err = config.Plan()
 	require.NoError(t, err)
-	// Check the parsed configuration
+	// Execute the parsed configuration
 	assert.Len(t, config.DataBlocks(), 1, "There should be one data source")
 
 	httpData, ok := config.DataBlocks()[0].(*HttpDatasource)
@@ -409,7 +409,7 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 					hb: config.Body.(*hclsyntax.Body).Blocks[0],
 				},
 			}
-			err := eval(h)
+			err := decode(h)
 			assert.NoError(s.T(), err)
 			assert.Equal(s.T(), c.want, h.Method)
 		})

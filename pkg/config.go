@@ -83,9 +83,9 @@ func (c *Config) parseFunc(expectedBlockType string, factories map[string]blockC
 			return fmt.Errorf("unregistered %s: %s, %s", expectedBlockType, t, hb.Range().String())
 		}
 		b := f(c, hb)
-		err := eval(b)
+		err := decode(b)
 		if err != nil {
-			return fmt.Errorf("%s.%s.%s(%s) eval error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
+			return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", expectedBlockType, b.Type(), b.Name(), hb.Range().String(), err)
 		}
 		return nil
 	}
@@ -137,13 +137,8 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 			continue
 		}
 		blocks = append(blocks, b)
-		if r, isRule := b.(Rule); isRule {
-			config.RulesOperator().addBlock(r)
-		} else if d, isData := b.(Data); isData {
-			config.DatasOperator().addBlock(d)
-		} else if f, isFix := b.(Fix); isFix {
-			config.FixesOperator().addBlock(f)
-		}
+		t := b.BlockType()
+		config.blockOperators[t].addBlock(b)
 	}
 	if err != nil {
 		return nil, err
@@ -202,9 +197,9 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 func (c *Config) Plan() (*Plan, error) {
 	var err error
 	for _, d := range c.DataBlocks() {
-		evalErr := eval(d)
+		evalErr := decode(d)
 		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
 		}
 	}
 	if err != nil {
@@ -216,9 +211,9 @@ func (c *Config) Plan() (*Plan, error) {
 	}
 
 	for _, r := range c.RuleBlocks() {
-		evalErr := eval(r)
+		evalErr := decode(r)
 		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
 		}
 	}
 	if err != nil {
@@ -226,9 +221,9 @@ func (c *Config) Plan() (*Plan, error) {
 	}
 
 	for _, f := range c.FixBlocks() {
-		evalErr := eval(f)
+		evalErr := decode(f)
 		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) eval error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
+			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
 		}
 	}
 	if err != nil {
@@ -238,16 +233,16 @@ func (c *Config) Plan() (*Plan, error) {
 	plan := newPlan()
 	errCh := make(chan error, len(c.RuleBlocks()))
 
-	// eval all rules
+	// decode all rules
 	for _, rule := range c.RuleBlocks() {
 		wg.Add(1)
 		go func(rule Rule) {
 			defer wg.Done()
-			if err := eval(rule); err != nil {
-				errCh <- fmt.Errorf("rule.%s.%s(%s) eval error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
+			if err := decode(rule); err != nil {
+				errCh <- fmt.Errorf("rule.%s.%s(%s) decode error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
 				return
 			}
-			runtimeErr := rule.Check()
+			runtimeErr := rule.Execute()
 			if runtimeErr != nil {
 				errCh <- runtimeErr
 				return
@@ -289,7 +284,7 @@ func (c *Config) Plan() (*Plan, error) {
 func (c *Config) loadAllDataSources() error {
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(c.DataBlocks()))
-	// Load all datasources
+	// Execute all datasources
 	for _, data := range c.DataBlocks() {
 		wg.Add(1)
 		go func(data Data) {
@@ -301,11 +296,11 @@ func (c *Config) loadAllDataSources() error {
 					return
 				}
 			}
-			if err := eval(data); err != nil {
-				errCh <- fmt.Errorf("data.%s.%s(%s) eval error: %+v", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err)
+			if err := decode(data); err != nil {
+				errCh <- fmt.Errorf("data.%s.%s(%s) decode error: %+v", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err)
 				return
 			}
-			if err := data.Load(); err != nil {
+			if err := data.Execute(); err != nil {
 				errCh <- fmt.Errorf("data.%s.%s(%s) throws error: %s", data.Type(), data.Name(), data.HclSyntaxBlock().Range().String(), err.Error())
 			}
 		}(data.(Data))

@@ -22,7 +22,7 @@ func (r *RmLocalFileFix) Type() string {
 	return "rm_local_file"
 }
 
-func (r *RmLocalFileFix) ApplyFix() error {
+func (r *RmLocalFileFix) Execute() error {
 	fs := FsFactory()
 	var err error
 	for _, path := range r.Paths {

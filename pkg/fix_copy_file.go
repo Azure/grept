@@ -28,7 +28,7 @@ func (c *CopyFileFix) Values() map[string]cty.Value {
 	}
 }
 
-func (c *CopyFileFix) ApplyFix() error {
+func (c *CopyFileFix) Execute() error {
 	fs := FsFactory()
 	file, err := fs.Open(c.Src)
 	if err != nil {

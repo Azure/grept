@@ -57,7 +57,7 @@ func (s *fileExistRuleSuite) TestFileExistRule_Check() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			runtimeErr := tt.rule.Check()
+			runtimeErr := tt.rule.Execute()
 			s.NoError(runtimeErr)
 			checkErr := tt.rule.CheckError()
 			if tt.wantError {

@@ -2,7 +2,6 @@ package pkg
 
 type Fix interface {
 	block
-	ApplyFix() error
 	GetRuleIds() []string
 }
 

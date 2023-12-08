@@ -26,7 +26,7 @@ func (f *FileExistRule) Values() map[string]cty.Value {
 	}
 }
 
-func (f *FileExistRule) Check() error {
+func (f *FileExistRule) Execute() error {
 	fs := FsFactory()
 	finds, err := afero.Glob(fs, f.Glob)
 	if err != nil {

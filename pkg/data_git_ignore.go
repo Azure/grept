@@ -16,7 +16,7 @@ type GitIgnoreDatasource struct {
 	Records []string
 }
 
-func (g *GitIgnoreDatasource) Load() error {
+func (g *GitIgnoreDatasource) Execute() error {
 	fs := FsFactory()
 	gitIgnoreFile := "./.gitignore"
 	exists, err := afero.Exists(fs, gitIgnoreFile)

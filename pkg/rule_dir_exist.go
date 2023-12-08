@@ -26,7 +26,7 @@ func (d *DirExistRule) Type() string {
 	return "dir_exist"
 }
 
-func (d *DirExistRule) Check() error {
+func (d *DirExistRule) Execute() error {
 	fs := FsFactory()
 	exists, err := afero.Exists(fs, d.Dir)
 	if err != nil {

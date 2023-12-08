@@ -21,7 +21,9 @@ type block interface {
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
+	Execute() error
 	parseBase(*hclsyntax.Block) error
+	setOperator(o *BlocksOperator)
 }
 
 func blockToString(f block) string {
@@ -29,7 +31,7 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-func eval(b block) error {
+func decode(b block) error {
 	hb := b.HclSyntaxBlock()
 	err := b.parseBase(hb)
 	if err != nil {
@@ -85,7 +87,7 @@ func concatLabels(labels []string) string {
 }
 
 func refresh(b block) {
-	_ = eval(b)
+	_ = decode(b)
 }
 
 func blockAddress(b *hclsyntax.Block) string {
@@ -97,10 +99,11 @@ func blockAddress(b *hclsyntax.Block) string {
 }
 
 type BaseBlock struct {
-	c    *Config
-	hb   *hclsyntax.Block
-	name string
-	id   string
+	c        *Config
+	hb       *hclsyntax.Block
+	name     string
+	id       string
+	operator *BlocksOperator
 }
 
 func (bb *BaseBlock) Id() string {
@@ -145,4 +148,8 @@ func (bb *BaseBlock) parseBase(b *hclsyntax.Block) error {
 		bb.id = uuid.NewString()
 	}
 	return nil
+}
+
+func (bb *BaseBlock) setOperator(o *BlocksOperator) {
+	bb.operator = o
 }

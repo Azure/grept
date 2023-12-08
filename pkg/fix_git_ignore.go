@@ -32,7 +32,7 @@ func (g *GitIgnoreFix) Values() map[string]cty.Value {
 	}
 }
 
-func (g *GitIgnoreFix) ApplyFix() error {
+func (g *GitIgnoreFix) Execute() error {
 	fs := FsFactory()
 	gitIgnoreFile := ".gitignore"
 	exist, err := afero.Exists(fs, gitIgnoreFile)

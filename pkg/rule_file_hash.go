@@ -38,7 +38,7 @@ func (fhr *FileHashRule) Values() map[string]cty.Value {
 	}
 }
 
-func (fhr *FileHashRule) Check() error {
+func (fhr *FileHashRule) Execute() error {
 	// Use Glob to find files matching the path pattern
 	fs := FsFactory()
 	files, err := afero.Glob(fs, fhr.Glob)
