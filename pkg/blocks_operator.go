@@ -11,3 +11,7 @@ func (o *BlocksOperator) addBlock(b block) {
 	o.blocks = append(o.blocks, b)
 	o.wg.Add(1)
 }
+
+func (o *BlocksOperator) notifyOnEvaluated(b block) {
+	o.wg.Done()
+}

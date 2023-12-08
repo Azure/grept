@@ -4,7 +4,6 @@ import "reflect"
 
 type Rule interface {
 	block
-	Check() error
 	CheckError() error
 }
 

@@ -59,7 +59,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Check() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runTimeErr := tt.rule.Check()
+			runTimeErr := tt.rule.Execute()
 			require.NoError(t, runTimeErr)
 			err := tt.rule.CheckError()
 			if tt.expectError {

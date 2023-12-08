@@ -44,7 +44,7 @@ func (s *renameFileFixSuite) TestRenameFile_ApplyFix() {
 	}
 
 	// Apply the fix
-	err = rf.ApplyFix()
+	err = rf.Execute()
 
 	// Assert there is no error and the renamed file exists
 	assert.NoError(t, err)

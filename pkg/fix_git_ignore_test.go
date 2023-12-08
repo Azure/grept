@@ -35,7 +35,7 @@ func (s *gitIgnoreFixSuite) TestApplyGitIgnoreFix() {
 	}
 
 	// Apply the fix
-	err := gitIgnoreFix.ApplyFix()
+	err := gitIgnoreFix.Execute()
 	s.NoError(err)
 
 	content, err := afero.ReadFile(s.fs, ".gitignore")
@@ -55,7 +55,7 @@ func (s *gitIgnoreFixSuite) TestGitIgnoreFixEnsureExist() {
 	}
 
 	// Apply the fix
-	err := gitIgnoreFix.ApplyFix()
+	err := gitIgnoreFix.Execute()
 	s.NoError(err)
 
 	content, err := afero.ReadFile(s.fs, ".gitignore")
@@ -78,7 +78,7 @@ content
 	}
 
 	// Apply the fix
-	err := gitIgnoreFix.ApplyFix()
+	err := gitIgnoreFix.Execute()
 	s.NoError(err)
 
 	content, err := afero.ReadFile(s.fs, ".gitignore")
@@ -99,7 +99,7 @@ func (s *gitIgnoreFixSuite) TestGitIgnoreFix_TrimItem() {
 	}
 
 	// Apply the fix
-	err := gitIgnoreFix.ApplyFix()
+	err := gitIgnoreFix.Execute()
 	s.NoError(err)
 
 	content, err := afero.ReadFile(s.fs, ".gitignore")
@@ -121,10 +121,10 @@ func (s *gitIgnoreFixSuite) TestGitIgnoreFix_GitIgnoreFileAbsent() {
 	}
 
 	// Apply the fix
-	err := gitIgnoreFix.ApplyFix()
+	err := gitIgnoreFix.Execute()
 	s.NoError(err)
 
-	// Check that the .gitignore file contains the correct content
+	// Execute that the .gitignore file contains the correct content
 	content, err := afero.ReadFile(s.fs, ".gitignore")
 	s.NoError(err)
 	s.Contains(string(content), "content")

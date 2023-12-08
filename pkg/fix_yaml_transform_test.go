@@ -119,7 +119,7 @@ jobs:
 			},
 		},
 	}
-	err := sut.ApplyFix()
+	err := sut.Execute()
 	y.NoError(err)
 	yf, err := afero.ReadFile(y.fs, yamlPath)
 	y.NoError(err)

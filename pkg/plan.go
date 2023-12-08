@@ -36,8 +36,8 @@ func (p *Plan) String() string {
 func (p *Plan) Apply() error {
 	var err error
 	for _, fix := range p.Fixes {
-		if err = eval(fix); err != nil {
-			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) eval error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
+		if err = decode(fix); err != nil {
+			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
 		}
 		if err != nil {
 			return err
@@ -45,7 +45,7 @@ func (p *Plan) Apply() error {
 	}
 
 	for _, fix := range p.Fixes {
-		if applyErr := fix.ApplyFix(); applyErr != nil {
+		if applyErr := fix.Execute(); applyErr != nil {
 			err = multierror.Append(err, applyErr)
 		}
 	}
