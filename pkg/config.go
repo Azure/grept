@@ -25,6 +25,7 @@ type Config struct {
 	basedir        string
 	blockOperators map[string]*BlocksOperator
 	dag            *dag.DAG
+	execErrChan    chan error
 }
 
 func (c *Config) DatasOperator() *BlocksOperator {
@@ -49,6 +50,14 @@ func (c *Config) RuleBlocks() []Rule {
 
 func (c *Config) FixBlocks() []Fix {
 	return contravariance[Fix](c.FixesOperator().blocks)
+}
+
+func (c *Config) blocksCount() int {
+	var cnt int
+	for _, o := range c.blockOperators {
+		cnt += o.blocksCount()
+	}
+	return cnt
 }
 
 func contravariance[T block](blocks []block) []T {
@@ -196,90 +205,77 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 }
 
 func (c *Config) Plan() (*Plan, error) {
-	var err error
-	for _, d := range c.DataBlocks() {
-		evalErr := decode(d)
-		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", d.Type(), d.Type(), d.Name(), d.HclSyntaxBlock().Range().String(), evalErr))
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	err = c.loadAllDataSources()
-	if err != nil {
-		return nil, err
+	c.execErrChan = make(chan error, c.blocksCount())
+	for _, n := range c.dag.GetRoots() {
+		b := n.(block)
+		go func() {
+			c.planBlock(b, c.execErrChan)
+		}()
 	}
 
-	for _, r := range c.RuleBlocks() {
-		evalErr := decode(r)
-		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", r.Type(), r.Type(), r.Name(), r.HclSyntaxBlock().Range().String(), evalErr))
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	for _, f := range c.FixBlocks() {
-		evalErr := decode(f)
-		if evalErr != nil {
-			err = multierror.Append(err, fmt.Errorf("%s.%s.%s(%s) decode error: %+v", f.Type(), f.Type(), f.Name(), f.HclSyntaxBlock().Range().String(), evalErr))
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	var wg sync.WaitGroup
-	plan := newPlan()
-	errCh := make(chan error, len(c.RuleBlocks()))
-
-	// decode all rules
-	for _, rule := range c.RuleBlocks() {
-		wg.Add(1)
-		go func(rule Rule) {
-			defer wg.Done()
-			if err := decode(rule); err != nil {
-				errCh <- fmt.Errorf("rule.%s.%s(%s) decode error: %+v", rule.Type(), rule.Name(), rule.HclSyntaxBlock().Range().String(), err)
-				return
-			}
-			runtimeErr := rule.Execute()
-			if runtimeErr != nil {
-				errCh <- runtimeErr
-				return
-			}
-			checkErr := rule.CheckError()
-			if checkErr == nil {
-				// This rule passes check, no need to fix it
-				return
-			}
-			fr := &FailedRule{
-				Rule:       rule,
-				CheckError: checkErr,
-			}
-			plan.addRule(fr)
-
-			// Find fixes for this rule
-			for _, f := range c.FixBlocks() {
-				fix := f.(Fix)
-				refresh(f)
-
-				if linq.From(fix.GetRuleIds()).Contains(rule.Id()) {
-					plan.addFix(fix)
-				}
-			}
-		}(rule.(Rule))
-	}
-
-	wg.Wait()
-	close(errCh)
-
-	err = readError(errCh)
+	c.DatasOperator().wg.Wait()
+	c.RulesOperator().wg.Wait()
+	c.FixesOperator().wg.Wait()
+	close(c.execErrChan)
+	err := readError(c.execErrChan)
 	if err != nil {
 		return nil, fmt.Errorf("the following blocks throw errors: %+v", err)
 	}
 
+	plan := newPlan()
+	for _, rb := range c.RuleBlocks() {
+		checkErr := rb.CheckError()
+		if checkErr != nil {
+			plan.addRule(&FailedRule{
+				Rule:       rb,
+				CheckError: checkErr,
+			})
+		}
+		for _, fb := range c.FixBlocks() {
+			if linq.From(fb.GetRuleIds()).Contains(rb.Id()) {
+				plan.addFix(fb)
+			}
+		}
+	}
+
 	return plan, nil
+}
+
+func (c *Config) planBlock(b block, errCh chan error) {
+	c.execBlock(b, errCh, true)
+}
+
+func (c *Config) execBlock(b block, errCh chan error, skipFix bool) {
+	if linq.From(b.getUpstreams()).AnyWith(func(i interface{}) bool {
+		return !i.(block).getExecSuccess()
+	}) {
+		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+		return
+	}
+	decodeErr := decode(b)
+	if decodeErr != nil {
+		errCh <- fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), decodeErr)
+		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+		return
+	}
+	if v, ok := b.(Validatable); ok {
+		if err := v.Validate(); err != nil {
+			errCh <- fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), err.Error())
+			c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+			return
+		}
+	}
+	if _, ok := b.(Fix); ok && skipFix {
+		c.blockOperators[b.BlockType()].notifyOnExecuted(b, true)
+		return
+	}
+	execErr := b.Execute()
+	if execErr != nil {
+		errCh <- fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
+		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+		return
+	}
+	c.blockOperators[b.BlockType()].notifyOnExecuted(b, true)
 }
 
 func (c *Config) loadAllDataSources() error {
