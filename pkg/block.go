@@ -32,6 +32,7 @@ type block interface {
 	getDownstreams() []block
 	notifyOnExecuted(b block, success bool)
 	getExecSuccess() bool
+	forEachDefined() bool
 }
 
 func blockToString(f block) string {
@@ -237,4 +238,9 @@ func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 
 func (bb *BaseBlock) getExecSuccess() bool {
 	return bb.execSuccess
+}
+
+func (bb *BaseBlock) forEachDefined() bool {
+	_, forEach := bb.HclSyntaxBlock().Body.Attributes["for_each"]
+	return forEach
 }
