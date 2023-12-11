@@ -22,7 +22,11 @@ func NewBlocksOperator(c *Config) *BlocksOperator {
 
 func (o *BlocksOperator) addBlock(b block) {
 	o.blocks.Add(b)
-	o.wg.Add(1)
+}
+
+func (o *BlocksOperator) resetWg() {
+	o.wg = sync.WaitGroup{}
+	o.wg.Add(o.blocks.Size())
 }
 
 func (o *BlocksOperator) notifyOnExecuted(b block, success bool) {

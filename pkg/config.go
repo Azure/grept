@@ -137,21 +137,9 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 }
 
 func (c *Config) Plan() (*Plan, error) {
-	c.execErrChan = make(chan error, c.blocksCount())
-	for _, n := range c.dag.GetRoots() {
-		b := n.(block)
-		go func() {
-			c.planBlock(b, c.execErrChan)
-		}()
-	}
-
-	for _, operator := range c.blockOperators {
-		operator.wg.Wait()
-	}
-	close(c.execErrChan)
-	err := readError(c.execErrChan)
+	err := c.runDag(plan)
 	if err != nil {
-		return nil, fmt.Errorf("the following blocks throw errors: %+v", err)
+		return nil, err
 	}
 
 	plan := newPlan()
@@ -171,6 +159,30 @@ func (c *Config) Plan() (*Plan, error) {
 	}
 
 	return plan, nil
+}
+
+func (c *Config) runDag(onReady func(*Config, block)) error {
+	c.resetWg()
+	for _, b := range c.blocks() {
+		b.setOnReady(onReady)
+	}
+	c.execErrChan = make(chan error, c.blocksCount())
+	for _, n := range c.dag.GetRoots() {
+		b := n.(block)
+		go func() {
+			onReady(c, b)
+		}()
+	}
+
+	for _, operator := range c.blockOperators {
+		operator.wg.Wait()
+	}
+	close(c.execErrChan)
+	err := readError(c.execErrChan)
+	if err != nil {
+		return fmt.Errorf("the following blocks throw errors: %+v", err)
+	}
+	return nil
 }
 
 func (c *Config) planBlock(b block, errCh chan error) {
@@ -312,4 +324,18 @@ func readRawHclBlock(b *hclsyntax.Block) []*hclsyntax.Block {
 		})
 	}
 	return newBlocks
+}
+
+func (c *Config) blocks() []block {
+	var blocks []block
+	for _, v := range c.dag.GetVertices() {
+		blocks = append(blocks, v.(block))
+	}
+	return blocks
+}
+
+func (c *Config) resetWg() {
+	for _, o := range c.blockOperators {
+		o.resetWg()
+	}
 }
