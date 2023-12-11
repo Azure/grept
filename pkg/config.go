@@ -161,16 +161,23 @@ func (c *Config) Plan() (*Plan, error) {
 	return plan, nil
 }
 
-func (c *Config) runDag(onReady func(*Config, block)) error {
+func (c *Config) runDag(onReady func(*Config, block) error) error {
+	wrapOnReady := func(c *Config, b block) {
+		err := onReady(c, b)
+		if err != nil {
+			c.execErrChan <- err
+		}
+		c.notifyOnExecuted(b, err == nil)
+	}
 	c.resetWg()
 	for _, b := range c.blocks() {
-		b.setOnReady(onReady)
+		b.setOnReady(wrapOnReady)
 	}
 	c.execErrChan = make(chan error, c.blocksCount())
 	for _, n := range c.dag.GetRoots() {
 		b := n.(block)
 		go func() {
-			onReady(c, b)
+			wrapOnReady(c, b)
 		}()
 	}
 
@@ -185,36 +192,30 @@ func (c *Config) runDag(onReady func(*Config, block)) error {
 	return nil
 }
 
-func (c *Config) planBlock(b block, errCh chan error) {
-	if linq.From(b.getUpstreams()).AnyWith(func(i interface{}) bool {
-		return !i.(block).getExecSuccess()
-	}) {
-		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-		return
-	}
+func (c *Config) planBlock(b block) error {
 	decodeErr := decode(b)
 	if decodeErr != nil {
-		errCh <- fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), decodeErr)
-		c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-		return
+		return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), decodeErr)
+		//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
 	}
 	if v, ok := b.(Validatable); ok {
 		if err := v.Validate(); err != nil {
-			errCh <- fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), err.Error())
-			c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-			return
+			return fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), err.Error())
+			//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+			//return
 		}
 	}
 	pa, ok := b.(planAction)
 	if ok {
 		execErr := pa.ExecuteDuringPlan()
 		if execErr != nil {
-			errCh <- fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
-			c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-			return
+			return fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
+			//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
+			//return
 		}
 	}
-	c.blockOperators[b.BlockType()].notifyOnExecuted(b, true)
+	//c.notifyOnExecuted(b, true)
+	return nil
 }
 
 func (c *Config) walkDag(blocks []block) (*dag.DAG, error) {
@@ -338,4 +339,8 @@ func (c *Config) resetWg() {
 	for _, o := range c.blockOperators {
 		o.resetWg()
 	}
+}
+
+func (c *Config) notifyOnExecuted(b block, success bool) {
+	c.blockOperators[b.BlockType()].notifyOnExecuted(b, success)
 }

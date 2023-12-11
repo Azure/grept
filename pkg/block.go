@@ -30,7 +30,6 @@ type block interface {
 	getUpstreams() []block
 	getDownstreams() []block
 	notifyOnExecuted(b block, success bool)
-	getExecSuccess() bool
 	forEachDefined() bool
 	setOnReady(func(*Config, block))
 }
@@ -123,7 +122,6 @@ type BaseBlock struct {
 	operator         *BlocksOperator
 	pendingUpstreams sets.Set
 	blockAddress     string
-	execSuccess      bool
 	mu               sync.Mutex
 	onReady          func(*Config, block)
 }
@@ -134,7 +132,6 @@ func newBaseBlock(c *Config, hb *hclsyntax.Block) *BaseBlock {
 		hb:               hb,
 		pendingUpstreams: hashset.New(),
 		blockAddress:     blockAddress(hb),
-		execSuccess:      true,
 		name:             hb.Labels[1],
 		id:               uuid.NewString(),
 	}
@@ -217,7 +214,7 @@ func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 	bb.pendingUpstreams.Remove(b)
 	bb.mu.Unlock()
 	if !success {
-		bb.execSuccess = false
+		bb.c.notifyOnExecuted(b, false)
 	}
 	if bb.pendingUpstreams.Empty() {
 		go func() {
@@ -229,10 +226,6 @@ func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 	}
 }
 
-func (bb *BaseBlock) getExecSuccess() bool {
-	return bb.execSuccess
-}
-
 func (bb *BaseBlock) forEachDefined() bool {
 	_, forEach := bb.HclSyntaxBlock().Body.Attributes["for_each"]
 	return forEach
@@ -242,7 +235,7 @@ func (bb *BaseBlock) setOnReady(next func(*Config, block)) {
 	bb.onReady = next
 }
 
-func plan(c *Config, b block) {
+func plan(c *Config, b block) error {
 	self, _ := c.dag.GetVertex(blockAddress(b.HclSyntaxBlock()))
-	c.planBlock(self.(block), c.execErrChan)
+	return c.planBlock(self.(block))
 }
