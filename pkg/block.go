@@ -24,7 +24,6 @@ type block interface {
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
-	parseBase(*hclsyntax.Block) error
 	setOperator(o *BlocksOperator)
 	addUpstream(block)
 	getPendingUpstreams() []block
@@ -41,12 +40,8 @@ func blockToString(f block) string {
 }
 
 func decode(b block) error {
-	hb := b.HclSyntaxBlock()
-	err := b.parseBase(hb)
-	if err != nil {
-		return err
-	}
 	defaults.SetDefaults(b)
+	hb := b.HclSyntaxBlock()
 	diag := gohcl.DecodeBody(hb.Body, b.EvalContext(), b)
 	if diag.HasErrors() {
 		return diag
@@ -132,13 +127,16 @@ type BaseBlock struct {
 }
 
 func newBaseBlock(c *Config, hb *hclsyntax.Block) *BaseBlock {
-	return &BaseBlock{
+	bb := &BaseBlock{
 		c:                c,
 		hb:               hb,
 		pendingUpstreams: hashset.New(),
 		blockAddress:     blockAddress(hb),
 		execSuccess:      true,
+		name:             hb.Labels[1],
+		id:               uuid.NewString(),
 	}
+	return bb
 }
 
 func (bb *BaseBlock) Id() string {
@@ -174,15 +172,6 @@ func (bb *BaseBlock) Context() context.Context {
 		return context.TODO()
 	}
 	return bb.c.ctx
-}
-
-func (bb *BaseBlock) parseBase(b *hclsyntax.Block) error {
-	bb.hb = b
-	bb.name = b.Labels[1]
-	if bb.id == "" {
-		bb.id = uuid.NewString()
-	}
-	return nil
 }
 
 func (bb *BaseBlock) setOperator(o *BlocksOperator) {

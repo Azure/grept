@@ -3,6 +3,8 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/emirpasic/gods/sets"
 	"github.com/emirpasic/gods/sets/hashset"
@@ -13,7 +15,6 @@ import (
 	"github.com/lonegunmanb/hclfuncs"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
-	"path/filepath"
 )
 
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix", "local")
