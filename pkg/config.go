@@ -43,19 +43,19 @@ func (c *Config) LocalsOperator() *BlocksOperator {
 }
 
 func (c *Config) DataBlocks() []Data {
-	return contravariance[Data](c.DatasOperator().blocks)
+	return contravariance[Data](c.DatasOperator().Blocks())
 }
 
 func (c *Config) RuleBlocks() []Rule {
-	return contravariance[Rule](c.RulesOperator().blocks)
+	return contravariance[Rule](c.RulesOperator().Blocks())
 }
 
 func (c *Config) FixBlocks() []Fix {
-	return contravariance[Fix](c.FixesOperator().blocks)
+	return contravariance[Fix](c.FixesOperator().Blocks())
 }
 
 func (c *Config) LocalBlocks() []Local {
-	return contravariance[Local](c.LocalsOperator().blocks)
+	return contravariance[Local](c.LocalsOperator().Blocks())
 }
 
 func (c *Config) blocksCount() int {

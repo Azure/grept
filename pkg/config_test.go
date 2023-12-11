@@ -172,6 +172,28 @@ func (s *configSuite) TestFunctionInEvalContext() {
 	assert.Nil(t, rule.CheckError())
 }
 
+//func (s *configSuite) TestNewConfigWithForEach_BlockShouldBeExpanded() {
+//	hclConfig := `
+//    locals {
+//        items = ["item1", "item2", "item3"]
+//    }
+//
+//    rule "file_hash" "sample" {
+//        for_each = local.items
+//        glob = "${each.value}.txt"
+//        hash = "abc123"
+//        algorithm = "sha256"
+//    }
+//    `
+//
+//	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+//
+//	config, err := NewConfig("", "", nil)
+//	s.NoError(err)
+//
+//	s.Len(config.RuleBlocks(), 3)
+//}
+
 func (s *configSuite) TestParseConfigHttpBlock() {
 	hclConfig := `  
 	data "http" "example" {  

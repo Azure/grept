@@ -1,21 +1,27 @@
 package pkg
 
-import "sync"
+import (
+	"github.com/emirpasic/gods/sets/hashset"
+	"sync"
+
+	"github.com/emirpasic/gods/sets"
+)
 
 type BlocksOperator struct {
 	c      *Config
-	blocks []block
+	blocks sets.Set
 	wg     sync.WaitGroup
 }
 
 func NewBlocksOperator(c *Config) *BlocksOperator {
 	return &BlocksOperator{
-		c: c,
+		c:      c,
+		blocks: hashset.New(),
 	}
 }
 
 func (o *BlocksOperator) addBlock(b block) {
-	o.blocks = append(o.blocks, b)
+	o.blocks.Add(b)
 	o.wg.Add(1)
 }
 
@@ -27,5 +33,13 @@ func (o *BlocksOperator) notifyOnExecuted(b block, success bool) {
 }
 
 func (o *BlocksOperator) blocksCount() int {
-	return len(o.blocks)
+	return o.blocks.Size()
+}
+
+func (o *BlocksOperator) Blocks() []block {
+	var blocks []block
+	for _, v := range o.blocks.Values() {
+		blocks = append(blocks, v.(block))
+	}
+	return blocks
 }
