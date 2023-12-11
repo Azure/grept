@@ -32,6 +32,7 @@ require (
 require (
 	codeberg.org/6543/go-yaml2json v1.0.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
+	github.com/agiledragon/gomonkey/v2 v2.11.0 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-metrics v0.3.9 // indirect
