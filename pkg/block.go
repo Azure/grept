@@ -3,8 +3,6 @@ package pkg
 import (
 	"context"
 	"encoding/json"
-	"github.com/emirpasic/gods/sets"
-	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -25,13 +23,10 @@ type block interface {
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
 	setOperator(o *BlocksOperator)
-	addUpstream(block)
-	getPendingUpstreams() []block
-	getUpstreams() []block
-	getDownstreams() []block
 	notifyOnExecuted(b block, success bool)
 	forEachDefined() bool
 	setOnReady(func(*Config, block))
+	getDownstreams() []block
 }
 
 func blockToString(f block) string {
@@ -115,25 +110,23 @@ func blockAddress(b *hclsyntax.Block) string {
 }
 
 type BaseBlock struct {
-	c                *Config
-	hb               *hclsyntax.Block
-	name             string
-	id               string
-	operator         *BlocksOperator
-	pendingUpstreams sets.Set
-	blockAddress     string
-	mu               sync.Mutex
-	onReady          func(*Config, block)
+	c            *Config
+	hb           *hclsyntax.Block
+	name         string
+	id           string
+	operator     *BlocksOperator
+	blockAddress string
+	mu           sync.Mutex
+	onReady      func(*Config, block)
 }
 
 func newBaseBlock(c *Config, hb *hclsyntax.Block) *BaseBlock {
 	bb := &BaseBlock{
-		c:                c,
-		hb:               hb,
-		pendingUpstreams: hashset.New(),
-		blockAddress:     blockAddress(hb),
-		name:             hb.Labels[1],
-		id:               uuid.NewString(),
+		c:            c,
+		hb:           hb,
+		blockAddress: blockAddress(hb),
+		name:         hb.Labels[1],
+		id:           uuid.NewString(),
 	}
 	return bb
 }
@@ -177,48 +170,17 @@ func (bb *BaseBlock) setOperator(o *BlocksOperator) {
 	bb.operator = o
 }
 
-func (bb *BaseBlock) addUpstream(ub block) {
-	bb.mu.Lock()
-	defer bb.mu.Unlock()
-	bb.pendingUpstreams.Add(ub)
-}
-
-func (bb *BaseBlock) getPendingUpstreams() []block {
-	var pu []block
-	for _, v := range bb.pendingUpstreams.Values() {
-		pu = append(pu, v.(block))
-	}
-	return pu
-}
-
-func (bb *BaseBlock) getUpstreams() []block {
-	var blocks []block
-	children, _ := bb.c.dag.GetAncestors(bb.blockAddress)
-	for _, c := range children {
-		blocks = append(blocks, c.(block))
-	}
-	return blocks
-}
-
-func (bb *BaseBlock) getDownstreams() []block {
-	var blocks []block
-	children, _ := bb.c.dag.GetChildren(bb.blockAddress)
-	for _, c := range children {
-		blocks = append(blocks, c.(block))
-	}
-	return blocks
-}
-
 func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 	bb.mu.Lock()
-	bb.pendingUpstreams.Remove(b)
+	pendingUpstreams := bb.c.dag.pendingUpstreams[bb.blockAddress]
+	pendingUpstreams.Remove(blockAddress(b.HclSyntaxBlock()))
 	bb.mu.Unlock()
 	self, _ := bb.c.dag.GetVertex(bb.blockAddress)
 	selfBlock := self.(block)
 	if !success {
 		bb.c.notifyOnExecuted(selfBlock, false)
 	}
-	if bb.pendingUpstreams.Empty() {
+	if pendingUpstreams.Empty() {
 		go func() {
 			if bb.onReady != nil {
 				bb.onReady(bb.c, selfBlock)
@@ -239,4 +201,13 @@ func (bb *BaseBlock) setOnReady(next func(*Config, block)) {
 func plan(c *Config, b block) error {
 	self, _ := c.dag.GetVertex(blockAddress(b.HclSyntaxBlock()))
 	return c.planBlock(self.(block))
+}
+
+func (bb *BaseBlock) getDownstreams() []block {
+	var blocks []block
+	children, _ := bb.c.dag.GetChildren(bb.blockAddress)
+	for _, c := range children {
+		blocks = append(blocks, c.(block))
+	}
+	return blocks
 }
