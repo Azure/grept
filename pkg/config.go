@@ -195,13 +195,10 @@ func (c *Config) planBlock(b block) error {
 	decodeErr := decode(b)
 	if decodeErr != nil {
 		return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), decodeErr)
-		//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
 	}
 	if v, ok := b.(Validatable); ok {
 		if err := v.Validate(); err != nil {
 			return fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), err.Error())
-			//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-			//return
 		}
 	}
 	pa, ok := b.(planAction)
@@ -209,11 +206,8 @@ func (c *Config) planBlock(b block) error {
 		execErr := pa.ExecuteDuringPlan()
 		if execErr != nil {
 			return fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
-			//c.blockOperators[b.BlockType()].notifyOnExecuted(b, false)
-			//return
 		}
 	}
-	//c.notifyOnExecuted(b, true)
 	return nil
 }
 

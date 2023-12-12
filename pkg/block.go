@@ -213,14 +213,15 @@ func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 	bb.mu.Lock()
 	bb.pendingUpstreams.Remove(b)
 	bb.mu.Unlock()
+	self, _ := bb.c.dag.GetVertex(bb.blockAddress)
+	selfBlock := self.(block)
 	if !success {
-		bb.c.notifyOnExecuted(b, false)
+		bb.c.notifyOnExecuted(selfBlock, false)
 	}
 	if bb.pendingUpstreams.Empty() {
 		go func() {
-			self, _ := bb.c.dag.GetVertex(bb.blockAddress)
 			if bb.onReady != nil {
-				bb.onReady(bb.c, self.(block))
+				bb.onReady(bb.c, selfBlock)
 			}
 		}()
 	}
