@@ -1,8 +1,6 @@
 package pkg
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
@@ -20,20 +18,15 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 		traversals := expr.Variables()
 		for _, traversal := range traversals {
 			for i, traverser := range traversal {
-				refIter, ok := refIters[name(traverser)]
+				name := name(traverser)
+				refIter, ok := refIters[name]
 				if !ok {
 					continue
 				}
-				if ref := refIter(traversal, i); ref != nil {
-					src := *ref
+				for _, src := range refIter(traversal, i) {
 					dest := blockAddress(d.rootBlock.HclBlock())
 					dests, err := d.dag.GetChildren(src)
 					if err != nil {
-						diag = diag.Append(&hcl.Diagnostic{
-							Severity: hcl.DiagError,
-							Summary:  fmt.Sprintf("cannot get children from %s", src),
-							Detail:   err.Error(),
-						})
 						continue
 					}
 
