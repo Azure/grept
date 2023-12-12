@@ -37,17 +37,17 @@ func (g *GitIgnoreFix) Apply() error {
 	gitIgnoreFile := ".gitignore"
 	exist, err := afero.Exists(fs, gitIgnoreFile)
 	if err != nil {
-		return fmt.Errorf("error on checking existing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on checking existing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 	}
 	if !exist {
 		err := afero.WriteFile(fs, gitIgnoreFile, []byte{}, 0600)
 		if err != nil {
-			return fmt.Errorf("error on ensuring gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclSyntaxBlock().Range().String())
+			return fmt.Errorf("error on ensuring gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 		}
 	}
 	f, err := fs.Open(gitIgnoreFile)
 	if err != nil {
-		return fmt.Errorf("error on reading gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on reading gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 	}
 
 	linq.From(g.NotExist).Select(g.trimLineAny).ToSlice(&g.NotExist)
@@ -73,7 +73,7 @@ func (g *GitIgnoreFix) Apply() error {
 	}
 	err = f.Close()
 	if err != nil {
-		return fmt.Errorf("error on closing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on closing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 	}
 	for _, item := range g.Exist {
 		if !existed.Contains(item) {
@@ -83,7 +83,7 @@ func (g *GitIgnoreFix) Apply() error {
 	}
 	err = afero.WriteFile(fs, gitIgnoreFile, []byte(sb.String()), 0600)
 	if err != nil {
-		return fmt.Errorf("error on writing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on writing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 	}
 	return nil
 }

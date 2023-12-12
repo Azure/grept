@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -18,7 +19,7 @@ type block interface {
 	Name() string
 	Type() string
 	BlockType() string
-	HclSyntaxBlock() *hclsyntax.Block
+	HclBlock() *hclBlock
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
@@ -27,6 +28,8 @@ type block interface {
 	forEachDefined() bool
 	setOnReady(func(*Config, block))
 	getDownstreams() []block
+	setForEach(each *forEach)
+	getForEach() *forEach
 }
 
 func blockToString(f block) string {
@@ -36,7 +39,7 @@ func blockToString(f block) string {
 
 func decode(b block) error {
 	defaults.SetDefaults(b)
-	hb := b.HclSyntaxBlock()
+	hb := b.HclBlock()
 	diag := gohcl.DecodeBody(hb.Body, b.EvalContext(), b)
 	if diag.HasErrors() {
 		return diag
@@ -101,26 +104,30 @@ func concatLabels(labels []string) string {
 	return sb.String()
 }
 
-func blockAddress(b *hclsyntax.Block) string {
+func blockAddress(b *hclBlock) string {
 	sb := strings.Builder{}
-	sb.WriteString(b.Type)
+	sb.WriteString(b.Block.Type)
 	sb.WriteString(".")
-	sb.WriteString(concatLabels(b.Labels))
+	sb.WriteString(concatLabels(b.Block.Labels))
+	if b.forEach != nil {
+		sb.WriteString(fmt.Sprintf("[%p]", b.forEach))
+	}
 	return sb.String()
 }
 
 type BaseBlock struct {
 	c            *Config
-	hb           *hclsyntax.Block
+	hb           *hclBlock
 	name         string
 	id           string
 	operator     *BlocksOperator
 	blockAddress string
 	mu           sync.Mutex
 	onReady      func(*Config, block)
+	forEach      *forEach
 }
 
-func newBaseBlock(c *Config, hb *hclsyntax.Block) *BaseBlock {
+func newBaseBlock(c *Config, hb *hclBlock) *BaseBlock {
 	bb := &BaseBlock{
 		c:            c,
 		hb:           hb,
@@ -139,9 +146,11 @@ func (bb *BaseBlock) Name() string {
 	return bb.name
 }
 
-func (bb *BaseBlock) HclSyntaxBlock() *hclsyntax.Block {
+func (bb *BaseBlock) HclBlock() *hclBlock {
 	if bb.hb == nil {
-		return new(hclsyntax.Block)
+		return &hclBlock{
+			Block: new(hclsyntax.Block),
+		}
 	}
 	return bb.hb
 }
@@ -173,7 +182,7 @@ func (bb *BaseBlock) setOperator(o *BlocksOperator) {
 func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 	bb.mu.Lock()
 	pendingUpstreams := bb.c.dag.pendingUpstreams[bb.blockAddress]
-	pendingUpstreams.Remove(blockAddress(b.HclSyntaxBlock()))
+	pendingUpstreams.Remove(blockAddress(b.HclBlock()))
 	bb.mu.Unlock()
 	self, _ := bb.c.dag.GetVertex(bb.blockAddress)
 	selfBlock := self.(block)
@@ -190,7 +199,7 @@ func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
 }
 
 func (bb *BaseBlock) forEachDefined() bool {
-	_, forEach := bb.HclSyntaxBlock().Body.Attributes["for_each"]
+	_, forEach := bb.HclBlock().Body.Attributes["for_each"]
 	return forEach
 }
 
@@ -207,8 +216,15 @@ func (bb *BaseBlock) getDownstreams() []block {
 	return blocks
 }
 
+func (bb *BaseBlock) setForEach(each *forEach) {
+	bb.forEach = each
+}
+func (bb *BaseBlock) getForEach() *forEach {
+	return bb.forEach
+}
+
 func plan(c *Config, b block) error {
-	self, _ := c.dag.GetVertex(blockAddress(b.HclSyntaxBlock()))
+	self, _ := c.dag.GetVertex(blockAddress(b.HclBlock()))
 	return c.planBlock(self.(block))
 }
 
@@ -217,7 +233,7 @@ func prepare(c *Config, b block) error {
 	if !ok {
 		return nil
 	}
-	value, diag := l.HclSyntaxBlock().Body.Attributes["value"].Expr.Value(c.EvalContext())
+	value, diag := l.HclBlock().Body.Attributes["value"].Expr.Value(c.EvalContext())
 	if !diag.HasErrors() {
 		l.Value = value
 		return nil

@@ -51,12 +51,12 @@ func (y *YamlTransformFix) Apply() error {
 	fs := FsFactory()
 	yf, err := afero.ReadFile(fs, y.FilePath)
 	if err != nil {
-		return fmt.Errorf("error on reading yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on reading yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	root := new(yaml.Node)
 	err = yaml.Unmarshal(yf, root)
 	if err != nil {
-		return fmt.Errorf("error on ummarshal yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on ummarshal yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	var ops []splice.Op
 	for _, t := range y.Transform {
@@ -68,15 +68,15 @@ func (y *YamlTransformFix) Apply() error {
 		ops = append(ops, yamled.Node(target).With(t.StringValue))
 	}
 	if err != nil {
-		return fmt.Errorf("error on finding yaml node, %+v fix.%s.%s %s", err, y.Type(), y.Name(), y.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on finding yaml node, %+v fix.%s.%s %s", err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	out, _, err := transform.Bytes(yamled.T(ops...), yf)
 	if err != nil {
-		return fmt.Errorf("error on transforming yaml node, %+v fix.%s.%s %s", err, y.Type(), y.Name(), y.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on transforming yaml node, %+v fix.%s.%s %s", err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	err = afero.WriteFile(fs, y.FilePath, out, 0600)
 	if err != nil {
-		return fmt.Errorf("error on writing yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclSyntaxBlock().Range().String())
+		return fmt.Errorf("error on writing yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	return nil
 }
