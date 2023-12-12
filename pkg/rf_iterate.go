@@ -1,12 +1,13 @@
 package pkg
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 )
 
-type refIterator func(t []hcl.Traverser, i int) *string
+type refIterator func(t []hcl.Traverser, i int) []string
 
 var refIters = map[string]refIterator{
 	"data":  dataIterator,
@@ -21,7 +22,8 @@ var ruleIterator = iterator("rule", 3)
 var fixIterator = iterator("fix", 3)
 
 func iterator(keyword string, addressLength int) refIterator {
-	return func(ts []hcl.Traverser, i int) *string {
+	return func(ts []hcl.Traverser, i int) []string {
+		var r []string
 		if len(ts) == 0 {
 			return nil
 		}
@@ -40,8 +42,16 @@ func iterator(keyword string, addressLength int) refIterator {
 				sb.WriteString(".")
 			}
 		}
-		r := sb.String()
-		return &r
+		r = []string{sb.String()}
+		//potential index
+		if len(ts) > i+addressLength+1 {
+			index, ok := ts[i+addressLength].(hcl.TraverseIndex)
+			if ok {
+				sb.WriteString(fmt.Sprintf(`[%s]`, CtyValueToString(index.Key)))
+				r = append(r, sb.String())
+			}
+		}
+		return r
 	}
 }
 

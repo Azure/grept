@@ -613,3 +613,36 @@ func (s *configSuite) TestForEach_ForEachBlockShouldBeExpanded() {
 	dataCount := config.blockOperators["data"].blocks.Size()
 	s.Equal(3, dataCount)
 }
+
+func (s *configSuite) TestForEachAndAddressIndex() {
+	hclConfig := `
+    locals {
+        items = toset(["item1", "item2", "item3"])
+    }
+
+    rule "must_be_true" sample {
+        for_each = local.items
+        condition = each.value != "item1"
+    }
+
+    fix "local_file" hello_world{
+        rule_ids = [rule.must_be_true.sample["item1"].id]
+        paths = ["/file"]
+        content = "Hello, world!"
+    }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	config, err := NewConfig("", "", nil)
+	require.NoError(s.T(), err)
+
+	p, err := config.Plan()
+	require.NoError(s.T(), err)
+	err = p.Apply()
+	require.NoError(s.T(), err)
+
+	// Verify that the file has been created successfully
+	exists, err := afero.Exists(s.fs, "/file")
+	s.NoError(err)
+	s.True(exists)
+}

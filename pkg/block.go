@@ -40,11 +40,42 @@ func blockToString(f block) string {
 func decode(b block) error {
 	defaults.SetDefaults(b)
 	hb := b.HclBlock()
-	diag := gohcl.DecodeBody(hb.Body, b.EvalContext(), b)
+	evalContext := b.EvalContext()
+	if hb.forEach != nil {
+		evalContext = evalContext.NewChild()
+		evalContext.Variables = map[string]cty.Value{
+			"each": cty.ObjectVal(map[string]cty.Value{
+				"key":   cty.StringVal(CtyValueToString(hb.key)),
+				"value": hb.forEach.value,
+			}),
+		}
+	}
+	diag := gohcl.DecodeBody(cleanBodyForDecode(hb), evalContext, b)
 	if diag.HasErrors() {
 		return diag
 	}
 	return nil
+}
+
+func cleanBodyForDecode(hb *hclBlock) *hclsyntax.Body {
+	// Create a new hclsyntax.Body
+	newBody := &hclsyntax.Body{
+		Attributes: make(hclsyntax.Attributes),
+		Blocks:     make([]*hclsyntax.Block, len(hb.Body.Blocks)),
+	}
+
+	// Iterate over the attributes of the original body
+	for attrName, attr := range hb.Body.Attributes {
+		// If the attribute is not named `for_each`, add it to the new body
+		if attrName != "for_each" {
+			newBody.Attributes[attrName] = attr
+		}
+	}
+
+	// Copy all blocks to the new body
+	copy(newBody.Blocks, hb.Body.Blocks)
+
+	return newBody
 }
 
 func LocalsValues(blocks []Local) cty.Value {
@@ -60,6 +91,27 @@ func LocalsValues(blocks []Local) cty.Value {
 	return cty.ObjectVal(res)
 }
 
+//	func Values[T block](blocks []T) cty.Value {
+//		if len(blocks) == 0 {
+//			return cty.EmptyObjectVal
+//		}
+//		res := map[string]cty.Value{}
+//		valuesMap := map[string]map[string]cty.Value{}
+//
+//		for _, b := range blocks {
+//			values := valuesMap[b.Type()]
+//			if values == nil {
+//				values = map[string]cty.Value{}
+//				valuesMap[b.Type()] = values
+//			}
+//			blockVal := blockToCtyValue(b)
+//			values[b.Name()] = blockVal
+//		}
+//		for t, m := range valuesMap {
+//			res[t] = cty.MapVal(m)
+//		}
+//		return cty.ObjectVal(res)
+//	}
 func Values[T block](blocks []T) cty.Value {
 	if len(blocks) == 0 {
 		return cty.EmptyObjectVal
@@ -68,26 +120,47 @@ func Values[T block](blocks []T) cty.Value {
 	valuesMap := map[string]map[string]cty.Value{}
 
 	for _, b := range blocks {
-		values := valuesMap[b.Type()]
-		if values == nil {
+		values, exists := valuesMap[b.Type()]
+		if !exists {
 			values = map[string]cty.Value{}
 			valuesMap[b.Type()] = values
 		}
-		blockValues := map[string]cty.Value{}
-		baseCtyValues := b.BaseValues()
-		ctyValues := b.Values()
-		for k, v := range ctyValues {
-			blockValues[k] = v
+		blockVal := blockToCtyValue(b)
+		forEach := b.getForEach()
+		if forEach == nil {
+			values[b.Name()] = blockVal
+		} else {
+			m, ok := values[b.Name()]
+			if !ok {
+				m = cty.MapValEmpty(cty.EmptyObject)
+			}
+			nm := m.AsValueMap()
+			if nm == nil {
+				nm = make(map[string]cty.Value)
+			}
+			nm[CtyValueToString(forEach.key)] = blockVal
+			values[b.Name()] = cty.MapVal(nm)
 		}
-		for k, v := range baseCtyValues {
-			blockValues[k] = v
-		}
-		values[b.Name()] = cty.ObjectVal(blockValues)
+		valuesMap[b.Type()] = values
 	}
 	for t, m := range valuesMap {
-		res[t] = cty.MapVal(m)
+		res[t] = cty.ObjectVal(m)
 	}
 	return cty.ObjectVal(res)
+}
+
+func blockToCtyValue(b block) cty.Value {
+	blockValues := map[string]cty.Value{}
+	baseCtyValues := b.BaseValues()
+	ctyValues := b.Values()
+	for k, v := range ctyValues {
+		blockValues[k] = v
+	}
+	for k, v := range baseCtyValues {
+		blockValues[k] = v
+	}
+	blockVal := cty.ObjectVal(blockValues)
+	return blockVal
 }
 
 func concatLabels(labels []string) string {
@@ -110,7 +183,7 @@ func blockAddress(b *hclBlock) string {
 	sb.WriteString(".")
 	sb.WriteString(concatLabels(b.Block.Labels))
 	if b.forEach != nil {
-		sb.WriteString(fmt.Sprintf("[%p]", b.forEach))
+		sb.WriteString(fmt.Sprintf("[%s]", CtyValueToString(b.forEach.key)))
 	}
 	return sb.String()
 }

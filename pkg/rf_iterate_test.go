@@ -40,7 +40,7 @@ func TestRefIterator(t *testing.T) {
 			iterator := refIters[root]
 			got := iterator(ts[0], 0)
 
-			assert.Equal(t, tt.want, *got)
+			assert.Equal(t, tt.want, got[0])
 		})
 	}
 }
