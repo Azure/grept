@@ -126,6 +126,10 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = config.runDag(prepare)
+	if err != nil {
+		return nil, err
+	}
 
 	return config, nil
 }

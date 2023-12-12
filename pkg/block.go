@@ -198,11 +198,6 @@ func (bb *BaseBlock) setOnReady(next func(*Config, block)) {
 	bb.onReady = next
 }
 
-func plan(c *Config, b block) error {
-	self, _ := c.dag.GetVertex(blockAddress(b.HclSyntaxBlock()))
-	return c.planBlock(self.(block))
-}
-
 func (bb *BaseBlock) getDownstreams() []block {
 	var blocks []block
 	children, _ := bb.c.dag.GetChildren(bb.blockAddress)
@@ -210,4 +205,22 @@ func (bb *BaseBlock) getDownstreams() []block {
 		blocks = append(blocks, c.(block))
 	}
 	return blocks
+}
+
+func plan(c *Config, b block) error {
+	self, _ := c.dag.GetVertex(blockAddress(b.HclSyntaxBlock()))
+	return c.planBlock(self.(block))
+}
+
+func prepare(c *Config, b block) error {
+	l, ok := b.(*LocalBlock)
+	if !ok {
+		return nil
+	}
+	value, diag := l.HclSyntaxBlock().Body.Attributes["value"].Expr.Value(c.EvalContext())
+	if !diag.HasErrors() {
+		l.Value = value
+		return nil
+	}
+	return diag
 }
