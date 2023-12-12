@@ -127,11 +127,6 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 		return nil, err
 	}
 
-	// If there's dag error, return dag error first.
-	config.dag, err = newDag(blocks)
-	if err != nil {
-		return nil, err
-	}
 	return config, nil
 }
 
@@ -161,6 +156,12 @@ func (c *Config) Plan() (*Plan, error) {
 }
 
 func (c *Config) runDag(onReady func(*Config, block) error) error {
+	// If there's dag error, return dag error first.
+	dag, err := newDag(c.blocks())
+	if err != nil {
+		return err
+	}
+	c.dag = dag
 	wrapOnReady := func(c *Config, b block) {
 		err := onReady(c, b)
 		if err != nil {
@@ -184,7 +185,7 @@ func (c *Config) runDag(onReady func(*Config, block) error) error {
 		operator.wg.Wait()
 	}
 	close(c.execErrChan)
-	err := readError(c.execErrChan)
+	err = readError(c.execErrChan)
 	if err != nil {
 		return fmt.Errorf("the following blocks throw errors: %+v", err)
 	}
@@ -304,8 +305,8 @@ func readRawHclBlock(b *hclsyntax.Block) []*hclsyntax.Block {
 
 func (c *Config) blocks() []block {
 	var blocks []block
-	for _, v := range c.dag.GetVertices() {
-		blocks = append(blocks, v.(block))
+	for _, o := range c.blockOperators {
+		blocks = append(blocks, o.Blocks()...)
 	}
 	return blocks
 }
