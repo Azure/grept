@@ -41,11 +41,8 @@ func decode(b block) error {
 	defaults.SetDefaults(b)
 	hb := b.HclBlock()
 	evalContext := b.EvalContext()
-	isString := false
 	if hb.forEach != nil {
 		evalContext = evalContext.NewChild()
-		isString = hb.forEach.value.Type() == cty.String
-		println(isString)
 		evalContext.Variables = map[string]cty.Value{
 			"each": cty.ObjectVal(map[string]cty.Value{
 				"key":   cty.StringVal(CtyValueToString(hb.key)),
