@@ -112,8 +112,7 @@ func (s *dagSuite) TestDag_CycleDependencyShouldCauseError() {
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
-	c, _ := NewConfig("", "", nil)
-	_, err := newDag(c.blocks())
+	_, err := NewConfig("", "", nil)
 	s.NotNil(err)
 	// The error message must contain both of two blocks' address so we're sure that it's about the loop.
 	s.Contains(err.Error(), "data.http.sample")
