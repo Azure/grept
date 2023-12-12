@@ -133,5 +133,5 @@ func assertVertex(t *testing.T, dag *Dag, address string) {
 	require.True(t, ok)
 	split := strings.Split(address, ".")
 	name := split[len(split)-1]
-	assert.Equal(t, name, bb.HclSyntaxBlock().Labels[1])
+	assert.Equal(t, name, bb.HclBlock().Labels[1])
 }

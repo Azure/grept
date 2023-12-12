@@ -37,7 +37,7 @@ func (p *Plan) Apply() error {
 	var err error
 	for _, fix := range p.Fixes {
 		if err = decode(fix); err != nil {
-			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclSyntaxBlock().Range().String(), err))
+			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclBlock().Range().String(), err))
 		}
 		if err != nil {
 			return err

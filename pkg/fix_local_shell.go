@@ -50,7 +50,7 @@ func (l *LocalShellFix) Apply() (err error) {
 	if len(l.Env) > 0 {
 		hclfuncs.GoroutineLocalEnv.Set(l.Env)
 		defer hclfuncs.GoroutineLocalEnv.Remove()
-		diag := gohcl.DecodeBody(l.HclSyntaxBlock().Body, l.EvalContext(), l)
+		diag := gohcl.DecodeBody(l.HclBlock().Body, l.EvalContext(), l)
 		if diag.HasErrors() {
 			return diag
 		}

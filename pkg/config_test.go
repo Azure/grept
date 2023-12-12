@@ -427,8 +427,10 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			require.False(s.T(), diag.HasErrors())
 			h := &HttpDatasource{
 				BaseBlock: &BaseBlock{
-					c:  newEmptyConfig(),
-					hb: config.Body.(*hclsyntax.Body).Blocks[0],
+					c: newEmptyConfig(),
+					hb: &hclBlock{
+						Block: config.Body.(*hclsyntax.Body).Blocks[0],
+					},
 				},
 			}
 			err := decode(h)
@@ -592,42 +594,22 @@ func (s *configSuite) TestLocalBetweenDataAndRule() {
 	s.True(c.RuleBlocks()[0].(*MustBeTrueRule).Condition)
 }
 
-//func (s *configSuite) TestExecuteDuringPlanErrorNotifiesDownstreamBlocks() {
-//	// Create a mock HTTP server that returns an error
-//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		http.Error(w, "Mock server error", http.StatusInternalServerError)
-//	}))
-//	defer server.Close()
-//
-//	// Define a sample config for testing
-//	sampleConfig := fmt.Sprintf(`
-//    data "http" "foo" {
-//        url = "%s"
-//        retry_max = 0
-//    }
-//
-//    rule "file_hash" "bar" {
-//        glob = "/testfile"
-//        hash = md5(data.http.foo.response_body)
-//        algorithm = "md5"
-//    }
-//    `, server.URL)
-//	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
-//
-//	// Parse the config
-//	config, err := NewConfig("", "", context.TODO())
-//	s.NoError(err)
-//
-//	ruleBlock := config.RuleBlocks()[0].(*FileHashRule)
-//	called := false
-//	stub := gomonkey.ApplyMethod(ruleBlock, "ExecuteDuringPlan", func() error {
-//		called = true
-//		return nil
-//	})
-//	defer stub.Reset()
-//
-//	// Plan the config
-//	_, planErr := config.Plan()
-//	s.Error(planErr)
-//	s.False(called)
-//}
+func (s *configSuite) TestForEach_ForEachBlockShouldBeExpanded() {
+	//s.T().Skip("for now")
+	hclConfig := `
+	locals {
+		items = ["item1", "item2", "item3"]
+	}
+
+	data "http" "sample" {
+		for_each = local.items
+		url = "http://${each.value}.com"
+	}
+`
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+	dataCount := config.blockOperators["data"].blocks.Size()
+	s.Equal(3, dataCount)
+}

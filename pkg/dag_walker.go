@@ -26,7 +26,7 @@ func (d dagWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 				}
 				if ref := refIter(traversal, i); ref != nil {
 					src := *ref
-					dest := blockAddress(d.rootBlock.HclSyntaxBlock())
+					dest := blockAddress(d.rootBlock.HclBlock())
 					dests, err := d.dag.GetChildren(src)
 					if err != nil {
 						diag = diag.Append(&hcl.Diagnostic{

@@ -99,18 +99,56 @@ func newEmptyConfig() *Config {
 }
 
 func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
+	var err error
+	hclBlocks, err := loadHclBlocks(cfgDir)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := newConfig(baseDir, ctx, hclBlocks, err)
+	if err != nil {
+		return nil, err
+	}
+	expandedHclBlocks := make([]*hclBlock, 0)
+	for _, b := range c.blocks() {
+		hb := b.HclBlock()
+		attr, ok := hb.Body.Attributes["for_each"]
+		if !ok {
+			expandedHclBlocks = append(expandedHclBlocks, newHclBlock(hb.Block, nil))
+			continue
+		}
+		forEachValue, diag := attr.Expr.Value(c.EvalContext())
+		if diag.HasErrors() {
+			err = multierror.Append(err, diag)
+			continue
+		}
+		if !forEachValue.CanIterateElements() {
+			err = multierror.Append(err, fmt.Errorf("invalid `for_each`, except set or map: %s", attr.Range().String()))
+			continue
+		}
+		iterator := forEachValue.ElementIterator()
+		for iterator.Next() {
+			key, value := iterator.Element()
+			newBlock := newHclBlock(hb.Block, &forEach{key: key, value: value})
+			expandedHclBlocks = append(expandedHclBlocks, newBlock)
+		}
+	}
+	if len(expandedHclBlocks) != len(hclBlocks) {
+		c, err = newConfig(baseDir, ctx, expandedHclBlocks, err)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return c, nil
+}
+
+func newConfig(baseDir string, ctx context.Context, hclBlocks []*hclBlock, err error) (*Config, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	config := newEmptyConfig()
 	config.basedir = baseDir
 	config.ctx = ctx
-
-	var err error
-	hclBlocks, err := config.loadHclBlocks(cfgDir)
-	if err != nil {
-		return nil, err
-	}
 
 	var blocks []block
 	for _, hb := range hclBlocks {
@@ -199,7 +237,7 @@ func (c *Config) runDag(onReady func(*Config, block) error) error {
 func (c *Config) planBlock(b block) error {
 	decodeErr := decode(b)
 	if decodeErr != nil {
-		return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), decodeErr)
+		return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclBlock().Range().String(), decodeErr)
 	}
 	if v, ok := b.(Validatable); ok {
 		if err := v.Validate(); err != nil {
@@ -210,7 +248,7 @@ func (c *Config) planBlock(b block) error {
 	if ok {
 		execErr := pa.ExecuteDuringPlan()
 		if execErr != nil {
-			return fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclSyntaxBlock().Range().String(), execErr)
+			return fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclBlock().Range().String(), execErr)
 		}
 	}
 	return nil
@@ -224,7 +262,7 @@ func readError(errors chan error) error {
 	return err
 }
 
-func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
+func wrapBlock(c *Config, hb *hclBlock) (block, error) {
 	blockFactories := factories[hb.Type]
 	blockType := ""
 	if len(hb.Labels) > 0 {
@@ -237,7 +275,7 @@ func wrapBlock(c *Config, hb *hclsyntax.Block) (block, error) {
 	return f(c, hb), nil
 }
 
-func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
+func loadHclBlocks(dir string) ([]*hclBlock, error) {
 	fs := FsFactory()
 	matches, err := afero.Glob(fs, filepath.Join(dir, "*.grept.hcl"))
 	if err != nil {
@@ -247,7 +285,7 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 		return nil, fmt.Errorf("no `.grept.hcl` file found at %s", dir)
 	}
 
-	var blocks []*hclsyntax.Block
+	var blocks []*hclBlock
 
 	for _, filename := range matches {
 		content, fsErr := afero.ReadFile(fs, filename)
@@ -263,7 +301,9 @@ func (c *Config) loadHclBlocks(dir string) (hclsyntax.Blocks, error) {
 		body := file.Body.(*hclsyntax.Body)
 		for _, b := range body.Blocks {
 			var bs []*hclsyntax.Block = readRawHclBlock(b)
-			blocks = append(blocks, bs...)
+			for _, hb := range bs {
+				blocks = append(blocks, newHclBlock(hb, nil))
+			}
 		}
 	}
 	if err != nil {
