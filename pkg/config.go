@@ -128,7 +128,7 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	}
 
 	// If there's dag error, return dag error first.
-	config.dag, err = walkDag(blocks)
+	config.dag, err = newDag(blocks)
 	if err != nil {
 		return nil, err
 	}
@@ -215,24 +215,6 @@ func (c *Config) planBlock(b block) error {
 	}
 	//c.notifyOnExecuted(b, true)
 	return nil
-}
-
-func walkDag(blocks []block) (*Dag, error) {
-	g := newDag()
-	var walkErr error
-	for _, b := range blocks {
-		err := g.AddVertexByID(blockAddress(b.HclSyntaxBlock()), b)
-		if err != nil {
-			walkErr = multierror.Append(walkErr, err)
-		}
-	}
-	for _, b := range blocks {
-		diag := hclsyntax.Walk(b.HclSyntaxBlock().Body, dagWalker{dag: g, rootBlock: b})
-		if diag.HasErrors() {
-			walkErr = multierror.Append(walkErr, diag.Errs()...)
-		}
-	}
-	return g, walkErr
 }
 
 func readError(errors chan error) error {
