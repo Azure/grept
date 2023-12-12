@@ -2,12 +2,14 @@ package pkg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -631,6 +633,85 @@ func (s *configSuite) TestForEachAndAddressIndex() {
         content = "Hello, world!"
     }
     `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	config, err := NewConfig("", "", nil)
+	require.NoError(s.T(), err)
+
+	p, err := config.Plan()
+	require.NoError(s.T(), err)
+	err = p.Apply()
+	require.NoError(s.T(), err)
+
+	// Verify that the file has been created successfully
+	exists, err := afero.Exists(s.fs, "/file")
+	s.NoError(err)
+	s.True(exists)
+}
+
+func (s *configSuite) TestForEach_from_data_to_fix() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Read the request body
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Parse the JSON body
+		var body map[string]interface{}
+		err = json.Unmarshal(bodyBytes, &body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Get the 'query' value
+		query, ok := body["query"].(string)
+		if !ok {
+			http.Error(w, "Invalid 'query' value", http.StatusBadRequest)
+			return
+		}
+		// Write the 'query' value as the response
+		_, _ = w.Write([]byte(query))
+	}))
+	defer server.Close()
+	hclConfig := fmt.Sprintf(`
+    locals {
+        items = toset(["item1", "item2", "item3"])
+    }
+
+	data "http" echo {
+		for_each = local.items
+		url = "%s"
+		request_body = jsonencode({
+    		query = each.value
+  		})
+	}
+
+    rule "must_be_true" sample {
+        for_each = local.items
+        condition = each.value == data.http.echo[each.value].response_body
+    }
+
+    fix "local_file" hello_world{
+		for_each = local.items
+        rule_ids = [rule.must_be_true.sample[each.value]]
+        paths = [each.value]
+        content = each.value
+    }
+    `, server.URL)
+
+	//expr, _ := hclsyntax.ParseExpression([]byte("each.value"), "test.hcl", hcl.InitialPos)
+	//empty := &hcl.EvalContext{Variables: map[string]cty.Value{}}
+	//ctx := empty.NewChild()
+	//ctx.Variables = make(map[string]cty.Value)
+	//ctx.Variables["each"] = cty.ObjectVal(map[string]cty.Value{
+	//	"key":   cty.StringVal("hello"),
+	//	"value": cty.StringVal("world"),
+	//})
+	//v, diag := expr.Value(ctx)
+	//s.False(diag.HasErrors())
+	//s.Equal("world", v.AsString())
+
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	config, err := NewConfig("", "", nil)
