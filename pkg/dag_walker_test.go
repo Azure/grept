@@ -2,15 +2,14 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/heimdalr/dag"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type dagSuite struct {
@@ -118,14 +117,14 @@ func (s *dagSuite) TestDag_CycleDependencyShouldCauseError() {
 	assert.Contains(t, err.Error(), "data.http.sample2")
 }
 
-func assertEdge(t *testing.T, dag *dag.DAG, src, dest string) {
+func assertEdge(t *testing.T, dag *Dag, src, dest string) {
 	from, err := dag.GetParents(dest)
 	assert.NoError(t, err)
 	_, ok := from[src]
 	assert.True(t, ok, "cannot find edge from %s to %s", src, dest)
 }
 
-func assertVertex(t *testing.T, dag *dag.DAG, address string) {
+func assertVertex(t *testing.T, dag *Dag, address string) {
 	b, err := dag.GetVertex(address)
 	assert.NoError(t, err)
 	bb, ok := b.(block)
