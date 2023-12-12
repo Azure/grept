@@ -5,13 +5,12 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/heimdalr/dag"
 )
 
 var _ hclsyntax.Walker = dagWalker{}
 
 type dagWalker struct {
-	dag       *dag.DAG
+	dag       *Dag
 	rootBlock block
 }
 

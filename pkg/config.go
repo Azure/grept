@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/heimdalr/dag"
 	"github.com/lonegunmanb/hclfuncs"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
@@ -23,7 +22,7 @@ type Config struct {
 	ctx            context.Context
 	basedir        string
 	blockOperators map[string]*BlocksOperator
-	dag            *dag.DAG
+	dag            *Dag
 	execErrChan    chan error
 }
 
@@ -129,7 +128,7 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	}
 
 	// If there's dag error, return dag error first.
-	config.dag, err = config.walkDag(blocks)
+	config.dag, err = walkDag(blocks)
 	if err != nil {
 		return nil, err
 	}
@@ -218,8 +217,8 @@ func (c *Config) planBlock(b block) error {
 	return nil
 }
 
-func (c *Config) walkDag(blocks []block) (*dag.DAG, error) {
-	g := dag.NewDAG()
+func walkDag(blocks []block) (*Dag, error) {
+	g := newDag()
 	var walkErr error
 	for _, b := range blocks {
 		err := g.AddVertexByID(blockAddress(b.HclSyntaxBlock()), b)
