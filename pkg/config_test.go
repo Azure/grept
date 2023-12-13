@@ -713,3 +713,21 @@ func (s *configSuite) TestForEach_from_data_to_fix() {
 	s.NoError(err)
 	s.False(exists)
 }
+
+func (s *configSuite) TestForEach_forEachAsToggle() {
+	hclConfig := `
+    locals {
+        items = toset(["item1", "item2", "item3"])
+    }
+
+    rule "must_be_true" sample {
+        for_each = false ? locals.items : []
+        condition = each.value != "item1"
+    }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	config, err := NewConfig("", "", nil)
+	require.NoError(s.T(), err)
+	s.Len(config.RuleBlocks(), 0)
+}
