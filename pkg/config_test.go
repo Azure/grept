@@ -429,7 +429,6 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			require.False(s.T(), diag.HasErrors())
 			h := &HttpDatasource{
 				BaseBlock: &BaseBlock{
-					c: newEmptyConfig(),
 					hb: &hclBlock{
 						Block: config.Body.(*hclsyntax.Body).Blocks[0],
 					},
@@ -612,8 +611,7 @@ func (s *configSuite) TestForEach_ForEachBlockShouldBeExpanded() {
 
 	config, err := NewConfig("", "", nil)
 	s.NoError(err)
-	dataCount := config.blockOperators["data"].blocks.Size()
-	s.Equal(3, dataCount)
+	s.Len(config.DataBlocks(), 3)
 }
 
 func (s *configSuite) TestForEachAndAddressIndex() {

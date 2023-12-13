@@ -20,51 +20,54 @@ import (
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix", "local")
 
 type Config struct {
-	ctx            context.Context
-	basedir        string
-	blockOperators map[string]*BlocksOperator
-	dag            *Dag
-	execErrChan    chan error
-}
-
-func (c *Config) DatasOperator() *BlocksOperator {
-	return c.blockOperators["data"]
-}
-
-func (c *Config) RulesOperator() *BlocksOperator {
-	return c.blockOperators["rule"]
-}
-
-func (c *Config) FixesOperator() *BlocksOperator {
-	return c.blockOperators["fix"]
-}
-
-func (c *Config) LocalsOperator() *BlocksOperator {
-	return c.blockOperators["local"]
+	ctx         context.Context
+	basedir     string
+	dag         *Dag
+	execErrChan chan error
 }
 
 func (c *Config) DataBlocks() []Data {
-	return contravariance[Data](c.DatasOperator().Blocks())
+	var r []Data
+	for _, b := range c.dag.GetVertices() {
+		if b.(block).BlockType() == "data" {
+			r = append(r, b.(Data))
+		}
+	}
+	return r
 }
 
 func (c *Config) RuleBlocks() []Rule {
-	return contravariance[Rule](c.RulesOperator().Blocks())
+	var r []Rule
+	for _, b := range c.dag.GetVertices() {
+		if b.(block).BlockType() == "rule" {
+			r = append(r, b.(Rule))
+		}
+	}
+	return r
 }
 
 func (c *Config) FixBlocks() []Fix {
-	return contravariance[Fix](c.FixesOperator().Blocks())
+	var r []Fix
+	for _, b := range c.dag.GetVertices() {
+		if b.(block).BlockType() == "fix" {
+			r = append(r, b.(Fix))
+		}
+	}
+	return r
 }
 
 func (c *Config) LocalBlocks() []Local {
-	return contravariance[Local](c.LocalsOperator().Blocks())
+	var r []Local
+	for _, b := range c.dag.GetVertices() {
+		if b.(block).BlockType() == "local" {
+			r = append(r, b.(Local))
+		}
+	}
+	return r
 }
 
 func (c *Config) blocksCount() int {
-	var cnt int
-	for _, o := range c.blockOperators {
-		cnt += o.blocksCount()
-	}
-	return cnt
+	return len(c.dag.GetVertices())
 }
 
 func contravariance[T block](blocks []block) []T {
@@ -90,12 +93,6 @@ func newEmptyConfig() *Config {
 	c := &Config{
 		ctx: context.TODO(),
 	}
-	c.blockOperators = map[string]*BlocksOperator{
-		"data":  NewBlocksOperator(c),
-		"rule":  NewBlocksOperator(c),
-		"fix":   NewBlocksOperator(c),
-		"local": NewBlocksOperator(c),
-	}
 	return c
 }
 
@@ -109,36 +106,6 @@ func NewConfig(baseDir, cfgDir string, ctx context.Context) (*Config, error) {
 	c, err := newConfig(baseDir, ctx, hclBlocks, err)
 	if err != nil {
 		return nil, err
-	}
-	expandedHclBlocks := make([]*hclBlock, 0)
-	for _, b := range c.blocks() {
-		hb := b.HclBlock()
-		attr, ok := hb.Body.Attributes["for_each"]
-		if !ok {
-			expandedHclBlocks = append(expandedHclBlocks, newHclBlock(hb.Block, nil))
-			continue
-		}
-		forEachValue, diag := attr.Expr.Value(c.EvalContext())
-		if diag.HasErrors() {
-			err = multierror.Append(err, diag)
-			continue
-		}
-		if !forEachValue.CanIterateElements() {
-			err = multierror.Append(err, fmt.Errorf("invalid `for_each`, except set or map: %s", attr.Range().String()))
-			continue
-		}
-		iterator := forEachValue.ElementIterator()
-		for iterator.Next() {
-			key, value := iterator.Element()
-			newBlock := newHclBlock(hb.Block, &forEach{key: key, value: value})
-			expandedHclBlocks = append(expandedHclBlocks, newBlock)
-		}
-	}
-	if len(expandedHclBlocks) != len(hclBlocks) {
-		c, err = newConfig(baseDir, ctx, expandedHclBlocks, err)
-		if err != nil {
-			return nil, err
-		}
 	}
 	return c, nil
 }
@@ -159,13 +126,21 @@ func newConfig(baseDir string, ctx context.Context, hclBlocks []*hclBlock, err e
 			continue
 		}
 		blocks = append(blocks, b)
-		t := b.BlockType()
-		config.blockOperators[t].addBlock(b)
 	}
 	if err != nil {
 		return nil, err
 	}
-	err = config.runDag(prepare)
+	// If there's dag error, return dag error first.
+	dag, err := newDag(blocks)
+	if err != nil {
+		return nil, err
+	}
+	config.dag = dag
+	err = dag.runDag(config, tryEvalLocal)
+	if err != nil {
+		return nil, err
+	}
+	err = dag.runDag(config, expandBlocks)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +149,7 @@ func newConfig(baseDir string, ctx context.Context, hclBlocks []*hclBlock, err e
 }
 
 func (c *Config) Plan() (*Plan, error) {
-	err := c.runDag(plan)
+	err := c.dag.runDag(c, plan)
 	if err != nil {
 		return nil, err
 	}
@@ -198,12 +173,8 @@ func (c *Config) Plan() (*Plan, error) {
 	return plan, nil
 }
 
-func (c *Config) runDag(onReady func(*Config, *Dag, block) error) error {
-	// If there's dag error, return dag error first.
-	dag, err := newDag(c.blocks())
-	if err != nil {
-		return err
-	}
+func (dag *Dag) runDag(c *Config, onReady func(*Config, *Dag, *linkedlistqueue.Queue, block) error) error {
+	var err error
 	visited := hashset.New()
 	pending := linkedlistqueue.New()
 	for _, n := range dag.GetRoots() {
@@ -212,7 +183,13 @@ func (c *Config) runDag(onReady func(*Config, *Dag, block) error) error {
 	for !pending.Empty() {
 		next, _ := pending.Dequeue()
 		b := next.(block)
-		ancestors, dagErr := dag.GetAncestors(blockAddress(b.HclBlock()))
+		// the node has already been expanded and deleted from dag
+		address := blockAddress(b.HclBlock())
+		exist := dag.exist(address)
+		if !exist {
+			continue
+		}
+		ancestors, dagErr := dag.GetAncestors(address)
 		if dagErr != nil {
 			return dagErr
 		}
@@ -225,11 +202,16 @@ func (c *Config) runDag(onReady func(*Config, *Dag, block) error) error {
 		if !ready {
 			continue
 		}
-		if callbackErr := onReady(c, dag, b); callbackErr != nil {
+		if callbackErr := onReady(c, dag, pending, b); callbackErr != nil {
 			err = multierror.Append(err, callbackErr)
 		}
-		visited.Add(blockAddress(b.HclBlock()))
-		children, dagErr := dag.GetChildren(blockAddress(b.HclBlock()))
+		visited.Add(address)
+		// this address might be expanded during onReady and no more exist.
+		exist = dag.exist(address)
+		if !exist {
+			continue
+		}
+		children, dagErr := dag.GetChildren(address)
 		if dagErr != nil {
 			return dagErr
 		}
@@ -240,7 +222,13 @@ func (c *Config) runDag(onReady func(*Config, *Dag, block) error) error {
 	return err
 }
 
-func (c *Config) planBlock(b block) error {
+func (d *Dag) exist(address string) bool {
+	n, existErr := d.GetVertex(address)
+	notExist := n == nil || existErr != nil
+	return !notExist
+}
+
+func planBlock(b block) error {
 	decodeErr := decode(b)
 	if decodeErr != nil {
 		return fmt.Errorf("%s.%s.%s(%s) decode error: %+v", b.Type(), b.Type(), b.Name(), b.HclBlock().Range().String(), decodeErr)
@@ -258,14 +246,6 @@ func (c *Config) planBlock(b block) error {
 		}
 	}
 	return nil
-}
-
-func readError(errors chan error) error {
-	var err error
-	for e := range errors {
-		err = multierror.Append(err, e)
-	}
-	return err
 }
 
 func wrapBlock(c *Config, hb *hclBlock) (block, error) {
@@ -355,8 +335,8 @@ func readRawHclBlock(b *hclsyntax.Block) []*hclsyntax.Block {
 
 func (c *Config) blocks() []block {
 	var blocks []block
-	for _, o := range c.blockOperators {
-		blocks = append(blocks, o.Blocks()...)
+	for _, n := range c.dag.GetVertices() {
+		blocks = append(blocks, n.(block))
 	}
 	return blocks
 }

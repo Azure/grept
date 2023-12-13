@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -23,11 +24,9 @@ type block interface {
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
-	setOperator(o *BlocksOperator)
 	forEachDefined() bool
-	setOnReady(func(*Config, block))
 	getDownstreams() []block
-	setForEach(each *forEach)
+	setForEach(*forEach)
 	getForEach() *forEach
 }
 
@@ -90,27 +89,6 @@ func LocalsValues(blocks []Local) cty.Value {
 	return cty.ObjectVal(res)
 }
 
-//	func Values[T block](blocks []T) cty.Value {
-//		if len(blocks) == 0 {
-//			return cty.EmptyObjectVal
-//		}
-//		res := map[string]cty.Value{}
-//		valuesMap := map[string]map[string]cty.Value{}
-//
-//		for _, b := range blocks {
-//			values := valuesMap[b.Type()]
-//			if values == nil {
-//				values = map[string]cty.Value{}
-//				valuesMap[b.Type()] = values
-//			}
-//			blockVal := blockToCtyValue(b)
-//			values[b.Name()] = blockVal
-//		}
-//		for t, m := range valuesMap {
-//			res[t] = cty.MapVal(m)
-//		}
-//		return cty.ObjectVal(res)
-//	}
 func Values[T block](blocks []T) cty.Value {
 	if len(blocks) == 0 {
 		return cty.EmptyObjectVal
@@ -192,7 +170,6 @@ type BaseBlock struct {
 	hb           *hclBlock
 	name         string
 	id           string
-	operator     *BlocksOperator
 	blockAddress string
 	mu           sync.Mutex
 	onReady      func(*Config, block)
@@ -247,17 +224,9 @@ func (bb *BaseBlock) Context() context.Context {
 	return bb.c.ctx
 }
 
-func (bb *BaseBlock) setOperator(o *BlocksOperator) {
-	bb.operator = o
-}
-
 func (bb *BaseBlock) forEachDefined() bool {
 	_, forEach := bb.HclBlock().Body.Attributes["for_each"]
 	return forEach
-}
-
-func (bb *BaseBlock) setOnReady(next func(*Config, block)) {
-	bb.onReady = next
 }
 
 func (bb *BaseBlock) getDownstreams() []block {
@@ -276,12 +245,12 @@ func (bb *BaseBlock) getForEach() *forEach {
 	return bb.forEach
 }
 
-func plan(c *Config, dag *Dag, b block) error {
+func plan(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error {
 	self, _ := dag.GetVertex(blockAddress(b.HclBlock()))
-	return c.planBlock(self.(block))
+	return planBlock(self.(block))
 }
 
-func prepare(c *Config, dag *Dag, b block) error {
+func tryEvalLocal(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error {
 	l, ok := b.(*LocalBlock)
 	if !ok {
 		return nil
@@ -289,7 +258,57 @@ func prepare(c *Config, dag *Dag, b block) error {
 	value, diag := l.HclBlock().Body.Attributes["value"].Expr.Value(c.EvalContext())
 	if !diag.HasErrors() {
 		l.Value = value
+	}
+	return nil
+}
+
+func expandBlocks(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error {
+	attr, ok := b.HclBlock().Body.Attributes["for_each"]
+	if !ok || b.getForEach() != nil {
 		return nil
 	}
-	return diag
+	forEachValue, diag := attr.Expr.Value(c.EvalContext())
+	if diag.HasErrors() {
+		return diag
+	}
+	if !forEachValue.CanIterateElements() {
+		return fmt.Errorf("invalid `for_each`, except set or map: %s", attr.Range().String())
+	}
+	address := blockAddress(b.HclBlock())
+	upstreams, err := dag.GetAncestors(address)
+	if err != nil {
+		return err
+	}
+	downstreams, err := dag.GetChildren(address)
+	if err != nil {
+		return err
+	}
+	iterator := forEachValue.ElementIterator()
+	for iterator.Next() {
+		key, value := iterator.Element()
+		newBlock := newHclBlock(b.HclBlock().Block, &forEach{key: key, value: value})
+		nb, err := wrapBlock(c, newBlock)
+		if err != nil {
+			return err
+		}
+		expandedAddress := blockAddress(newBlock)
+		err = dag.AddVertexByID(expandedAddress, nb)
+		if err != nil {
+			return err
+		}
+		for upstreamAddress, _ := range upstreams {
+			err := dag.addEdge(upstreamAddress, expandedAddress)
+			if err != nil {
+				return err
+			}
+		}
+		for downstreamAddress, _ := range downstreams {
+			err := dag.addEdge(expandedAddress, downstreamAddress)
+			if err != nil {
+				return err
+			}
+		}
+		q.Enqueue(nb)
+	}
+	return dag.DeleteVertex(address)
 }
