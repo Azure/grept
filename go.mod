@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/hashicorp/hcl/v2 v2.19.1
-	github.com/heimdalr/dag v1.3.1
+	github.com/heimdalr/dag v1.4.0
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
 	github.com/lonegunmanb/hclfuncs v0.3.0
