@@ -24,7 +24,6 @@ type block interface {
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
 	setOperator(o *BlocksOperator)
-	notifyOnExecuted(b block, success bool)
 	forEachDefined() bool
 	setOnReady(func(*Config, block))
 	getDownstreams() []block
@@ -252,25 +251,6 @@ func (bb *BaseBlock) setOperator(o *BlocksOperator) {
 	bb.operator = o
 }
 
-func (bb *BaseBlock) notifyOnExecuted(b block, success bool) {
-	bb.mu.Lock()
-	pendingUpstreams := bb.c.dag.pendingUpstreams[bb.blockAddress]
-	pendingUpstreams.Remove(blockAddress(b.HclBlock()))
-	bb.mu.Unlock()
-	self, _ := bb.c.dag.GetVertex(bb.blockAddress)
-	selfBlock := self.(block)
-	if !success {
-		bb.c.notifyOnExecuted(selfBlock, false)
-	}
-	if pendingUpstreams.Empty() {
-		go func() {
-			if bb.onReady != nil {
-				bb.onReady(bb.c, selfBlock)
-			}
-		}()
-	}
-}
-
 func (bb *BaseBlock) forEachDefined() bool {
 	_, forEach := bb.HclBlock().Body.Attributes["for_each"]
 	return forEach
@@ -296,12 +276,12 @@ func (bb *BaseBlock) getForEach() *forEach {
 	return bb.forEach
 }
 
-func plan(c *Config, b block) error {
-	self, _ := c.dag.GetVertex(blockAddress(b.HclBlock()))
+func plan(c *Config, dag *Dag, b block) error {
+	self, _ := dag.GetVertex(blockAddress(b.HclBlock()))
 	return c.planBlock(self.(block))
 }
 
-func prepare(c *Config, b block) error {
+func prepare(c *Config, dag *Dag, b block) error {
 	l, ok := b.(*LocalBlock)
 	if !ok {
 		return nil
