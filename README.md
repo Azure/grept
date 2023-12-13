@@ -150,6 +150,45 @@ For each block type, you can find detailed information about the block's attribu
 
 You can define and use `locals` block in `grept` just like [Terraform](https://developer.hashicorp.com/terraform/language/values/locals).
 
+## `for_each` support
+
+You can use `for_each` like Terraform. `for_each` is a meta-argument, it can be used with:
+
+* `data`
+* `rule`
+* `fix`
+
+The `for_each` meta-argument accepts a map or a set of strings, and creates an instance for each item in that map or set. Each instance has a distinct block associated with it, and each is separately planed and applied.
+
+```hcl
+locals {
+  items = toset(["item1", "item2", "item3"])
+}
+
+data "http" echo {
+	for_each = local.items
+
+	url          = "http://foo"
+	request_body = jsonencode({
+  		query = each.value
+  })
+}
+
+rule "must_be_true" sample {
+  for_each = local.items
+
+  condition = each.value != data.http.echo[each.value]response_body
+}
+
+fix "local_file" hello_world{
+  for_each = local.items
+
+  rule_ids = [rule.must_be_true.sample[each.value].id]
+  paths    = [each.value]
+  content  = each.value
+}
+```
+
 ## Contributing
 
 Contributions to `grept` are welcome! Please submit a pull request or issue on the [grept GitHub page](https://github.com/Azure/grept). 
