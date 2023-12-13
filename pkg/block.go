@@ -12,7 +12,6 @@ import (
 	"github.com/mcuadros/go-defaults"
 	"github.com/zclconf/go-cty/cty"
 	"strings"
-	"sync"
 )
 
 type block interface {
@@ -171,8 +170,6 @@ type BaseBlock struct {
 	name         string
 	id           string
 	blockAddress string
-	mu           sync.Mutex
-	onReady      func(*Config, block)
 	forEach      *forEach
 }
 
@@ -296,13 +293,13 @@ func expandBlocks(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error 
 		if err != nil {
 			return err
 		}
-		for upstreamAddress, _ := range upstreams {
+		for upstreamAddress := range upstreams {
 			err := dag.addEdge(upstreamAddress, expandedAddress)
 			if err != nil {
 				return err
 			}
 		}
-		for downstreamAddress, _ := range downstreams {
+		for downstreamAddress := range downstreams {
 			err := dag.addEdge(expandedAddress, downstreamAddress)
 			if err != nil {
 				return err

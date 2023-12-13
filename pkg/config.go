@@ -20,10 +20,9 @@ import (
 var validBlockTypes sets.Set = hashset.New("data", "rule", "fix", "local")
 
 type Config struct {
-	ctx         context.Context
-	basedir     string
-	dag         *Dag
-	execErrChan chan error
+	ctx     context.Context
+	basedir string
+	dag     *Dag
 }
 
 func (c *Config) DataBlocks() []Data {
@@ -62,18 +61,6 @@ func (c *Config) LocalBlocks() []Local {
 		if b.(block).BlockType() == "local" {
 			r = append(r, b.(Local))
 		}
-	}
-	return r
-}
-
-func (c *Config) blocksCount() int {
-	return len(c.dag.GetVertices())
-}
-
-func contravariance[T block](blocks []block) []T {
-	var r []T
-	for _, b := range blocks {
-		r = append(r, b.(T))
 	}
 	return r
 }
@@ -194,7 +181,7 @@ func (dag *Dag) runDag(c *Config, onReady func(*Config, *Dag, *linkedlistqueue.Q
 			return dagErr
 		}
 		ready := true
-		for upstreamAddress, _ := range ancestors {
+		for upstreamAddress := range ancestors {
 			if !visited.Contains(upstreamAddress) {
 				ready = false
 			}
