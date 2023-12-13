@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"path/filepath"
 
 	"github.com/ahmetb/go-linq/v3"
@@ -197,41 +198,46 @@ func (c *Config) Plan() (*Plan, error) {
 	return plan, nil
 }
 
-func (c *Config) runDag(onReady func(*Config, block) error) error {
+func (c *Config) runDag(onReady func(*Config, *Dag, block) error) error {
 	// If there's dag error, return dag error first.
 	dag, err := newDag(c.blocks())
 	if err != nil {
 		return err
 	}
-	c.dag = dag
-	wrapOnReady := func(c *Config, b block) {
-		err := onReady(c, b)
-		if err != nil {
-			c.execErrChan <- err
+	visited := hashset.New()
+	pending := linkedlistqueue.New()
+	for _, n := range dag.GetRoots() {
+		pending.Enqueue(n.(block))
+	}
+	for !pending.Empty() {
+		next, _ := pending.Dequeue()
+		b := next.(block)
+		ancestors, dagErr := dag.GetAncestors(blockAddress(b.HclBlock()))
+		if dagErr != nil {
+			return dagErr
 		}
-		c.notifyOnExecuted(b, err == nil)
+		ready := true
+		for upstreamAddress, _ := range ancestors {
+			if !visited.Contains(upstreamAddress) {
+				ready = false
+			}
+		}
+		if !ready {
+			continue
+		}
+		if callbackErr := onReady(c, dag, b); callbackErr != nil {
+			err = multierror.Append(err, callbackErr)
+		}
+		visited.Add(blockAddress(b.HclBlock()))
+		children, dagErr := dag.GetChildren(blockAddress(b.HclBlock()))
+		if dagErr != nil {
+			return dagErr
+		}
+		for _, n := range children {
+			pending.Enqueue(n)
+		}
 	}
-	c.resetWg()
-	for _, b := range c.blocks() {
-		b.setOnReady(wrapOnReady)
-	}
-	c.execErrChan = make(chan error, c.blocksCount())
-	for _, n := range c.dag.GetRoots() {
-		b := n.(block)
-		go func() {
-			wrapOnReady(c, b)
-		}()
-	}
-
-	for _, operator := range c.blockOperators {
-		operator.wg.Wait()
-	}
-	close(c.execErrChan)
-	err = readError(c.execErrChan)
-	if err != nil {
-		return fmt.Errorf("the following blocks throw errors: %+v", err)
-	}
-	return nil
+	return err
 }
 
 func (c *Config) planBlock(b block) error {
@@ -353,14 +359,4 @@ func (c *Config) blocks() []block {
 		blocks = append(blocks, o.Blocks()...)
 	}
 	return blocks
-}
-
-func (c *Config) resetWg() {
-	for _, o := range c.blockOperators {
-		o.resetWg()
-	}
-}
-
-func (c *Config) notifyOnExecuted(b block, success bool) {
-	c.blockOperators[b.BlockType()].notifyOnExecuted(b, success)
 }

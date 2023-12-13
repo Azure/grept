@@ -1,16 +1,13 @@
 package pkg
 
 import (
-	"github.com/emirpasic/gods/sets/hashset"
-	"sync"
-
 	"github.com/emirpasic/gods/sets"
+	"github.com/emirpasic/gods/sets/hashset"
 )
 
 type BlocksOperator struct {
 	c      *Config
 	blocks sets.Set
-	wg     sync.WaitGroup
 }
 
 func NewBlocksOperator(c *Config) *BlocksOperator {
@@ -22,18 +19,6 @@ func NewBlocksOperator(c *Config) *BlocksOperator {
 
 func (o *BlocksOperator) addBlock(b block) {
 	o.blocks.Add(b)
-}
-
-func (o *BlocksOperator) resetWg() {
-	o.wg = sync.WaitGroup{}
-	o.wg.Add(o.blocks.Size())
-}
-
-func (o *BlocksOperator) notifyOnExecuted(b block, success bool) {
-	for _, next := range b.getDownstreams() {
-		next.notifyOnExecuted(b, success)
-	}
-	o.wg.Done()
 }
 
 func (o *BlocksOperator) blocksCount() int {
