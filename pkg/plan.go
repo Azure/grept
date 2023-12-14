@@ -73,5 +73,6 @@ type FailedRule struct {
 }
 
 func (fr *FailedRule) String() string {
-	return fmt.Sprintf("rule.%s.%s check return failure: %s", fr.Rule.Type(), fr.Rule.Name(), fr.CheckError.Error())
+	address := blockAddress(fr.HclBlock())
+	return fmt.Sprintf("%s check return failure: %s", address, fr.CheckError.Error())
 }

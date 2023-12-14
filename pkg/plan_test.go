@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -21,6 +22,10 @@ func TestPlan_String(t *testing.T) {
 							BaseBlock: &BaseBlock{
 								name: "test-rule",
 								id:   "1",
+								hb: newHclBlock(&hclsyntax.Block{
+									Type:   "rule",
+									Labels: []string{"file_hash", "test-rule"},
+								}, nil),
 							},
 							Glob:      "test-glob",
 							Hash:      "test-hash",
@@ -33,6 +38,10 @@ func TestPlan_String(t *testing.T) {
 					"test_id": &LocalFileFix{
 						BaseBlock: &BaseBlock{
 							name: "test-fix",
+							hb: newHclBlock(&hclsyntax.Block{
+								Type:   "fix",
+								Labels: []string{"local_file", "test-fix"},
+							}, nil),
 						},
 						Paths:   []string{"test-path"},
 						Content: "test-content",

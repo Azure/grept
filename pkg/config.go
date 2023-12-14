@@ -144,12 +144,13 @@ func (c *Config) Plan() (*Plan, error) {
 	plan := newPlan()
 	for _, rb := range c.RuleBlocks() {
 		checkErr := rb.CheckError()
-		if checkErr != nil {
-			plan.addRule(&FailedRule{
-				Rule:       rb,
-				CheckError: checkErr,
-			})
+		if checkErr == nil {
+			continue
 		}
+		plan.addRule(&FailedRule{
+			Rule:       rb,
+			CheckError: checkErr,
+		})
 		for _, fb := range c.FixBlocks() {
 			if linq.From(fb.GetRuleIds()).Contains(rb.Id()) {
 				plan.addFix(fb)

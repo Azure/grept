@@ -731,3 +731,25 @@ func (s *configSuite) TestForEach_forEachAsToggle() {
 	require.NoError(s.T(), err)
 	s.Len(config.RuleBlocks(), 0)
 }
+
+func (s *configSuite) TestPlanOnlyAddFixWhenCheckErrNotNil() {
+	t := s.T()
+	content := `
+	rule "must_be_true" sample {
+		condition = true
+	}
+
+	fix "local_file" hello_world{
+		rule_ids = [rule.must_be_true.sample.id]
+		paths = ["/path/to/file.txt"]
+		content = "Hello, world!"
+	}
+	`
+
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	config, err := NewConfig("", "", nil)
+	require.NoError(t, err)
+	plan, err := config.Plan()
+	require.NoError(t, err)
+	s.Len(plan.Fixes, 0)
+}
