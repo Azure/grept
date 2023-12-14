@@ -23,11 +23,11 @@ func (p *Plan) String() string {
 	sb := strings.Builder{}
 	for _, r := range p.FailedRules {
 		sb.WriteString(r.String())
-		sb.WriteString("\n")
+		sb.WriteString("\n---\n")
 	}
 	for _, f := range p.Fixes {
-		sb.WriteString("  ")
 		sb.WriteString(fmt.Sprintf("%s would be apply:\n %s\n", blockAddress(f.HclBlock()), blockToString(f)))
+		sb.WriteString("\n---\n")
 	}
 
 	return sb.String()
