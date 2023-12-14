@@ -732,6 +732,27 @@ func (s *configSuite) TestForEach_forEachAsToggle() {
 	s.Len(config.RuleBlocks(), 0)
 }
 
+func (s *configSuite) TestForEach_blocksWithIndexShouldHasNewBlockId() {
+	hclConfig := `
+    locals {
+        items = toset(["item1", "item2"])
+    }
+
+    rule "must_be_true" sample {
+        for_each = local.items
+        condition = each.value != "item1"
+    }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
+
+	config, err := NewConfig("", "", nil)
+	require.NoError(s.T(), err)
+	s.Len(config.RuleBlocks(), 2)
+	rb0 := config.RuleBlocks()[0].(block)
+	rb1 := config.RuleBlocks()[1].(block)
+	s.NotEqual(rb0.Id(), rb1.Id())
+}
+
 func (s *configSuite) TestPlanOnlyAddFixWhenCheckErrNotNil() {
 	t := s.T()
 	content := `
