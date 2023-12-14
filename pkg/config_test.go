@@ -748,8 +748,11 @@ func (s *configSuite) TestForEach_blocksWithIndexShouldHasNewBlockId() {
 	config, err := NewConfig("", "", nil)
 	require.NoError(s.T(), err)
 	s.Len(config.RuleBlocks(), 2)
-	rb0 := config.RuleBlocks()[0].(block)
-	rb1 := config.RuleBlocks()[1].(block)
+	ruleBlocks := config.RuleBlocks()
+	rb0 := ruleBlocks[0].(block)
+	rb1 := ruleBlocks[1].(block)
+	b := rb0.Id() == rb1.Id()
+	s.False(b)
 	s.NotEqual(rb0.Id(), rb1.Id())
 }
 

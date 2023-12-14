@@ -27,7 +27,7 @@ func (p *Plan) String() string {
 	}
 	for _, f := range p.Fixes {
 		sb.WriteString("  ")
-		sb.WriteString(fmt.Sprintf("fix.%s.%s would be apply:\n %s", f.Type(), f.Name(), blockToString(f)))
+		sb.WriteString(fmt.Sprintf("%s would be apply:\n %s\n", blockAddress(f.HclBlock()), blockToString(f)))
 	}
 
 	return sb.String()
