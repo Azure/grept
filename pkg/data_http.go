@@ -20,7 +20,7 @@ var _ Data = &HttpDatasource{}
 
 type HttpDatasource struct {
 	*BaseBlock
-	baseData
+	*BaseData
 	Url             string            `hcl:"url"`
 	Method          string            `hcl:"method,optional" default:"GET"`
 	RequestBody     string            `hcl:"request_body,optional"`

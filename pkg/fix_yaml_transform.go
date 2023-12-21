@@ -17,8 +17,7 @@ var _ Fix = &YamlTransformFix{}
 
 type YamlTransformFix struct {
 	*BaseBlock
-	baseFix
-	RuleIds   []string        `hcl:"rule_ids" json:"rule_ids"`
+	*BaseFix
 	FilePath  string          `hcl:"file_path" json:"file_path" validate:"endswith=.yaml|endswith=.yml"`
 	Transform []YamlTransform `hcl:"transform,block"`
 }
@@ -41,7 +40,6 @@ func (y *YamlTransformFix) Values() map[string]cty.Value {
 		}))
 	}
 	return map[string]cty.Value{
-		"rule_id":   ToCtyValue(y.RuleIds),
 		"file_path": ToCtyValue(y.FilePath),
 		"transform": cty.ListVal(transforms),
 	}
@@ -79,8 +77,4 @@ func (y *YamlTransformFix) Apply() error {
 		return fmt.Errorf("error on writing yaml file %s, %+v fix.%s.%s %s", y.FilePath, err, y.Type(), y.Name(), y.HclBlock().Range().String())
 	}
 	return nil
-}
-
-func (y *YamlTransformFix) GetRuleIds() []string {
-	return y.RuleIds
 }

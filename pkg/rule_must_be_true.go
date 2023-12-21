@@ -9,14 +9,14 @@ var _ Rule = &MustBeTrueRule{}
 
 type MustBeTrueRule struct {
 	*BaseBlock
-	BaseRule
+	*BaseRule
 	Condition    bool   `hcl:"condition"`
 	ErrorMessage string `hcl:"error_message,optional"`
 }
 
 func (m *MustBeTrueRule) ExecuteDuringPlan() error {
 	if !m.Condition {
-		logCheckError(m, fmt.Errorf("assertion failed: %s", m.ErrorMessage))
+		m.setCheckError(fmt.Errorf("assertion failed: %s", m.ErrorMessage))
 	}
 	return nil
 }
