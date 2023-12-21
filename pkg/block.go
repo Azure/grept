@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/emirpasic/gods/queues/linkedlistqueue"
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -34,6 +35,8 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
+var publicAttributeNames = hashset.New("for_each", "rule_ids")
+
 func decode(b block) error {
 	defaults.SetDefaults(b)
 	hb := b.HclBlock()
@@ -45,6 +48,12 @@ func decode(b block) error {
 				"key":   cty.StringVal(CtyValueToString(hb.key)),
 				"value": hb.forEach.value,
 			}),
+		}
+	}
+	if decodeBase, ok := b.(DecodeBase); ok {
+		err := decodeBase.Decode(hb, evalContext)
+		if err != nil {
+			return err
 		}
 	}
 	diag := gohcl.DecodeBody(cleanBodyForDecode(hb), evalContext, b)
@@ -63,10 +72,11 @@ func cleanBodyForDecode(hb *hclBlock) *hclsyntax.Body {
 
 	// Iterate over the attributes of the original body
 	for attrName, attr := range hb.Body.Attributes {
-		// If the attribute is not named `for_each`, add it to the new body
-		if attrName != "for_each" {
-			newBody.Attributes[attrName] = attr
+
+		if publicAttributeNames.Contains(attrName) {
+			continue
 		}
+		newBody.Attributes[attrName] = attr
 	}
 
 	// Copy all blocks to the new body
@@ -308,4 +318,8 @@ func expandBlocks(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error 
 		q.Enqueue(nb)
 	}
 	return dag.DeleteVertex(address)
+}
+
+type DecodeBase interface {
+	Decode(*hclBlock, *hcl.EvalContext) error
 }

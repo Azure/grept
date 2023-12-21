@@ -2,10 +2,25 @@ package pkg
 
 import (
 	"reflect"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type blockConstructor = func(*Config, *hclBlock) block
 type blockRegistry map[string]blockConstructor
+
+var baseFactory = map[string]func() any{
+	"rule": func() any {
+		return new(BaseRule)
+	},
+	"fix": func() any {
+		return new(BaseFix)
+	},
+	"data": func() any {
+		return new(BaseData)
+	},
+}
 
 func registerFunc(registry blockRegistry, t block) {
 	registry[t.Type()] = func(c *Config, hb *hclBlock) block {
@@ -13,7 +28,12 @@ func registerFunc(registry blockRegistry, t block) {
 		newBaseBlock := newBaseBlock(c, hb)
 		newBaseBlock.setForEach(hb.forEach)
 		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
-		return newBlock.Addr().Interface().(block)
+		b := newBlock.Addr().Interface().(block)
+		if f, ok := baseFactory[t.BlockType()]; ok {
+			blockName := cases.Title(language.English).String(t.BlockType())
+			newBlock.FieldByName("Base" + blockName).Set(reflect.ValueOf(f()))
+		}
+		return b
 	}
 }
 

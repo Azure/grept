@@ -10,7 +10,7 @@ var _ Rule = &FileExistRule{}
 
 type FileExistRule struct {
 	*BaseBlock
-	BaseRule
+	*BaseRule
 	Glob       string `hcl:"glob"`
 	MatchFiles []string
 }
@@ -33,7 +33,7 @@ func (f *FileExistRule) ExecuteDuringPlan() error {
 		return fmt.Errorf("error on glob files %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclBlock().Range().String())
 	}
 	if len(finds) == 0 {
-		logCheckError(f, fmt.Errorf("no match on glob %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclBlock().Range().String()))
+		f.setCheckError(fmt.Errorf("no match on glob %s, rule.%s.%s %s", f.Glob, f.Type(), f.Name(), f.HclBlock().Range().String()))
 		return nil
 	}
 	f.MatchFiles = finds

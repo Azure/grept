@@ -52,6 +52,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Check() {
 		{
 			name: "matching file found",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "file*.txt",
 				Hash:      fmt.Sprintf("%x", expectedHash),
 				Algorithm: "md5",
@@ -61,6 +62,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Check() {
 		{
 			name: "no matching file found",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "file*.txt",
 				Hash:      fmt.Sprintf("%x", sha1.Sum([]byte("world1"))),
 				Algorithm: "sha1",
@@ -70,6 +72,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Check() {
 		{
 			name: "no matching glob pattern",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "nofile*.txt",
 				Hash:      fmt.Sprintf("%x", expectedHash),
 				Algorithm: "md5",
@@ -99,6 +102,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Validate() {
 		{
 			name: "valid rule",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "/file*.txt",
 				Hash:      "abc123",
 				Algorithm: "md5",
@@ -108,6 +112,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Validate() {
 		{
 			name: "missing glob",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Hash:      "abc123",
 				Algorithm: "md5",
 			},
@@ -116,6 +121,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Validate() {
 		{
 			name: "missing hash",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "/file*.txt",
 				Algorithm: "md5",
 			},
@@ -124,6 +130,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_Validate() {
 		{
 			name: "invalid algorithm",
 			rule: &FileHashRule{
+				BaseRule:  new(BaseRule),
 				Glob:      "/file*.txt",
 				Hash:      "abc123",
 				Algorithm: "invalid",
@@ -151,8 +158,9 @@ func (s *fileHashRuleSuite) TestFileHashRule_HashMismatchFilesShouldBeExported()
 		BaseBlock: &BaseBlock{
 			c: &Config{},
 		},
-		Glob: "/example/*/testfile.txt",
-		Hash: "non-matching-hash", // MD5 hash that doesn't match "test content"
+		BaseRule: new(BaseRule),
+		Glob:     "/example/*/testfile.txt",
+		Hash:     "non-matching-hash", // MD5 hash that doesn't match "test content"
 	}
 	runtimeErr := rule.ExecuteDuringPlan()
 	assert.Nil(t, runtimeErr)
@@ -183,6 +191,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is false, file content matches hash",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -195,6 +204,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is false, file content does not match hash",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/testfile",
 				Hash:               "incorrecthash",
 				Algorithm:          "sha256",
@@ -207,6 +217,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is false, one file content matches hash",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/example/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -219,6 +230,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is true, file content does not match hash",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/example/*/testfile",
 				Hash:               "incorrecthash",
 				Algorithm:          "sha256",
@@ -231,6 +243,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is true, file content matches hash exits, but still got file hash that mismatch",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/example/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -243,6 +256,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is false, all files match",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/example2/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",
@@ -255,6 +269,7 @@ func (s *fileHashRuleSuite) TestFileHashRule_FailOnHashMismatch() {
 			name: "FailOnHashMismatch is false, all files match",
 			rule: &FileHashRule{
 				BaseBlock:          &BaseBlock{},
+				BaseRule:           new(BaseRule),
 				Glob:               "/example2/*/testfile",
 				Hash:               expectedHash,
 				Algorithm:          "sha256",

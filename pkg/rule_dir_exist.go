@@ -10,7 +10,7 @@ var _ Rule = &DirExistRule{}
 
 type DirExistRule struct {
 	*BaseBlock
-	BaseRule
+	*BaseRule
 	Dir         string `hcl:"dir"`
 	FailOnExist bool   `hcl:"fail_on_exist,optional"`
 }
@@ -33,11 +33,11 @@ func (d *DirExistRule) ExecuteDuringPlan() error {
 		return err
 	}
 	if d.FailOnExist && exists {
-		logCheckError(d, fmt.Errorf("directory exists: %s", d.Dir))
+		d.setCheckError(fmt.Errorf("directory exists: %s", d.Dir))
 		return nil
 	}
 	if !d.FailOnExist && !exists {
-		logCheckError(d, fmt.Errorf("directory does not exist: %s", d.Dir))
+		d.setCheckError(fmt.Errorf("directory does not exist: %s", d.Dir))
 		return nil
 	}
 	return nil

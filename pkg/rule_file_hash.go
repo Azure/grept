@@ -16,7 +16,7 @@ var _ Rule = &FileHashRule{}
 
 type FileHashRule struct {
 	*BaseBlock
-	BaseRule
+	*BaseRule
 	Glob               string `hcl:"glob"`
 	Hash               string `hcl:"hash"`
 	Algorithm          string `hcl:"algorithm,optional" default:"sha1"`
@@ -47,7 +47,7 @@ func (fhr *FileHashRule) ExecuteDuringPlan() error {
 	}
 
 	if len(files) == 0 {
-		logCheckError(fhr, fmt.Errorf("no files match path pattern: %s", fhr.Glob))
+		fhr.setCheckError(fmt.Errorf("no files match path pattern: %s", fhr.Glob))
 		return nil
 	}
 	matchFound := false
@@ -90,7 +90,7 @@ func (fhr *FileHashRule) ExecuteDuringPlan() error {
 		return nil
 	}
 
-	logCheckError(fhr, fmt.Errorf("file with glob %s and  different hash than %s found", fhr.Glob, fhr.Hash))
+	fhr.setCheckError(fmt.Errorf("file with glob %s and  different hash than %s found", fhr.Glob, fhr.Hash))
 	return nil
 }
 

@@ -12,7 +12,7 @@ var _ Data = &GitIgnoreDatasource{}
 
 type GitIgnoreDatasource struct {
 	*BaseBlock
-	baseData
+	*BaseData
 	Records []string
 }
 

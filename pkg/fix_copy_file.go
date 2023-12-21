@@ -10,10 +10,9 @@ var _ Fix = &CopyFileFix{}
 
 type CopyFileFix struct {
 	*BaseBlock
-	baseFix
-	RuleIds []string `json:"rule_ids" hcl:"rule_ids"`
-	Src     string   `json:"src" hcl:"src"`
-	Dest    string   `json:"dest" hcl:"dest"`
+	*BaseFix
+	Src  string `json:"src" hcl:"src"`
+	Dest string `json:"dest" hcl:"dest"`
 }
 
 func (c *CopyFileFix) Type() string {
@@ -42,8 +41,4 @@ func (c *CopyFileFix) Apply() error {
 		return fmt.Errorf("error on writing dest %s %+v", c.Dest, err)
 	}
 	return nil
-}
-
-func (c *CopyFileFix) GetRuleIds() []string {
-	return c.RuleIds
 }

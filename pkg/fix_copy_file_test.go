@@ -34,9 +34,8 @@ func (s *copyFileFixSuite) TestCopyFileFix() {
 			name: "test",
 			id:   "test",
 		},
-		RuleIds: nil,
-		Src:     "/example/test",
-		Dest:    "/example/test2",
+		Src:  "/example/test",
+		Dest: "/example/test2",
 	}
 	err := sut.Apply()
 	s.NoError(err)

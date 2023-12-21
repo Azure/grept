@@ -11,7 +11,6 @@ import (
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/alexellis/go-execute/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -19,8 +18,7 @@ var _ Fix = &LocalShellFix{}
 
 type LocalShellFix struct {
 	*BaseBlock
-	baseFix
-	RuleIds        []string          `hcl:"rule_ids" json:"rule_ids"`
+	*BaseFix
 	ExecuteCommand []string          `hcl:"execute_command,optional" default:"[/bin/sh,-c]"` // The command used to execute the script.
 	InlineShebang  string            `hcl:"inline_shebang,optional" validate:"required_with=Inlines"`
 	Inlines        []string          `hcl:"inlines,optional" validate:"conflict_with=Script RemoteScript,at_least_one_of=Inlines Script RemoteScript"`
@@ -36,7 +34,6 @@ func (l *LocalShellFix) Type() string {
 
 func (l *LocalShellFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
-		"rule_ids":      ToCtyValue(l.RuleIds),
 		"inlines":       ToCtyValue(l.Inlines),
 		"script":        ToCtyValue(l.Script),
 		"remote_script": ToCtyValue(l.RemoteScript),
@@ -50,9 +47,13 @@ func (l *LocalShellFix) Apply() (err error) {
 	if len(l.Env) > 0 {
 		hclfuncs.GoroutineLocalEnv.Set(l.Env)
 		defer hclfuncs.GoroutineLocalEnv.Remove()
-		diag := gohcl.DecodeBody(l.HclBlock().Body, l.EvalContext(), l)
-		if diag.HasErrors() {
-			return diag
+		//diag := gohcl.DecodeBody(l.HclBlock().Body, l.EvalContext(), l)
+		//if diag.HasErrors() {
+		//	return diag
+		//}
+		err := decode(l)
+		if err != nil {
+			return err
 		}
 	}
 	if len(l.OnlyOn) > 0 && !linq.From(l.OnlyOn).Contains(runtime.GOOS) {
@@ -101,10 +102,6 @@ func (l *LocalShellFix) Apply() (err error) {
 		return fmt.Errorf("non-zero exit code: %d fix.%s.%s", result.ExitCode, l.Type(), l.Name())
 	}
 	return nil
-}
-
-func (l *LocalShellFix) GetRuleIds() []string {
-	return l.RuleIds
 }
 
 func (l *LocalShellFix) downloadFile(url string) (string, error) {

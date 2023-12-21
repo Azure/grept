@@ -14,8 +14,7 @@ var _ Fix = &GitIgnoreFix{}
 
 type GitIgnoreFix struct {
 	*BaseBlock
-	baseFix
-	RuleIds  []string `hcl:"rule_ids" json:"rule_ids"`
+	*BaseFix
 	Exist    []string `hcl:"exist,optional" validate:"at_least_one_of=Exist NotExist"`
 	NotExist []string `hcl:"not_exist,optional" validate:"at_least_one_of=Exist NotExist"`
 }
@@ -86,10 +85,6 @@ func (g *GitIgnoreFix) Apply() error {
 		return fmt.Errorf("error on writing gitignore: %+v, fix.%s.%s, %s", err, g.BlockType(), g.Name(), g.HclBlock().Range().String())
 	}
 	return nil
-}
-
-func (g *GitIgnoreFix) GetRuleIds() []string {
-	return g.RuleIds
 }
 
 func (g *GitIgnoreFix) trimLine(line string) string {

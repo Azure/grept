@@ -4,8 +4,8 @@ type Data interface {
 	block
 }
 
-type baseData struct{}
+type BaseData struct{}
 
-func (bd baseData) BlockType() string {
+func (bd *BaseData) BlockType() string {
 	return "data"
 }
