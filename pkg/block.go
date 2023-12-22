@@ -7,6 +7,7 @@ import (
 	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -24,6 +25,7 @@ type block interface {
 	EvalContext() *hcl.EvalContext
 	Values() map[string]cty.Value
 	BaseValues() map[string]cty.Value
+	PreConditionCheck(*hcl.EvalContext) ([]PreCondition, error)
 	forEachDefined() bool
 	getDownstreams() []block
 	setForEach(*forEach)
@@ -35,7 +37,8 @@ func blockToString(f block) string {
 	return string(marshal)
 }
 
-var publicAttributeNames = hashset.New("for_each", "rule_ids")
+var metaAttributeNames = hashset.New("for_each", "rule_ids")
+var metaNestedBlockNames = hashset.New("precondition")
 
 func decode(b block) error {
 	defaults.SetDefaults(b)
@@ -67,20 +70,22 @@ func cleanBodyForDecode(hb *hclBlock) *hclsyntax.Body {
 	// Create a new hclsyntax.Body
 	newBody := &hclsyntax.Body{
 		Attributes: make(hclsyntax.Attributes),
-		Blocks:     make([]*hclsyntax.Block, len(hb.Body.Blocks)),
 	}
 
 	// Iterate over the attributes of the original body
 	for attrName, attr := range hb.Body.Attributes {
-
-		if publicAttributeNames.Contains(attrName) {
+		if metaAttributeNames.Contains(attrName) {
 			continue
 		}
 		newBody.Attributes[attrName] = attr
 	}
 
-	// Copy all blocks to the new body
-	copy(newBody.Blocks, hb.Body.Blocks)
+	for _, nb := range hb.Body.Blocks {
+		if metaNestedBlockNames.Contains(nb.Type) {
+			continue
+		}
+		newBody.Blocks = append(newBody.Blocks, nb)
+	}
 
 	return newBody
 }
@@ -175,12 +180,13 @@ func blockAddress(b *hclBlock) string {
 }
 
 type BaseBlock struct {
-	c            *Config
-	hb           *hclBlock
-	name         string
-	id           string
-	blockAddress string
-	forEach      *forEach
+	c             *Config
+	hb            *hclBlock
+	name          string
+	id            string
+	blockAddress  string
+	forEach       *forEach
+	preConditions []PreCondition
 }
 
 func newBaseBlock(c *Config, hb *hclBlock) *BaseBlock {
@@ -231,6 +237,22 @@ func (bb *BaseBlock) Context() context.Context {
 	return bb.c.ctx
 }
 
+func (bb *BaseBlock) PreConditionCheck(ctx *hcl.EvalContext) ([]PreCondition, error) {
+	var failedChecks []PreCondition
+	var err error
+	for _, cond := range bb.preConditions {
+		diag := gohcl.DecodeBody(cond.Body, ctx, &cond)
+		if diag.HasErrors() {
+			err = multierror.Append(err, diag.Errs()...)
+			continue
+		}
+		if !cond.Condition {
+			failedChecks = append(failedChecks, cond)
+		}
+	}
+	return failedChecks, err
+}
+
 func (bb *BaseBlock) forEachDefined() bool {
 	_, forEach := bb.HclBlock().Body.Attributes["for_each"]
 	return forEach
@@ -250,6 +272,16 @@ func (bb *BaseBlock) setForEach(each *forEach) {
 }
 func (bb *BaseBlock) getForEach() *forEach {
 	return bb.forEach
+}
+
+func (bb *BaseBlock) setMetaNestedBlock() {
+	for _, nb := range bb.hb.Block.Body.Blocks {
+		if nb.Type == "precondition" {
+			bb.preConditions = append(bb.preConditions, PreCondition{
+				Body: nb.Body,
+			})
+		}
+	}
 }
 
 func plan(c *Config, dag *Dag, q *linkedlistqueue.Queue, b block) error {
