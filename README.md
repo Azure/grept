@@ -203,6 +203,7 @@ rule "must_be_true" "check_env" {
   }
   condition = true
 }
+```
 
 ## Contributing
 
