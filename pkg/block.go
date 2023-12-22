@@ -44,15 +44,6 @@ func decode(b block) error {
 	defaults.SetDefaults(b)
 	hb := b.HclBlock()
 	evalContext := b.EvalContext()
-	if hb.forEach != nil {
-		evalContext = evalContext.NewChild()
-		evalContext.Variables = map[string]cty.Value{
-			"each": cty.ObjectVal(map[string]cty.Value{
-				"key":   cty.StringVal(CtyValueToString(hb.key)),
-				"value": hb.forEach.value,
-			}),
-		}
-	}
 	if decodeBase, ok := b.(DecodeBase); ok {
 		err := decodeBase.Decode(hb, evalContext)
 		if err != nil {
@@ -224,10 +215,22 @@ func (bb *BaseBlock) BaseValues() map[string]cty.Value {
 }
 
 func (bb *BaseBlock) EvalContext() *hcl.EvalContext {
+	var ctx *hcl.EvalContext
 	if bb.c == nil {
-		return new(hcl.EvalContext)
+		ctx = new(hcl.EvalContext)
+	} else {
+		ctx = bb.c.EvalContext()
 	}
-	return bb.c.EvalContext()
+	if bb.forEach != nil {
+		ctx = ctx.NewChild()
+		ctx.Variables = map[string]cty.Value{
+			"each": cty.ObjectVal(map[string]cty.Value{
+				"key":   cty.StringVal(CtyValueToString(bb.forEach.key)),
+				"value": bb.forEach.value,
+			}),
+		}
+	}
+	return ctx
 }
 
 func (bb *BaseBlock) Context() context.Context {

@@ -306,3 +306,86 @@ func (s *preConditionSuite) TestPreCondition_ReferMultipleBlockAttributesFailedC
 	_, err = config.Plan()
 	s.Contains(err.Error(), "Precondition check failed")
 }
+
+func (s *preConditionSuite) TestPreCondition_ReferOtherBlockAttributeWithForEach() {
+	// Create a mock HTTP server that returns specific contents
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Mock server content"))
+	}))
+	defer server.Close()
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`
+        locals {
+            items = toset(["item1", "item2", "item3"])
+        }
+
+        data "http" "foo" {
+            for_each = local.items
+
+            url = "%s"
+        }
+
+        rule "must_be_true" "bar" {
+            for_each = local.items
+
+            condition = true
+            precondition {
+                condition = data.http.foo[each.value].response_body == "Mock server content"
+                error_message = "Precondition check failed"
+            }
+        }
+    `, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.NoError(err) // Expect no error as the precondition should pass
+}
+
+func (s *preConditionSuite) TestPreCondition_ReferOtherBlockAttributeWithForEach_FailedCheck() {
+	// Create a mock HTTP server that returns specific contents
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Mock server content"))
+	}))
+	defer server.Close()
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`
+        locals {
+            items = toset(["item1", "item2", "item3"])
+        }
+
+        data "http" "foo" {
+            for_each = local.items
+
+            url = "%s"
+        }
+
+        rule "must_be_true" "bar" {
+            for_each = local.items
+
+            condition = true
+            precondition {
+                condition = data.http.foo[each.value].response_body != "Mock server content"
+                error_message = "Precondition check failed ${each.value}"
+            }
+        }
+    `, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.NotNil(err)
+	s.Contains(err.Error(), "Precondition check failed item1")
+	s.Contains(err.Error(), "Precondition check failed item2")
+	s.Contains(err.Error(), "Precondition check failed item3")
+}
