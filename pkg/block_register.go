@@ -27,6 +27,7 @@ func registerFunc(registry blockRegistry, t block) {
 		newBlock := reflect.New(reflect.TypeOf(t).Elem()).Elem()
 		newBaseBlock := newBaseBlock(c, hb)
 		newBaseBlock.setForEach(hb.forEach)
+		newBaseBlock.setMetaNestedBlock()
 		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
 		b := newBlock.Addr().Interface().(block)
 		if f, ok := baseFactory[t.BlockType()]; ok {
