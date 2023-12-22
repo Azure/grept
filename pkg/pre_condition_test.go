@@ -1,9 +1,12 @@
 package pkg
 
 import (
+	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -93,4 +96,213 @@ func (s *preConditionSuite) TestPreCondition_FaileddHardcodedCondition() {
 	s.NoError(err)
 	s.Len(check, 1)
 	s.Equal("this precondition must be true", check[0].ErrorMessage)
+}
+
+func (s *preConditionSuite) TestPreCondition_FunctionCallInCondition() {
+	s.T().Setenv("KEY", "VALUE")
+	content := `
+    rule "file_hash" sample {
+        glob = "*.txt"
+        hash = "abc123"
+        algorithm = "sha256"
+        precondition {
+            condition = env("KEY") != "VALUE"
+			error_message = "this precondition must be true"
+        }
+    }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+	_, err = config.Plan()
+	s.NotNil(err)
+	s.Contains(err.Error(), "this precondition must be true")
+}
+
+func (s *preConditionSuite) TestMultiplePreConditions_containFailedCheck() {
+	// Test case when one of the preconditions fails
+	content := `
+        rule "file_hash" sample {
+            glob = "*.txt"
+            hash = "abc123"
+            algorithm = "sha256"
+            precondition {
+                condition = true
+            }
+            precondition {
+                condition = false
+                error_message = "this precondition must be true"
+            }
+        }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+	_, err = config.Plan()
+	s.NotNil(err)
+	s.Contains(err.Error(), "this precondition must be true")
+}
+
+func (s *preConditionSuite) TestMultiplePreConditions_allPassedCheck() {
+	// Test case when all preconditions pass
+	content := `
+        rule "file_hash" sample {
+            glob = "*.txt"
+            hash = "abc123"
+            algorithm = "sha256"
+            precondition {
+                condition = true
+            }
+            precondition {
+                condition = true
+            }
+        }
+    `
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+	_, err = config.Plan()
+	s.NoError(err)
+}
+
+func (s *preConditionSuite) TestPreCondition_ReferOtherBlockAttribute() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Mock server content"))
+	}))
+	defer server.Close()
+
+	sampleConfig := fmt.Sprintf(`
+    data "http" "foo" {
+        url = "%s"
+    }
+
+    rule "must_be_true" "bar" {
+		condition = true
+        precondition {
+            condition = data.http.foo.response_body == "Mock server content"
+            error_message = "Precondition check failed"
+        }
+    }
+    `, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.NoError(err) // Expect no error as the precondition should pass
+}
+
+func (s *preConditionSuite) TestPreCondition_ReferOtherBlockAttributeFailedCheck() {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("Mock server content"))
+	}))
+	defer server.Close()
+
+	sampleConfig := fmt.Sprintf(`
+    data "http" "foo" {
+        url = "%s"
+    }
+
+    rule "must_be_true" "bar" {
+		condition = true
+        precondition {
+            condition = data.http.foo.response_body != "Mock server content"
+            error_message = "Precondition check failed"
+        }
+    }
+    `, server.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.Contains(err.Error(), "Precondition check failed")
+}
+
+func (s *preConditionSuite) TestPreCondition_ReferMultipleBlockAttributes() {
+	// Create two mock HTTP servers that return specific contents
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("content1"))
+	}))
+	defer server1.Close()
+
+	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("content2"))
+	}))
+	defer server2.Close()
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`
+    data "http" "foo1" {
+        url = "%s"
+    }
+
+    data "http" "foo2" {
+        url = "%s"
+    }
+
+    rule "must_be_true" "bar" {
+		condition = true
+        precondition {
+            condition = data.http.foo1.response_body == "content1" && data.http.foo2.response_body == "content2"
+            error_message = "Precondition check failed"
+        }
+    }
+    `, server1.URL, server2.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.NoError(err) // Expect no error as the precondition should pass
+}
+
+func (s *preConditionSuite) TestPreCondition_ReferMultipleBlockAttributesFailedCheck() {
+	// Create two mock HTTP servers that return specific contents
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("content1"))
+	}))
+	defer server1.Close()
+
+	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("content2"))
+	}))
+	defer server2.Close()
+
+	// Define a sample config for testing
+	sampleConfig := fmt.Sprintf(`
+    data "http" "foo1" {
+        url = "%s"
+    }
+
+    data "http" "foo2" {
+        url = "%s"
+    }
+
+    rule "must_be_true" "bar" {
+		condition = true
+        precondition {
+            condition = data.http.foo1.response_body != "content1" && data.http.foo2.response_body == "content2"
+            error_message = "Precondition check failed"
+        }
+    }
+    `, server1.URL, server2.URL)
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
+
+	// Parse the config
+	config, err := NewConfig("", "", nil)
+	s.NoError(err)
+
+	// Plan the parsed configuration
+	_, err = config.Plan()
+	s.Contains(err.Error(), "Precondition check failed")
 }
