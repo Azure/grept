@@ -166,11 +166,11 @@ locals {
 }
 
 data "http" echo {
-	for_each = local.items
+  for_each = local.items
 
-	url          = "http://foo"
-	request_body = jsonencode({
-  		query = each.value
+  url          = "http://foo"
+  request_body = jsonencode({
+    query = each.value
   })
 }
 
@@ -188,6 +188,21 @@ fix "local_file" hello_world{
   content  = each.value
 }
 ```
+
+## `precondition` support
+
+The `precondition` block is used to specify a condition that must be met before a block is evaluated. This is useful for adding checks that prevent the rule from running when certain conditions are not met.
+
+Here is an example of a `precondition` block that checks if the `GITHUB_TOKEN` environment variable exists:
+
+```hcl
+rule "must_be_true" "check_env" {
+  precondition {
+    condition     = env("GITHUB_TOKEN") != ""
+    error_message = "GITHUB_TOKEN environment variable must be set"
+  }
+  condition = true
+}
 
 ## Contributing
 
