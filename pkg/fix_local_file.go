@@ -17,7 +17,7 @@ type LocalFileFix struct {
 	*BaseFix
 	Paths   []string `json:"paths" hcl:"paths"`
 	Content string   `json:"content" hcl:"content"`
-	Mode    *string  `json:"mode" hcl:"mode,optional"`
+	Mode    *uint32  `json:"mode" hcl:"mode,optional"`
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {
@@ -36,7 +36,7 @@ func (lf *LocalFileFix) Apply() error {
 	var err error
 	var mode uint64 = 420 // 0644
 	if lf.Mode != nil {
-		mode, err = strconv.ParseUint(*lf.Mode, 8, 32)
+		mode, err = strconv.ParseUint(strconv.Itoa(int(*lf.Mode)), 8, 32)
 		if err != nil {
 			return fmt.Errorf("invalid file mode: %w", err)
 		}
