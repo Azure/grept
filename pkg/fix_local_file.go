@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"fmt"
 	"io/fs"
+	"strconv"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/afero"
@@ -13,9 +15,9 @@ var _ Fix = &LocalFileFix{}
 type LocalFileFix struct {
 	*BaseBlock
 	*BaseFix
-	Paths   []string     `json:"paths" hcl:"paths"`
-	Content string       `json:"content" hcl:"content"`
-	Mode    *fs.FileMode `json:"mode" hcl:"mode,optional"`
+	Paths   []string `json:"paths" hcl:"paths"`
+	Content string   `json:"content" hcl:"content"`
+	Mode    *string  `json:"mode" hcl:"mode,optional"`
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {
@@ -32,12 +34,16 @@ func (lf *LocalFileFix) Type() string {
 
 func (lf *LocalFileFix) Apply() error {
 	var err error
-	var defmode = fs.FileMode(0644)
-	if lf.Mode == nil {
-		lf.Mode = &defmode
+	var mode uint64 = 420 // 0644
+	if lf.Mode != nil {
+		mode, err = strconv.ParseUint(*lf.Mode, 8, 32)
+		if err != nil {
+			return fmt.Errorf("invalid file mode: %w", err)
+		}
 	}
+	filemode := fs.FileMode(mode)
 	for _, path := range lf.Paths {
-		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), *lf.Mode)
+		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), filemode)
 		if writeErr != nil {
 			err = multierror.Append(err, writeErr)
 		}
