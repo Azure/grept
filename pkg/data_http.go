@@ -3,17 +3,18 @@ package pkg
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/emirpasic/gods/sets/hashset"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/zclconf/go-cty/cty"
-	"golang.org/x/net/http/httpproxy"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/emirpasic/gods/sets/hashset"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/zclconf/go-cty/cty"
+	"golang.org/x/net/http/httpproxy"
 )
 
 var _ Data = &HttpDatasource{}
