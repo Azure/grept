@@ -15,7 +15,7 @@ type LocalFileFix struct {
 	*BaseFix
 	Paths   []string    `json:"paths" hcl:"paths"`
 	Content string      `json:"content" hcl:"content"`
-	Mode    fs.FileMode `json:"mode" hcl:"mode"`
+	Mode    fs.FileMode `json:"mode" hcl:"mode,optional"`
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {
