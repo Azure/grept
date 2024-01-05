@@ -118,12 +118,12 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
 	fs := s.fs
 	t := s.T()
 	path := "/file1.txt"
-	mode := iofs.FileMode(0755)
+	modestr := "0755"
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
-		Mode:      &mode,
+		Mode:      &modestr,
 	}
 
 	// Create the file first
@@ -133,5 +133,5 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
 	// Check custom mode
 	finfo, err := fs.Stat(path)
 	assert.NoError(t, err)
-	assert.Equal(t, finfo.Mode(), mode)
+	assert.Equal(t, finfo.Mode(), iofs.FileMode(0755))
 }
