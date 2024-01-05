@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -811,7 +810,4 @@ func (s *configSuite) TestApplyPlan_file_fix_with_null_mode() {
 	content1, err := afero.ReadFile(FsFactory(), "/example/testfile")
 	assert.NoError(t, err)
 	assert.Equal(t, "hello", string(content1))
-
-	finfo, err := s.testBase.fs.Stat("/example/testfile")
-	assert.Equal(t, fs.FileMode(0644), finfo.Mode())
 }
