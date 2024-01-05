@@ -130,7 +130,7 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
 	err := fix.Apply()
 	assert.NoError(t, err)
 
-	// Check default mode 0644
+	// Check custom mode
 	finfo, err := fs.Stat(path)
 	assert.NoError(t, err)
 	assert.Equal(t, finfo.Mode(), mode)
