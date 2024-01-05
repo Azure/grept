@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/suite"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,18 +38,18 @@ func (s *configSuite) TearDownTest() {
 }
 
 func (s *configSuite) TestParseConfig() {
-	content := `  
-	rule "file_hash" sample {  
-		glob = "*.txt"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
-  
-	fix "local_file" hello_world{  
+	content := `
+	rule "file_hash" sample {
+		glob = "*.txt"
+		hash = "abc123"
+		algorithm = "sha256"
+	}
+
+	fix "local_file" hello_world{
 		rule_ids = [rule.file_hash.sample.id]
-		paths = ["/path/to/file.txt"]  
+		paths = ["/path/to/file.txt"]
 		content = "Hello, world!"
-	}  
+	}
 	`
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
@@ -73,12 +75,12 @@ func (s *configSuite) TestParseConfig() {
 }
 
 func (s *configSuite) TestUnregisteredFix() {
-	hcl := `  
-	fix "unregistered_fix" sample {  
-		rule_id = "c01d7cf6-ec3f-47f0-9556-a5d6e9009a43"  
-		path = "/path/to/file.txt"  
-		content = "Hello, world!"  
-	}  
+	hcl := `
+	fix "unregistered_fix" sample {
+		rule_id = "c01d7cf6-ec3f-47f0-9556-a5d6e9009a43"
+		path = "/path/to/file.txt"
+		content = "Hello, world!"
+	}
 	`
 
 	t := s.T()
@@ -90,12 +92,12 @@ func (s *configSuite) TestUnregisteredFix() {
 }
 
 func (s *configSuite) TestUnregisteredRule() {
-	hcl := `  
-	rule "unregistered_rule" sample {  
-		glob = "*.txt"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
+	hcl := `
+	rule "unregistered_rule" sample {
+		glob = "*.txt"
+		hash = "abc123"
+		algorithm = "sha256"
+	}
 	`
 
 	t := s.T()
@@ -108,12 +110,12 @@ func (s *configSuite) TestUnregisteredRule() {
 }
 
 func (s *configSuite) TestInvalidBlockType() {
-	hcl := `  
-	invalid_block "invalid_type" sample {  
-		glob = "*.txt"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
+	hcl := `
+	invalid_block "invalid_type" sample {
+		glob = "*.txt"
+		hash = "abc123"
+		algorithm = "sha256"
+	}
 	`
 
 	t := s.T()
@@ -127,15 +129,15 @@ func (s *configSuite) TestInvalidBlockType() {
 
 func (s *configSuite) TestEvalContextRef() {
 	hcl := `
-	rule "file_hash" sample {  
-		glob = "LICENSE"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
-  
-	fix "local_file" hello_world{  
+	rule "file_hash" sample {
+		glob = "LICENSE"
+		hash = "abc123"
+		algorithm = "sha256"
+	}
+
+	fix "local_file" hello_world{
 		rule_ids = [rule.file_hash.sample.id]
-		paths = [rule.file_hash.sample.glob]  
+		paths = [rule.file_hash.sample.glob]
 		content = "Hello, world!"
 	}
 `
@@ -153,12 +155,12 @@ func (s *configSuite) TestEvalContextRef() {
 func (s *configSuite) TestFunctionInEvalContext() {
 	t := s.T()
 	fileContent := "Hello, world!"
-	configStr := fmt.Sprintf(`  
-	rule "file_hash" "test_rule" {  
-		glob = "/testfile"  
-		hash = md5("%s")  
-		algorithm = "md5"  
-	}  
+	configStr := fmt.Sprintf(`
+	rule "file_hash" "test_rule" {
+		glob = "/testfile"
+		hash = md5("%s")
+		algorithm = "md5"
+	}
 	`, fileContent)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{fileContent, configStr})
 
@@ -197,16 +199,16 @@ func (s *configSuite) TestFunctionInEvalContext() {
 //}
 
 func (s *configSuite) TestParseConfigHttpBlock() {
-	hclConfig := `  
-	data "http" "example" {  
-		url = "http://example.com"  
-		method = "GET"  
-		request_body = "Hello"  
-		request_headers = {  
-			"Content-Type" = "application/json"  
-			"Accept" = "application/json"  
-		}  
-	}  
+	hclConfig := `
+	data "http" "example" {
+		url = "http://example.com"
+		method = "GET"
+		request_body = "Hello"
+		request_headers = {
+			"Content-Type" = "application/json"
+			"Accept" = "application/json"
+		}
+	}
 	`
 
 	t := s.T()
@@ -240,11 +242,11 @@ func (s *configSuite) TestPlanError_DatasourceError() {
 	defer server.Close()
 
 	// Define a sample config for testing
-	sampleConfig := fmt.Sprintf(`  
-	data "http" "foo" {  
+	sampleConfig := fmt.Sprintf(`
+	data "http" "foo" {
 		url = "%s"
 		retry_max = 0
-	}  
+	}
 `, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 	// Parse the config
@@ -265,16 +267,16 @@ func (s *configSuite) TestPlanError_FileHashRuleError() {
 	defer server.Close()
 
 	// Define a sample config for testing
-	sampleConfig := fmt.Sprintf(`  
-	data "http" "foo" {  
-		url = "%s"  
-	}  
-  
-	rule "file_hash" "bar" {  
-		glob = "/testfile"  
-		hash = md5(data.http.foo.response_body)  
-		algorithm = "md5"  
-	}  
+	sampleConfig := fmt.Sprintf(`
+	data "http" "foo" {
+		url = "%s"
+	}
+
+	rule "file_hash" "bar" {
+		glob = "/testfile"
+		hash = md5(data.http.foo.response_body)
+		algorithm = "md5"
+	}
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{"Different content", sampleConfig})
 	// Parse the config
@@ -298,16 +300,16 @@ func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
 	}))
 	defer server.Close()
 
-	sampleConfig := fmt.Sprintf(`  
-	data "http" "foo" {  
-		url = "%s"  
-	}  
-  
-	rule "file_hash" "bar" {  
-		glob = "/testfile"  
-		hash = md5(data.http.foo.response_body)  
-		algorithm = "md5"  
-	}  
+	sampleConfig := fmt.Sprintf(`
+	data "http" "foo" {
+		url = "%s"
+	}
+
+	rule "file_hash" "bar" {
+		glob = "/testfile"
+		hash = md5(data.http.foo.response_body)
+		algorithm = "md5"
+	}
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"/testfile", "test.grept.hcl"}, []string{expectedContent, sampleConfig})
 
@@ -324,18 +326,18 @@ func (s *configSuite) TestPlanSuccess_FileHashRuleSuccess() {
 
 func (s *configSuite) TestApplyPlan_multiple_file_fix() {
 	t := s.T()
-	content := `    
-	rule "file_hash" sample {    
-		glob = "/example/*/testfile"    
-		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // SHA256 of "hello"    
-		algorithm = "sha256"    
-	}    
-    
-	fix "local_file" hello_world{    
-		rule_ids = [rule.file_hash.sample.id]  
-		paths = rule.file_hash.sample.hash_mismatch_files  
-		content = "hello"  
-	}    
+	content := `
+	rule "file_hash" sample {
+		glob = "/example/*/testfile"
+		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // SHA256 of "hello"
+		algorithm = "sha256"
+	}
+
+	fix "local_file" hello_world{
+		rule_ids = [rule.file_hash.sample.id]
+		paths = rule.file_hash.sample.hash_mismatch_files
+		content = "hello"
+	}
 	`
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl", "/example/sub1/testfile", "/example/sub2/testfile"}, []string{content, "world", "world"})
@@ -413,16 +415,16 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			if c.method == "" {
 				assignment = ""
 			}
-			hclConfig := fmt.Sprintf(`  
-	data "http" "example" {  
-		url = "http://example.com"  
-		request_body = "Hello" 
+			hclConfig := fmt.Sprintf(`
+	data "http" "example" {
+		url = "http://example.com"
+		request_body = "Hello"
 		%s
-		request_headers = {  
-			"Content-Type" = "application/json"  
-			"Accept" = "application/json"  
-		}  
-	}  
+		request_headers = {
+			"Content-Type" = "application/json"
+			"Accept" = "application/json"
+		}
+	}
 	`, assignment)
 
 			config, diag := hclsyntax.ParseConfig([]byte(hclConfig), "test.grept.hcl", hcl.InitialPos)
@@ -442,7 +444,7 @@ func (s *configSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 }
 
 func (s *configSuite) TestAnyRuleFailShouldTriggerFix() {
-	hclConfig := `  
+	hclConfig := `
 	rule "must_be_true" true {
 		condition = true
 	}
@@ -471,7 +473,7 @@ func (s *configSuite) TestAnyRuleFailShouldTriggerFix() {
 }
 
 func (s *configSuite) TestMultipleRulesTriggerSameFixShouldExecuteOnlyOnce() {
-	hclConfig := `  
+	hclConfig := `
 	rule "must_be_true" one {
 		condition = false
 	}
@@ -509,14 +511,14 @@ func (s *configSuite) TestParseConfigBeforePlan_UnknownValueShouldNotTriggerErro
 	}))
 	defer server.Close()
 
-	sampleConfig := fmt.Sprintf(`  
-	data "http" "foo" {  
-		url = "%s"  
-	}  
-  
+	sampleConfig := fmt.Sprintf(`
+	data "http" "foo" {
+		url = "%s"
+	}
+
 	rule "must_be_true" "bar" {
 		condition = yamldecode(data.http.foo.response_body).hello == "world"
-	}  
+	}
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 
@@ -543,15 +545,15 @@ func (s *configSuite) TestLocalWithRuleAndFix() {
 		path = "LICENSE"
 	}
 
-	rule "file_hash" sample {  
-		glob = local.path  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
-  
-	fix "local_file" hello_world{  
+	rule "file_hash" sample {
+		glob = local.path
+		hash = "abc123"
+		algorithm = "sha256"
+	}
+
+	fix "local_file" hello_world{
 		rule_ids = [rule.file_hash.sample.id]
-		paths = [local.path]  
+		paths = [local.path]
 		content = "Hello, world!"
 	}
 `
@@ -573,18 +575,18 @@ func (s *configSuite) TestLocalBetweenDataAndRule() {
 	}))
 	defer server.Close()
 
-	sampleConfig := fmt.Sprintf(`  
+	sampleConfig := fmt.Sprintf(`
 	locals{
 		content = data.http.foo.response_body
 	}
-	
-	data "http" "foo" {  
-		url = "%s"  
+
+	data "http" "foo" {
+		url = "%s"
 	}
-  
+
 	rule "must_be_true" "bar" {
 		condition = local.content == "world"
-	}  
+	}
 	`, server.URL)
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{sampleConfig})
 
@@ -776,4 +778,40 @@ func (s *configSuite) TestPlanOnlyAddFixWhenCheckErrNotNil() {
 	plan, err := config.Plan()
 	require.NoError(t, err)
 	s.Len(plan.Fixes, 0)
+}
+
+func (s *configSuite) TestApplyPlan_file_fix_with_null_mode() {
+	t := s.T()
+	content := `
+	rule "file_hash" "sample" {
+		glob = "/example/testfile"
+		hash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824" // SHA256 of "hello"
+		algorithm = "sha256"
+	}
+
+	fix "local_file" "hello_world" {
+		rule_ids = [rule.file_hash.sample.id]
+		paths = rule.file_hash.sample.hash_mismatch_files
+		content = "hello"
+		mode = null
+	}
+	`
+
+	s.dummyFsWithFiles([]string{"test.grept.hcl", "/example/testfile"}, []string{content, "world"})
+
+	config, err := NewConfig("/", "", nil)
+	require.NoError(t, err)
+
+	plan, err := config.Plan()
+	require.NoError(t, err)
+
+	err = plan.Apply()
+	require.NoError(t, err)
+
+	content1, err := afero.ReadFile(FsFactory(), "/example/testfile")
+	assert.NoError(t, err)
+	assert.Equal(t, "hello", string(content1))
+
+	finfo, err := s.testBase.fs.Stat("/example/testfile")
+	assert.Equal(t, fs.FileMode(0644), finfo.Mode())
 }
