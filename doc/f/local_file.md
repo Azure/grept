@@ -7,7 +7,7 @@ The `local_file` fix block in the `grept` tool is used to write a specified cont
 - `rule_ids`: The ID list of the rules this fix is associated with. Any rule check failure would trigger this fix.
 - `paths`: A list of file paths where the content should be written.
 - `content`: The content to be written to the files.
-- `mode`: (Optional) The file mode to be set on the files. Defaults to `0644`.
+- `mode`: (Optional) The mode to set if creating a new file. Defaults to `0644`.
 
 ## Exported Attributes
 

@@ -118,12 +118,12 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
 	fs := s.fs
 	t := s.T()
 	path := "/file1.txt"
-	modestr := "0755"
+	mode := uint32(755)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
-		Mode:      &modestr,
+		Mode:      &mode,
 	}
 
 	// Create the file first
