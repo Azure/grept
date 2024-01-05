@@ -1,8 +1,10 @@
 package pkg
 
 import (
-	"github.com/stretchr/testify/suite"
+	iofs "io/fs"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -90,4 +92,45 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	content, err := afero.ReadFile(fs, path)
 	assert.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
+}
+
+func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasDefaultMode0644() {
+	fs := s.fs
+	t := s.T()
+	path := "/file1.txt"
+	fix := &LocalFileFix{
+		BaseBlock: &BaseBlock{},
+		Paths:     []string{path},
+		Content:   "Hello, world!",
+	}
+
+	// Create the file first
+	err := fix.Apply()
+	assert.NoError(t, err)
+
+	// Check default mode 0644
+	finfo, err := fs.Stat(path)
+	assert.NoError(t, err)
+	assert.Equal(t, finfo.Mode(), iofs.FileMode(0644))
+}
+
+func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
+	fs := s.fs
+	t := s.T()
+	path := "/file1.txt"
+	fix := &LocalFileFix{
+		BaseBlock: &BaseBlock{},
+		Paths:     []string{path},
+		Content:   "Hello, world!",
+		Mode:      0755,
+	}
+
+	// Create the file first
+	err := fix.Apply()
+	assert.NoError(t, err)
+
+	// Check custom mode
+	finfo, err := fs.Stat(path)
+	assert.NoError(t, err)
+	assert.Equal(t, finfo.Mode(), fix.Mode)
 }

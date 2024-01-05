@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"io/fs"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
@@ -11,14 +13,16 @@ var _ Fix = &LocalFileFix{}
 type LocalFileFix struct {
 	*BaseBlock
 	*BaseFix
-	Paths   []string `json:"paths" hcl:"paths"`
-	Content string   `json:"content" hcl:"content"`
+	Paths   []string    `json:"paths" hcl:"paths"`
+	Content string      `json:"content" hcl:"content"`
+	Mode    fs.FileMode `json:"mode" hcl:"mode"`
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
 		"paths":   ToCtyValue(lf.Paths),
 		"content": ToCtyValue(lf.Content),
+		"mode":    ToCtyValue(lf.Mode),
 	}
 }
 
@@ -28,8 +32,11 @@ func (lf *LocalFileFix) Type() string {
 
 func (lf *LocalFileFix) Apply() error {
 	var err error
+	if lf.Mode == 0 {
+		lf.Mode = 0644
+	}
 	for _, path := range lf.Paths {
-		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), 0644)
+		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), lf.Mode)
 		if writeErr != nil {
 			err = multierror.Append(err, writeErr)
 		}
