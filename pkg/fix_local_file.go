@@ -34,14 +34,15 @@ func (lf *LocalFileFix) Type() string {
 
 func (lf *LocalFileFix) Apply() error {
 	var err error
-	var mode uint64 = 420 // 0644
+	var filemode = fs.FileMode(0644)
 	if lf.Mode != nil {
-		mode, err = strconv.ParseUint(strconv.Itoa(int(*lf.Mode)), 8, 32)
+		mode, err := strconv.ParseUint(strconv.Itoa(int(*lf.Mode)), 8, 32)
 		if err != nil {
 			return fmt.Errorf("invalid file mode: %w", err)
 		}
+		filemode = fs.FileMode(mode)
 	}
-	filemode := fs.FileMode(mode)
+
 	for _, path := range lf.Paths {
 		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), filemode)
 		if writeErr != nil {
