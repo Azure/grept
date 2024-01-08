@@ -3,6 +3,8 @@ package pkg
 import (
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/go-playground/validator/v10"
+	"io/fs"
+	"strconv"
 	"strings"
 )
 
@@ -13,10 +15,24 @@ func registerValidator() {
 	_ = validate.RegisterValidation("at_least_one_of", validateAtLeastOneOf)
 	_ = validate.RegisterValidation("required_with", validateRequiredWith)
 	_ = validate.RegisterValidation("all_string_in_slice", validateAllStringInSlice)
+	_ = validate.RegisterValidation("file_mode", validateFileMode)
 }
 
 type Validatable interface {
 	Validate() error
+}
+
+func validateFileMode(fl validator.FieldLevel) bool {
+	field := fl.Field().Interface()
+	num, ok := field.(fs.FileMode)
+	if !ok {
+		return false
+	}
+	mode, err := strconv.ParseUint(strconv.Itoa(int(num)), 8, 32)
+	if err != nil {
+		return false
+	}
+	return mode >= 0 && uint32(mode) <= uint32(fs.ModePerm)
 }
 
 func validateAllStringInSlice(fl validator.FieldLevel) bool {

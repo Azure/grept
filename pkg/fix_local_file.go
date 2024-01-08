@@ -2,12 +2,11 @@ package pkg
 
 import (
 	"fmt"
-	"io/fs"
-	"strconv"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
+	"io/fs"
+	"strconv"
 )
 
 var _ Fix = &LocalFileFix{}
@@ -15,9 +14,9 @@ var _ Fix = &LocalFileFix{}
 type LocalFileFix struct {
 	*BaseBlock
 	*BaseFix
-	Paths   []string `json:"paths" hcl:"paths"`
-	Content string   `json:"content" hcl:"content"`
-	Mode    *uint32  `json:"mode" hcl:"mode,optional"`
+	Paths   []string     `json:"paths" hcl:"paths"`
+	Content string       `json:"content" hcl:"content"`
+	Mode    *fs.FileMode `json:"mode" hcl:"mode,optional" default:"0644" validate:"file_mode"`
 }
 
 func (lf *LocalFileFix) Values() map[string]cty.Value {
@@ -33,22 +32,26 @@ func (lf *LocalFileFix) Type() string {
 }
 
 func (lf *LocalFileFix) Apply() error {
-	var err error
-	var filemode = fs.FileMode(0644)
-	if lf.Mode != nil {
-		mode, err := strconv.ParseUint(strconv.Itoa(int(*lf.Mode)), 8, 32)
-		if err != nil {
-			return fmt.Errorf("invalid file mode: %w", err)
-		}
-		filemode = fs.FileMode(mode)
+	fm, err := toDecimal(*lf.Mode)
+	if err != nil {
+		return err
 	}
 
 	for _, path := range lf.Paths {
-		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), filemode)
+		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), fm)
 		if writeErr != nil {
 			err = multierror.Append(err, writeErr)
 		}
 	}
 
 	return err
+}
+
+func toDecimal(decimalMode fs.FileMode) (fs.FileMode, error) {
+	mode, err := strconv.ParseUint(strconv.Itoa(int(decimalMode)), 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf("invalid file mode: %w", err)
+	}
+	fm := fs.FileMode(mode)
+	return fm, nil
 }
