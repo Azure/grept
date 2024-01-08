@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	iofs "io/fs"
 	"testing"
 
@@ -23,16 +24,26 @@ func (s *localFileFixSuite) SetupTest() {
 	s.testBase = newTestBase()
 }
 
+func (s *localFileFixSuite) SetupSubTest() {
+	s.SetupTest()
+}
+
 func (s *localFileFixSuite) TearDownTest() {
 	s.teardown()
+}
+
+func (s *localFileFixSuite) TearDownSubTest() {
+	s.TearDownTest()
 }
 
 func (s *localFileFixSuite) TestLocalFile_ApplyFix_CreateNewFile() {
 	fs := s.fs
 	t := s.T()
+	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		Paths:   []string{"/file1.txt"},
 		Content: "Hello, world!",
+		Mode:    &mode,
 	}
 
 	err := fix.Apply()
@@ -48,10 +59,12 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	fs := s.fs
 	t := s.T()
 	path := "/file1.txt"
+	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
+		Mode:      &mode,
 	}
 
 	// Create the file first
@@ -73,10 +86,12 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	fs := s.fs
 	t := s.T()
 	path := "/example/sub1/file1.txt"
+	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
 		Content:   "Hello, world!",
+		Mode:      &mode,
 	}
 
 	// Create the file first
@@ -94,65 +109,74 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	assert.Equal(t, fix.Content, string(content))
 }
 
-func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasDefaultMode0644() {
-	fs := s.fs
-	t := s.T()
-	path := "/file1.txt"
-	fix := &LocalFileFix{
-		BaseBlock: &BaseBlock{},
-		Paths:     []string{path},
-		Content:   "Hello, world!",
+func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileMode() {
+	var pString = func(s string) *string {
+		return &s
+	}
+	cases := []struct {
+		desc                 string
+		mode                 *string
+		wanted               iofs.FileMode
+		expectedErrorMessage *string
+	}{
+		{
+			desc:   "no assignment",
+			mode:   nil,
+			wanted: iofs.FileMode(0644),
+		},
+		{
+			desc:   "customized mode",
+			mode:   pString("0777"),
+			wanted: iofs.ModePerm,
+		},
+		{
+			desc:   "explicit null",
+			mode:   pString("null"),
+			wanted: iofs.FileMode(0644),
+		},
+		{
+			desc:                 "invalid mode1",
+			mode:                 pString("0778"),
+			expectedErrorMessage: pString("file_mode"),
+		},
 	}
 
-	// Create the file first
-	err := fix.Apply()
-	assert.NoError(t, err)
-
-	// Check default mode 0644
-	finfo, err := fs.Stat(path)
-	assert.NoError(t, err)
-	assert.Equal(t, finfo.Mode(), iofs.FileMode(0644))
-}
-
-func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasCustomMode() {
-	fs := s.fs
-	t := s.T()
-	path := "/file1.txt"
-	mode := uint32(755)
-	fix := &LocalFileFix{
-		BaseBlock: &BaseBlock{},
-		Paths:     []string{path},
-		Content:   "Hello, world!",
-		Mode:      &mode,
+	for i := 0; i < len(cases); i++ {
+		sc := cases[i]
+		s.Run(sc.desc, func() {
+			var assignment = ""
+			if sc.mode != nil {
+				assignment = fmt.Sprintf("mode = %s", *sc.mode)
+			}
+			config := fmt.Sprintf(`
+	rule "must_be_true" "sample" {
+		condition = false
 	}
-
-	// Create the file first
-	err := fix.Apply()
-	assert.NoError(t, err)
-
-	// Check custom mode
-	finfo, err := fs.Stat(path)
-	assert.NoError(t, err)
-	assert.Equal(t, finfo.Mode(), iofs.FileMode(0755))
-}
-
-func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileHasNilMode() {
-	fs := s.fs
-	t := s.T()
-	path := "/file1.txt"
-	fix := &LocalFileFix{
-		BaseBlock: &BaseBlock{},
-		Paths:     []string{path},
-		Content:   "Hello, world!",
-		Mode:      nil,
+	
+	fix "local_file" "sample" {
+		rule_ids = [rule.must_be_true.sample.id]
+		paths = ["/file1.txt"]
+		content = "Hello world!"
+		%s
 	}
+`, assignment)
+			s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{config})
+			path := "/file1.txt"
+			// Create the file first
+			c, err := NewConfig("", "", nil)
+			s.NoError(err)
+			p, err := c.Plan()
+			if sc.expectedErrorMessage != nil {
+				s.Contains(err.Error(), *sc.expectedErrorMessage)
+				return
+			}
+			s.NoError(err)
+			err = p.Apply()
+			s.NoError(err)
 
-	// Create the file first
-	err := fix.Apply()
-	assert.NoError(t, err)
-
-	// Check custom mode
-	finfo, err := fs.Stat(path)
-	assert.NoError(t, err)
-	assert.Equal(t, finfo.Mode(), iofs.FileMode(0644))
+			finfo, err := s.fs.Stat(path)
+			s.NoError(err)
+			s.Equal(sc.wanted, finfo.Mode())
+		})
+	}
 }

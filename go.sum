@@ -1,3 +1,5 @@
+bou.ke/monkey v1.0.2 h1:kWcnsrCNUatbxncxR/ThdYqbytgOIArtYWqcQLQzKLI=
+bou.ke/monkey v1.0.2/go.mod h1:OqickVX3tNx6t33n1xvtTtu85YN5s6cKwVug+oHMaIA=
 codeberg.org/6543/go-yaml2json v1.0.0 h1:heGqo9VEi7gY2yNqjj7X4ADs5nzlFIbGsJtgYDLrnig=
 codeberg.org/6543/go-yaml2json v1.0.0/go.mod h1:mz61q14LWF4ZABrgMEDMmk3t9dPi6zgR1uBh2VKV2RQ=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
@@ -196,6 +198,8 @@ github.com/leodido/go-urn v1.2.4 h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=
 github.com/leodido/go-urn v1.2.4/go.mod h1:7ZrI8mTSeBSHl/UaRyKQW1qZeMgak41ANeCNaVckg+4=
 github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34 h1:k/TmToj7wP7k6Ul6bh4I9anc+y39+wVYRqjOVdAOnbQ=
 github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34/go.mod h1:VIId/O/ib34Xhk/gUq3Wi/NBGSo8ArxVLurqhBInv1c=
+github.com/lonegunmanb/go-defaults v1.3.0 h1:Ta5uZW54yWu2smdEZ3FrcgZcWIWvm/ppVFy0b1ibLI4=
+github.com/lonegunmanb/go-defaults v1.3.0/go.mod h1:0xAP3y7xIeYvZRoC51utMuERLFWbTNdghNH6/FH/lFY=
 github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b h1:iq8qR7E7mpIUs9n3TBxdFceYTfpsEdXcOaUXfxEW6e0=
 github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b/go.mod h1:uvga3hKd6b8WDuxlf7sgaxP0jUN5fdYBfCGhWAj75yo=
 github.com/lonegunmanb/hclfuncs v0.4.1 h1:z2ieMu+vCwIbT3K1MVVf6ac0coXi5XYjlIT/8CuL9rE=
@@ -225,8 +229,6 @@ github.com/mattn/go-runewidth v0.0.3/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzp
 github.com/mattn/go-runewidth v0.0.13 h1:lTGmDsbAYt5DmK6OnoV7EuIF1wEIFAcxld6ypU4OSgU=
 github.com/mattn/go-runewidth v0.0.13/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/mcuadros/go-defaults v1.2.0 h1:FODb8WSf0uGaY8elWJAkoLL0Ri6AlZ1bFlenk56oZtc=
-github.com/mcuadros/go-defaults v1.2.0/go.mod h1:WEZtHEVIGYVDqkKSWBdWKUVdRyKlMfulPaGDWIVeCWY=
 github.com/miekg/dns v1.1.26/go.mod h1:bPDLeHnStXmXAq1m/Ch/hvfNHr14JKNPMBo3VZKjuso=
 github.com/miekg/dns v1.1.41 h1:WMszZWJG0XmzbK9FEmzH2TVcqYzFesusSIB41b8KHxY=
 github.com/miekg/dns v1.1.41/go.mod h1:p6aan82bvRIyn+zDIv9xYNUpwa73JcSh9BKwknJysuI=
