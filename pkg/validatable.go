@@ -33,7 +33,7 @@ func validateFileMode(fl validator.FieldLevel) bool {
 	if err != nil {
 		return false
 	}
-	return mode >= 0 && uint32(mode) <= uint32(fs.ModePerm)
+	return uint32(mode) <= uint32(fs.ModePerm)
 }
 
 func validateAllStringInSlice(fl validator.FieldLevel) bool {
