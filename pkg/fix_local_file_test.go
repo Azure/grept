@@ -38,7 +38,7 @@ func (s *localFileFixSuite) TearDownSubTest() {
 func (s *localFileFixSuite) TestLocalFile_ApplyFix_CreateNewFile() {
 	fs := s.fs
 	t := s.T()
-	mode := iofs.FileMode(644)
+	mode := iofs.FileMode(0644)
 	fix := &LocalFileFix{
 		Paths:   []string{"/file1.txt"},
 		Content: "Hello, world!",
@@ -58,7 +58,7 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	fs := s.fs
 	t := s.T()
 	path := "/file1.txt"
-	mode := iofs.FileMode(644)
+	mode := iofs.FileMode(0644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
@@ -85,7 +85,7 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
 	fs := s.fs
 	t := s.T()
 	path := "/example/sub1/file1.txt"
-	mode := iofs.FileMode(644)
+	mode := iofs.FileMode(0644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
 		Paths:     []string{path},
