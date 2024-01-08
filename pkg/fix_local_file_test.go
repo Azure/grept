@@ -5,10 +5,9 @@ import (
 	iofs "io/fs"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 type localFileFixSuite struct {

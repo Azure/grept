@@ -2,11 +2,12 @@ package pkg
 
 import (
 	"fmt"
+	"io/fs"
+	"strconv"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
-	"io/fs"
-	"strconv"
 )
 
 var _ Fix = &LocalFileFix{}

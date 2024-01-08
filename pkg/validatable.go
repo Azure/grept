@@ -1,11 +1,12 @@
 package pkg
 
 import (
-	"github.com/ahmetb/go-linq/v3"
-	"github.com/go-playground/validator/v10"
 	"io/fs"
 	"strconv"
 	"strings"
+
+	"github.com/ahmetb/go-linq/v3"
+	"github.com/go-playground/validator/v10"
 )
 
 var validate = validator.New(validator.WithRequiredStructEnabled())
