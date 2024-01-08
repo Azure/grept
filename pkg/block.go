@@ -41,7 +41,6 @@ var metaAttributeNames = hashset.New("for_each", "rule_ids")
 var metaNestedBlockNames = hashset.New("precondition")
 
 func decode(b block) error {
-	defaults.SetDefaults(b)
 	hb := b.HclBlock()
 	evalContext := b.EvalContext()
 	if decodeBase, ok := b.(DecodeBase); ok {
@@ -54,6 +53,7 @@ func decode(b block) error {
 	if diag.HasErrors() {
 		return diag
 	}
+	defaults.SetDefaults(b)
 	return nil
 }
 

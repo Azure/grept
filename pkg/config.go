@@ -227,6 +227,9 @@ func planBlock(b block) error {
 			return fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), err.Error())
 		}
 	}
+	if validateErr := validate.Struct(b); validateErr != nil {
+		return fmt.Errorf("%s.%s.%s is not valid: %s", b.BlockType(), b.Type(), b.Name(), validateErr.Error())
+	}
 	failedChecks, preConditionCheckError := b.PreConditionCheck(b.EvalContext())
 	if preConditionCheckError != nil {
 		return preConditionCheckError

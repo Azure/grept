@@ -597,7 +597,6 @@ func (s *configSuite) TestLocalBetweenDataAndRule() {
 }
 
 func (s *configSuite) TestForEach_ForEachBlockShouldBeExpanded() {
-	//s.T().Skip("for now")
 	hclConfig := `
 	locals {
 		items = ["item1", "item2", "item3"]
