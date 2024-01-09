@@ -48,8 +48,8 @@ func (lf *LocalFileFix) Apply() error {
 	return err
 }
 
-func toDecimal(decimalMode fs.FileMode) (fs.FileMode, error) {
-	mode, err := strconv.ParseUint(strconv.Itoa(int(decimalMode)), 8, 32)
+func toDecimal(octalMode fs.FileMode) (fs.FileMode, error) {
+	mode, err := strconv.ParseUint(strconv.Itoa(int(octalMode)), 8, 32)
 	if err != nil {
 		return 0, fmt.Errorf("invalid file mode: %w", err)
 	}
