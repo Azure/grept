@@ -14,10 +14,10 @@ require (
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/heimdalr/dag v1.4.0
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
+	github.com/lonegunmanb/go-defaults v1.4.0
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
 	github.com/lonegunmanb/hclfuncs v0.4.1
 	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
-	github.com/mcuadros/go-defaults v1.3.0
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
 	github.com/spf13/afero v1.11.0
@@ -96,5 +96,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/mcuadros/go-defaults v1.3.0 => github.com/lonegunmanb/go-defaults v1.3.0
