@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/mcuadros/go-defaults"
+	"github.com/lonegunmanb/go-defaults"
 	"github.com/zclconf/go-cty/cty"
 	"strings"
 )
