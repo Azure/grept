@@ -91,6 +91,7 @@ func TestLocalFile_ApplyFix_FileInSubFolder(t *testing.T) {
 		_ = os.RemoveAll(path)
 	}()
 	filePath := filepath.Join(path, "a", "b", "tmp")
+	//lint:ignore SA9002
 	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},

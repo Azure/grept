@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strconv"
 
@@ -48,7 +49,7 @@ func (lf *LocalFileFix) Apply() error {
 			continue
 		}
 		if !dirExists {
-			mkDirErr := fs.MkdirAll(dir, 0644)
+			mkDirErr := fs.MkdirAll(dir, os.ModeDir)
 			if mkDirErr != nil {
 				err = multierror.Append(err, mkDirErr)
 				continue
