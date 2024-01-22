@@ -2,7 +2,11 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	iofs "io/fs"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -81,30 +85,35 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	assert.Equal(t, fix.Content, string(content))
 }
 
-func (s *localFileFixSuite) TestLocalFile_ApplyFix_FileInSubFolder() {
-	fs := s.fs
-	t := s.T()
-	path := "/example/sub1/file1.txt"
-	mode := iofs.FileMode(0644)
+func TestLocalFile_ApplyFix_FileInSubFolder(t *testing.T) {
+	path := filepath.Join(os.TempDir(), uuid.NewString())
+	defer func() {
+		_ = os.RemoveAll(path)
+	}()
+	filePath := filepath.Join(path, "a", "b", "tmp")
+	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
-		Paths:     []string{path},
+		Paths:     []string{filePath},
 		Content:   "Hello, world!",
 		Mode:      &mode,
 	}
 
+	fs := FsFactory()
 	// Create the file first
 	err := fix.Apply()
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	content, err := afero.ReadFile(fs, filePath)
+	assert.Equal(t, "Hello, world!", string(content))
 
 	// Now overwrite it
 	fix.Content = "New content"
 	err = fix.Apply()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// ExecuteDuringPlan that the file was overwritten with the correct content
-	content, err := afero.ReadFile(fs, path)
-	assert.NoError(t, err)
+	content, err = afero.ReadFile(fs, filePath)
+	require.NoError(t, err)
 	assert.Equal(t, fix.Content, string(content))
 }
 
