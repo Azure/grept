@@ -85,13 +85,14 @@ func (s *localFileFixSuite) TestLocalFile_ApplyFix_OverwriteExistingFile() {
 	assert.Equal(t, fix.Content, string(content))
 }
 
+//nolint:all
 func TestLocalFile_ApplyFix_FileInSubFolder(t *testing.T) {
 	path := filepath.Join(os.TempDir(), uuid.NewString())
 	defer func() {
 		_ = os.RemoveAll(path)
 	}()
 	filePath := filepath.Join(path, "a", "b", "tmp")
-	//lint:ignore SA9002
+	//must use 644 here
 	mode := iofs.FileMode(644)
 	fix := &LocalFileFix{
 		BaseBlock: &BaseBlock{},
