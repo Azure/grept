@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"strconv"
 
 	"github.com/hashicorp/go-multierror"
@@ -38,8 +39,22 @@ func (lf *LocalFileFix) Apply() error {
 		return err
 	}
 
+	fs := FsFactory()
 	for _, path := range lf.Paths {
-		writeErr := afero.WriteFile(FsFactory(), path, []byte(lf.Content), fm)
+		dir := filepath.Dir(path)
+		dirExists, dirCheckErr := afero.DirExists(fs, dir)
+		if dirCheckErr != nil {
+			err = multierror.Append(err, dirCheckErr)
+			continue
+		}
+		if !dirExists {
+			mkDirErr := fs.MkdirAll(dir, 0644)
+			if mkDirErr != nil {
+				err = multierror.Append(err, mkDirErr)
+				continue
+			}
+		}
+		writeErr := afero.WriteFile(fs, path, []byte(lf.Content), fm)
 		if writeErr != nil {
 			err = multierror.Append(err, writeErr)
 		}
