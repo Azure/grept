@@ -202,8 +202,8 @@ github.com/lonegunmanb/go-defaults v1.4.0 h1:Lf/wnb28dYqoUdpRTL+e+bFkW79ThpSH7Aw
 github.com/lonegunmanb/go-defaults v1.4.0/go.mod h1:TwYUNCQyY/Qz5UzoH5Nlj7YPIT4EkgNANrPN8U9h9MU=
 github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b h1:iq8qR7E7mpIUs9n3TBxdFceYTfpsEdXcOaUXfxEW6e0=
 github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b/go.mod h1:uvga3hKd6b8WDuxlf7sgaxP0jUN5fdYBfCGhWAj75yo=
-github.com/lonegunmanb/hclfuncs v0.4.1 h1:z2ieMu+vCwIbT3K1MVVf6ac0coXi5XYjlIT/8CuL9rE=
-github.com/lonegunmanb/hclfuncs v0.4.1/go.mod h1:i4ufSphag5SM2E2KRR9tyTh/JD3bPcqVw4vDFySCBck=
+github.com/lonegunmanb/hclfuncs v0.5.0 h1:6DfTrD1ir6qLjN80SOWWZGNad9Rs9pclMiaR+Ck3RMg=
+github.com/lonegunmanb/hclfuncs v0.5.0/go.mod h1:TxBwFBre5VV2VbPA/n4ZbdH70VIT6TLkvOSkuP5sNvc=
 github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2 h1:ehCuFUus1jd9m6sbxL93c9e2UbDrDwRxgbULHiT/+ho=
 github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2/go.mod h1:Ru2CZaRtz7FUr8/vm4ZlH5i4yBm1d+bZKk6Ng4Xxe4g=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
