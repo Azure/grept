@@ -268,6 +268,8 @@ func (s *greptConfigSuite) TestHttpDatasource_DefaultMethodShouldBeGet() {
 			s.dummyFsWithFiles([]string{"/test.grept.hcl"}, []string{hclConfig})
 			config, err := BuildGreptConfig("", "/", context.TODO())
 			s.NoError(err)
+			_, err = RunGreptPlan(config)
+			s.NoError(err)
 			d := golden.Blocks[Data](config)[0].(*HttpDatasource)
 			assert.Equal(s.T(), c.want, d.Method)
 		})
