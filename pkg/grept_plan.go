@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"github.com/Azure/grept/golden"
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/hashicorp/go-multierror"
 	"strings"
 	"sync"
 )
 
 func RunGreptPlan(c golden.Config) (*GreptPlan, error) {
-	err := c.RunDag(plan)
+	err := c.RunDag(golden.DagPlan)
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +95,6 @@ func (p *GreptPlan) addFix(f Fix) {
 	p.mu.Lock()
 	p.Fixes[f.Id()] = f
 	p.mu.Unlock()
-}
-
-func plan(c golden.Config, dag *golden.Dag, q *linkedlistqueue.Queue, b golden.Block) error {
-	self, _ := dag.GetVertex(b.Address())
-	return golden.RunPlan(self.(golden.Block))
 }
 
 type FailedRule struct {

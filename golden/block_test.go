@@ -7,6 +7,76 @@ import (
 	"testing"
 )
 
+type TestData interface {
+	PlanBlock
+	Data()
+}
+
+type BaseData struct{}
+
+func (db *BaseData) BlockType() string {
+	return "data"
+}
+
+func (db *BaseData) Data() {}
+
+func (db *BaseData) AddressLength() int { return 3 }
+
+type TestResource interface {
+	PlanBlock
+	ApplyBlock
+	Resource()
+}
+
+type BaseResource struct{}
+
+func (rb *BaseResource) BlockType() string {
+	return "resource"
+}
+
+func (rb *BaseResource) Resource() {}
+
+func (rb *BaseResource) AddressLength() int {
+	return 3
+}
+
+var _ TestData = &DummyData{}
+
+type DummyData struct {
+	*BaseData
+	*BaseBlock
+	Tags                      map[string]string `json:"data" hcl:"data,optional"`
+	AttributeWithDefaultValue string            `json:"attribute" hcl:"attribute,optional" default:"default_value"`
+}
+
+func (d *DummyData) Type() string {
+	return "dummy"
+}
+
+func (d *DummyData) ExecuteDuringPlan() error {
+	return nil
+}
+
+var _ TestResource = &DummyResource{}
+
+type DummyResource struct {
+	*BaseBlock
+	*BaseResource
+	Tags map[string]string `json:"tags" hcl:"tags,optional"`
+}
+
+func (d *DummyResource) Type() string {
+	return "dummy"
+}
+
+func (d *DummyResource) ExecuteDuringPlan() error {
+	return nil
+}
+
+func (d *DummyResource) Apply() error {
+	return nil
+}
+
 func Test_LocalBlocksValueShouldBeAFlattenObject(t *testing.T) {
 	numberVal := cty.NumberVal(big.NewFloat(1))
 	stringVal := cty.StringVal("hello world")

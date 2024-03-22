@@ -20,7 +20,7 @@ type BaseBlock struct {
 	preConditions []PreCondition
 }
 
-func newBaseBlock(c Config, hb *HclBlock) *BaseBlock {
+func NewBaseBlock(c Config, hb *HclBlock) *BaseBlock {
 	bb := &BaseBlock{
 		c:            c,
 		hb:           hb,
