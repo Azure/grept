@@ -1,7 +1,6 @@
 package golden
 
 import (
-	"github.com/Azure/grept/pkg"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/stretchr/testify/suite"
 	"github.com/zclconf/go-cty/cty"
@@ -11,7 +10,7 @@ import (
 
 type localSuite struct {
 	suite.Suite
-	*golden.testBase
+	*testBase
 }
 
 func TestLocalSuite(t *testing.T) {
@@ -19,7 +18,7 @@ func TestLocalSuite(t *testing.T) {
 }
 
 func (s *localSuite) SetupTest() {
-	s.testBase = golden.newTestBase()
+	s.testBase = newTestBase()
 }
 
 func (s *localSuite) TearDownTest() {
@@ -35,9 +34,9 @@ locals {
 }
 `
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{code})
-	c, err := BuildGreptConfig("/", "", nil)
+	c, err := BuildDummyConfig("/", "", nil)
 	s.NoError(err)
-	_, err = RunGreptPlan(c)
+	_, err = RunDummyPlan(c)
 	s.NoError(err)
 	var locals []Local
 	linq.From(Blocks[Local](c)).OrderBy(func(i interface{}) interface{} {

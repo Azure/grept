@@ -1,8 +1,6 @@
 package golden
 
 import (
-	"fmt"
-	"github.com/Azure/grept/pkg"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,7 +13,7 @@ import (
 
 type dagSuite struct {
 	suite.Suite
-	*golden.testBase
+	*testBase
 	server *httptest.Server
 }
 
@@ -24,7 +22,7 @@ func TestDagSuite(t *testing.T) {
 }
 
 func (s *dagSuite) SetupTest() {
-	s.testBase = golden.newTestBase()
+	s.testBase = newTestBase()
 	s.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Expected content"))
 	}))
@@ -36,90 +34,75 @@ func (s *dagSuite) TearDownTest() {
 }
 
 func (s *dagSuite) TestDag_DagVertex() {
-	content := fmt.Sprintf(`
-	data "http" sample {
-	    url = "%s"
-    }
+	content := `
+	data "dummy" foo {}
 
-	rule "file_hash" sample {  
-		glob = "*.txt"  
-		hash = "abc123"  
-		algorithm = "sha256"  
-	}  
-  
-	fix "local_file" hello_world{  
-		rule_ids = [rule.file_hash.sample.id]
-		paths = ["/path/to/file.txt"]  
-		content = "Hello, world!"
-	}  
-	`, s.server.URL)
+	resource "dummy" bar {}  
+	`
 
-	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{content})
 
-	config, err := BuildGreptConfig("", "", nil)
+	config, err := BuildDummyConfig("", "", nil)
 	s.NoError(err)
 	d := newDag()
 	err = d.buildDag(blocks(config))
 	s.NoError(err)
-	s.Len(d.GetVertices(), 3)
+	s.Len(d.GetVertices(), 2)
 
-	assertVertex(s.T(), d, "rule.file_hash.sample")
-	assertVertex(s.T(), d, "data.http.sample")
-	assertVertex(s.T(), d, "fix.local_file.hello_world")
+	assertVertex(s.T(), d, "data.dummy.foo")
+	assertVertex(s.T(), d, "resource.dummy.bar")
 }
 
 func (s *dagSuite) TestDag_DagBlocksShouldBeConnectedWithEdgeIfThereIsReferenceBetweenTwoBlocks() {
 	t := s.T()
-	content := fmt.Sprintf(`
-	data "http" sample {
-	    url = "%s"
+	content := `
+	data "dummy" foo {
+	    data = {
+			key = "value"
+		}
     }
 
-	rule "file_hash" sample {  
-		glob = "*.txt"  
-		hash = sha256(data.http.sample.response_body)  
-		algorithm = "sha256"  
+	resource "dummy" foo {
+		tags = data.dummy.foo.data
 	}  
-  
-	fix "local_file" hello_world{  
-		rule_ids = [rule.file_hash.sample.id]
-		paths = ["/path/to/file.txt"]  
-		content = "Hello, world!"
-	}  
-	`, s.server.URL)
+	resource "dummy" bar {
+		tags = merge(data.dummy.foo.data, resource.dummy.foo.tags)
+	}
+	`
 
-	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{content})
 
-	config, err := BuildGreptConfig("", "", nil)
+	config, err := BuildDummyConfig("", "", nil)
 	require.NoError(t, err)
 	dag := newDag()
 	err = dag.buildDag(blocks(config))
 	require.NoError(t, err)
-	assert.Equal(t, 2, dag.GetSize())
+	assert.Equal(t, 3, dag.GetSize())
 	roots := dag.GetRoots()
 	assert.Len(t, roots, 1)
-	assertEdge(t, dag, "data.http.sample", "rule.file_hash.sample")
-	assertEdge(t, dag, "rule.file_hash.sample", "fix.local_file.hello_world")
+	assertEdge(t, dag, "data.dummy.foo", "resource.dummy.foo")
+	assertEdge(t, dag, "data.dummy.foo", "resource.dummy.foo")
+	assertEdge(t, dag, "resource.dummy.foo", "resource.dummy.bar")
 }
 
 func (s *dagSuite) TestDag_CycleDependencyShouldCauseError() {
 	content := `
-	data "http" sample {
-	    url = data.http.sample2.url
+	data "dummy" sample {
+	    data = data.dummy.sample2.data
     }
 
-	data "http" sample2 {
-		url = data.http.sample.url
+	data "dummy" sample2 {
+		data = data.dummy.sample.data
     }
 	`
 
-	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{content})
 
-	_, err := BuildGreptConfig("", "", nil)
+	_, err := BuildDummyConfig("", "", nil)
 	s.NotNil(err)
 	// The error message must contain both of two blocks' address so we're sure that it's about the loop.
-	s.Contains(err.Error(), "data.http.sample")
-	s.Contains(err.Error(), "data.http.sample2")
+	s.Contains(err.Error(), "data.dummy.sample")
+	s.Contains(err.Error(), "data.dummy.sample2")
 }
 
 func assertEdge(t *testing.T, dag *Dag, src, dest string) {

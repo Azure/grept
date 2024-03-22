@@ -1,15 +1,13 @@
 package golden
 
 import (
-	"github.com/Azure/grept/pkg"
 	"github.com/stretchr/testify/suite"
-	"io/fs"
 	"testing"
 )
 
 type forEachTestSuite struct {
 	suite.Suite
-	*golden.testBase
+	*testBase
 }
 
 func TestForEachTestSuite(t *testing.T) {
@@ -17,7 +15,7 @@ func TestForEachTestSuite(t *testing.T) {
 }
 
 func (s *forEachTestSuite) SetupTest() {
-	s.testBase = golden.newTestBase()
+	s.testBase = newTestBase()
 }
 
 func (s *forEachTestSuite) SetupSubTest() {
@@ -33,32 +31,18 @@ func (s *forEachTestSuite) TearDownSubTest() {
 }
 
 func (s *forEachTestSuite) TestForEachBlockWithAttributeThatHasDefaultValue() {
-	config := `
-	rule "must_be_true" "sample" {
-		condition = false
-	}
-	
-	fix "local_file" "sample" {
+	config := `	
+	data "dummy" "sample" {
 		for_each = toset([1,2,3])
-		rule_ids = [rule.must_be_true.sample.id]
-		paths = ["/file1.txt"]
-		content = "Hello world!"
 	}
 `
-	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{config})
-	c, err := BuildGreptConfig("", "", nil)
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{config})
+	c, err := BuildDummyConfig("", "", nil)
 	s.NoError(err)
-	_, err = RunGreptPlan(c)
+	_, err = RunDummyPlan(c)
 	s.NoError(err)
-	found := false
 	for _, b := range blocks(c) {
-		fix, ok := b.(*LocalFileFix)
-		if ok {
-			found = true
-		} else {
-			continue
-		}
-		s.Equal(fs.FileMode(644), *fix.Mode)
+		data := b.(*DummyData)
+		s.Equal("default_value", data.AttributeWithDefaultValue)
 	}
-	s.True(found)
 }
