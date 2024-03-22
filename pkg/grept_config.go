@@ -62,12 +62,7 @@ func loadGreptHclBlocks(ignoreUnsupportedBlock bool, dir string) ([]*golden.HclB
 			continue
 		}
 		body := file.Body.(*hclsyntax.Body)
-		for _, b := range body.Blocks {
-			var bs []*hclsyntax.Block = readRawHclBlock(b)
-			for _, hb := range bs {
-				blocks = append(blocks, golden.NewHclBlock(hb, nil))
-			}
-		}
+		blocks = append(blocks, golden.AsHclBlocks(body.Blocks)...)
 	}
 	if err != nil {
 		return nil, err
@@ -86,31 +81,4 @@ func loadGreptHclBlocks(ignoreUnsupportedBlock bool, dir string) ([]*golden.HclB
 		}
 	}
 	return r, err
-}
-
-func readRawHclBlock(b *hclsyntax.Block) []*hclsyntax.Block {
-	if b.Type != "locals" {
-		return []*hclsyntax.Block{b}
-	}
-	var newBlocks []*hclsyntax.Block
-	for _, attr := range b.Body.Attributes {
-		newBlocks = append(newBlocks, &hclsyntax.Block{
-			Type:   "local",
-			Labels: []string{"", attr.Name},
-			Body: &hclsyntax.Body{
-				Attributes: map[string]*hclsyntax.Attribute{
-					"value": {
-						Name:        "value",
-						Expr:        attr.Expr,
-						SrcRange:    attr.SrcRange,
-						NameRange:   attr.NameRange,
-						EqualsRange: attr.EqualsRange,
-					},
-				},
-				SrcRange: attr.NameRange,
-				EndRange: attr.SrcRange,
-			},
-		})
-	}
-	return newBlocks
 }

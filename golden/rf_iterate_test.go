@@ -20,14 +20,9 @@ func TestRefIterator(t *testing.T) {
 			want: "data.source.attribute",
 		},
 		{
-			name: "rule ref iterator",
-			hcl:  `rule.my_rule.id`,
-			want: "rule.my_rule.id",
-		},
-		{
-			name: "fix ref iterator",
-			hcl:  `fix.my_fix.id`,
-			want: "fix.my_fix.id",
+			name: "resource ref iterator",
+			hcl:  `resource.dummy.id`,
+			want: "resource.dummy.id",
 		},
 	}
 

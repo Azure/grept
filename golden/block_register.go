@@ -39,7 +39,7 @@ func RegisterBlock(t Block) {
 	validBlockTypes.Add(bt)
 	registry[t.Type()] = func(c Config, hb *HclBlock) Block {
 		newBlock := reflect.New(reflect.TypeOf(t).Elem()).Elem()
-		newBaseBlock := newBaseBlock(c, hb)
+		newBaseBlock := NewBaseBlock(c, hb)
 		newBaseBlock.setForEach(hb.forEach)
 		newBaseBlock.setMetaNestedBlock()
 		newBlock.FieldByName("BaseBlock").Set(reflect.ValueOf(newBaseBlock))
