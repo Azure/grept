@@ -3,22 +3,23 @@ package golden
 import (
 	"context"
 	"fmt"
-	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 )
 
 type directedAcyclicGraph interface {
 	GetVertices() map[string]interface{}
+	GetAncestors(id string) (map[string]interface{}, error)
 	GetChildren(id string) (map[string]interface{}, error)
 	buildDag(blocks []Block) error
-	runDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error
+	runDag(onReady func(Block) error) error
 }
 
 type Config interface {
 	directedAcyclicGraph
 	Context() context.Context
 	EvalContext() *hcl.EvalContext
+	RunPrePlan() error
 	RunPlan() error
 	expandBlock(b Block) ([]Block, error)
 }
@@ -54,14 +55,10 @@ func InitConfig(config Config, hclBlocks []*HclBlock) error {
 	if err != nil {
 		return err
 	}
-	err = config.runDag(tryEvalLocal)
+	err = config.RunPrePlan()
 	if err != nil {
 		return err
 	}
-	//err = config.runDag(expandBlocks)
-	//if err != nil {
-	//	return err
-	//}
 
 	return nil
 }

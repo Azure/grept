@@ -22,6 +22,10 @@ func (db *BaseData) Data() {}
 
 func (db *BaseData) AddressLength() int { return 3 }
 
+func (db *BaseData) CanExecutePrePlan() bool {
+	return false
+}
+
 type TestResource interface {
 	PlanBlock
 	ApplyBlock
@@ -38,6 +42,10 @@ func (rb *BaseResource) Resource() {}
 
 func (rb *BaseResource) AddressLength() int {
 	return 3
+}
+
+func (rb *BaseResource) CanExecutePrePlan() bool {
+	return false
 }
 
 var _ TestData = &DummyData{}

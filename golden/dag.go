@@ -52,7 +52,7 @@ func (d *Dag) addEdge(from, to string) error {
 	return nil
 }
 
-func (d *Dag) runDag(c Config, onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error {
+func (d *Dag) runDag(c Config, onReady func(Block) error) error {
 	var err error
 	visited := hashset.New()
 	pending := linkedlistqueue.New()
@@ -96,7 +96,7 @@ func (d *Dag) runDag(c Config, onReady func(Config, *Dag, *linkedlistqueue.Queue
 		if !ready {
 			continue
 		}
-		if callbackErr := onReady(c, d, pending, b); callbackErr != nil {
+		if callbackErr := onReady(b); callbackErr != nil {
 			err = multierror.Append(err, callbackErr)
 		}
 		visited.Add(address)

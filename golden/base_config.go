@@ -3,7 +3,6 @@ package golden
 import (
 	"context"
 	"fmt"
-	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/lonegunmanb/hclfuncs"
 	"github.com/zclconf/go-cty/cty"
@@ -60,12 +59,20 @@ func NewBasicConfig(basedir string, ctx context.Context) *BaseConfig {
 	return c
 }
 
+func (c *BaseConfig) RunPrePlan() error {
+	return c.runDag(prePlan)
+}
+
 func (c *BaseConfig) RunPlan() error {
 	return c.runDag(dagPlan)
 }
 
 func (c *BaseConfig) GetVertices() map[string]interface{} {
 	return c.d.GetVertices()
+}
+
+func (c *BaseConfig) GetAncestors(id string) (map[string]interface{}, error) {
+	return c.d.GetAncestors(id)
 }
 
 func (c *BaseConfig) GetChildren(id string) (map[string]interface{}, error) {
@@ -76,7 +83,7 @@ func (c *BaseConfig) buildDag(blocks []Block) error {
 	return c.d.buildDag(blocks)
 }
 
-func (c *BaseConfig) runDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error {
+func (c *BaseConfig) runDag(onReady func(Block) error) error {
 	return c.d.runDag(c, onReady)
 }
 
