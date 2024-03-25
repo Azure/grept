@@ -68,6 +68,21 @@ func (d *Dag) runDag(c Config, onReady func(Config, *Dag, *linkedlistqueue.Queue
 		if !exist {
 			continue
 		}
+		if !b.expanded() {
+			expandedBlocks, err := c.expandBlock(b)
+			if err != nil {
+				return err
+			}
+			newPending := linkedlistqueue.New()
+			for _, eb := range expandedBlocks {
+				newPending.Enqueue(eb)
+			}
+			for _, b := range pending.Values() {
+				newPending.Enqueue(b)
+			}
+			pending = newPending
+			continue
+		}
 		ancestors, dagErr := d.GetAncestors(address)
 		if dagErr != nil {
 			return dagErr
