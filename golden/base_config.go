@@ -2,6 +2,7 @@ package golden
 
 import (
 	"context"
+	"fmt"
 	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/lonegunmanb/hclfuncs"
@@ -77,4 +78,58 @@ func (c *BaseConfig) buildDag(blocks []Block) error {
 
 func (c *BaseConfig) runDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error {
 	return c.d.runDag(c, onReady)
+}
+
+func (c *BaseConfig) expandBlock(b Block) ([]Block, error) {
+	var expandedBlocks []Block
+	attr, ok := b.HclBlock().Body.Attributes["for_each"]
+	if !ok || b.getForEach() != nil {
+		return nil, nil
+	}
+	forEachValue, diag := attr.Expr.Value(c.EvalContext())
+	if diag.HasErrors() {
+		return nil, diag
+	}
+	if !forEachValue.CanIterateElements() {
+		return nil, fmt.Errorf("invalid `for_each`, except set or map: %s", attr.Range().String())
+	}
+	address := b.Address()
+	upstreams, err := c.d.GetAncestors(address)
+	if err != nil {
+		return nil, err
+	}
+	downstreams, err := c.d.GetChildren(address)
+	if err != nil {
+		return nil, err
+	}
+	iterator := forEachValue.ElementIterator()
+	for iterator.Next() {
+		key, value := iterator.Element()
+		newBlock := NewHclBlock(b.HclBlock().Block, &forEach{key: key, value: value})
+		nb, err := wrapBlock(c, newBlock)
+		if err != nil {
+			return nil, err
+		}
+		nb.markExpanded()
+		expandedAddress := blockAddress(newBlock)
+		expandedBlocks = append(expandedBlocks, nb)
+		err = c.d.AddVertexByID(expandedAddress, nb)
+		if err != nil {
+			return nil, err
+		}
+		for upstreamAddress := range upstreams {
+			err := c.d.addEdge(upstreamAddress, expandedAddress)
+			if err != nil {
+				return nil, err
+			}
+		}
+		for downstreamAddress := range downstreams {
+			err := c.d.addEdge(expandedAddress, downstreamAddress)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	b.markExpanded()
+	return expandedBlocks, c.d.DeleteVertex(address)
 }

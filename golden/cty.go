@@ -9,7 +9,7 @@ import (
 )
 
 // ToCtyValue is a function that converts a primary/collection type to cty.Value
-func ToCtyValue(input interface{}) cty.Value {
+func ToCtyValue(input any) cty.Value {
 
 	val := reflect.ValueOf(input)
 

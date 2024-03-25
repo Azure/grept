@@ -30,6 +30,8 @@ type Block interface {
 	AddressLength() int
 	getDownstreams() []Block
 	getForEach() *forEach
+	markExpanded()
+	expanded() bool
 }
 
 func BlockToString(f Block) string {
@@ -183,52 +185,12 @@ func tryEvalLocal(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
 }
 
 func expandBlocks(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
-	attr, ok := b.HclBlock().Body.Attributes["for_each"]
-	if !ok || b.getForEach() != nil {
-		return nil
-	}
-	forEachValue, diag := attr.Expr.Value(c.EvalContext())
-	if diag.HasErrors() {
-		return diag
-	}
-	if !forEachValue.CanIterateElements() {
-		return fmt.Errorf("invalid `for_each`, except set or map: %s", attr.Range().String())
-	}
-	address := b.Address()
-	upstreams, err := dag.GetAncestors(address)
+	expandBlocks, err := c.expandBlock(b)
 	if err != nil {
 		return err
 	}
-	downstreams, err := dag.GetChildren(address)
-	if err != nil {
-		return err
+	for _, eb := range expandBlocks {
+		q.Enqueue(eb)
 	}
-	iterator := forEachValue.ElementIterator()
-	for iterator.Next() {
-		key, value := iterator.Element()
-		newBlock := NewHclBlock(b.HclBlock().Block, &forEach{key: key, value: value})
-		nb, err := wrapBlock(c, newBlock)
-		if err != nil {
-			return err
-		}
-		expandedAddress := blockAddress(newBlock)
-		err = dag.AddVertexByID(expandedAddress, nb)
-		if err != nil {
-			return err
-		}
-		for upstreamAddress := range upstreams {
-			err := dag.addEdge(upstreamAddress, expandedAddress)
-			if err != nil {
-				return err
-			}
-		}
-		for downstreamAddress := range downstreams {
-			err := dag.addEdge(expandedAddress, downstreamAddress)
-			if err != nil {
-				return err
-			}
-		}
-		q.Enqueue(nb)
-	}
-	return dag.DeleteVertex(address)
+	return nil
 }
