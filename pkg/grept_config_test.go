@@ -48,7 +48,7 @@ func (s *greptConfigSuite) TestParseConfigHttpBlock() {
 	`
 
 	t := s.T()
-	s.dummyFsWithFiles([]string{"test.Grept.hcl"}, []string{hclConfig})
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{hclConfig})
 
 	// Parse the configuration
 	config, err := BuildGreptConfig("", "", nil)
