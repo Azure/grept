@@ -20,6 +20,7 @@ type Config interface {
 	Context() context.Context
 	EvalContext() *hcl.EvalContext
 	RunPlan() error
+	expandBlock(b Block) ([]Block, error)
 }
 
 func Blocks[T Block](c directedAcyclicGraph) []T {
@@ -57,10 +58,10 @@ func InitConfig(config Config, hclBlocks []*HclBlock) error {
 	if err != nil {
 		return err
 	}
-	err = config.runDag(expandBlocks)
-	if err != nil {
-		return err
-	}
+	//err = config.runDag(expandBlocks)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }

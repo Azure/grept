@@ -17,6 +17,7 @@ type BaseBlock struct {
 	id            string
 	blockAddress  string
 	forEach       *forEach
+	hasExpanded   bool
 	preConditions []PreCondition
 }
 
@@ -138,4 +139,12 @@ func (bb *BaseBlock) setMetaNestedBlock() {
 			})
 		}
 	}
+}
+
+func (bb *BaseBlock) markExpanded() {
+	bb.hasExpanded = true
+}
+
+func (bb *BaseBlock) expanded() bool {
+	return !bb.forEachDefined() || bb.hasExpanded
 }
