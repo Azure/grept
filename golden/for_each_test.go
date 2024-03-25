@@ -46,3 +46,43 @@ func (s *forEachTestSuite) TestForEachBlockWithAttributeThatHasDefaultValue() {
 		s.Equal("default_value", data.AttributeWithDefaultValue)
 	}
 }
+
+func (s *forEachTestSuite) TestLocals_locals_as_for_each() {
+	code := `
+locals {
+  numbers = toset([1,2,3])
+}
+
+data "dummy" foo {
+	for_each = local.numbers
+}
+`
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{code})
+	c, err := BuildDummyConfig("/", "", nil)
+	s.NoError(err)
+	p, err := RunDummyPlan(c)
+	s.NoError(err)
+	s.Len(p.Datas, 3)
+}
+
+func (s *forEachTestSuite) TestLocals_data_output_as_foreach() {
+	code := `
+data "dummy" foo {
+	data = {
+		"1" = "one"
+		"2" = "two"
+		"3" = "three"
+	}
+}
+
+resource "dummy" bar {
+	for_each = data.dummy.foo.data
+}
+`
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{code})
+	c, err := BuildDummyConfig("/", "", nil)
+	s.NoError(err)
+	p, err := RunDummyPlan(c)
+	s.NoError(err)
+	s.Len(p.Resources, 3)
+}

@@ -2,8 +2,6 @@ package golden
 
 import (
 	"github.com/emirpasic/gods/queues/linkedlistqueue"
-	"github.com/emirpasic/gods/sets"
-	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/heimdalr/dag"
@@ -11,13 +9,11 @@ import (
 
 type Dag struct {
 	*dag.DAG
-	pendingUpstreams map[string]sets.Set
 }
 
 func newDag() *Dag {
 	return &Dag{
-		DAG:              dag.NewDAG(),
-		pendingUpstreams: make(map[string]sets.Set),
+		DAG: dag.NewDAG(),
 	}
 }
 
@@ -43,18 +39,11 @@ func (d *Dag) addEdge(from, to string) error {
 	if err != nil {
 		return err
 	}
-	set, ok := d.pendingUpstreams[to]
-	if !ok {
-		set = hashset.New()
-		d.pendingUpstreams[to] = set
-	}
-	set.Add(from)
 	return nil
 }
 
 func (d *Dag) runDag(c Config, onReady func(Block) error) error {
 	var err error
-	visited := hashset.New()
 	pending := linkedlistqueue.New()
 	for _, n := range d.GetRoots() {
 		pending.Enqueue(n.(Block))
@@ -62,13 +51,31 @@ func (d *Dag) runDag(c Config, onReady func(Block) error) error {
 	for !pending.Empty() {
 		next, _ := pending.Dequeue()
 		b := next.(Block)
-		// the node has already been expanded and deleted from dag
+		// the node has already been expandable and deleted from dag
 		address := b.Address()
 		exist := d.exist(address)
 		if !exist {
 			continue
 		}
-		if !b.expanded() {
+		ancestors, dagErr := d.GetAncestors(address)
+		if dagErr != nil {
+			return dagErr
+		}
+		ready := true
+		for upstreamAddress := range ancestors {
+			v, dagErr := d.GetVertex(upstreamAddress)
+			if dagErr != nil {
+				return dagErr
+			}
+			if !v.(Block).isReadyForRead() {
+				ready = false
+				break
+			}
+		}
+		if !ready {
+			continue
+		}
+		if b.expandable() {
 			expandedBlocks, err := c.expandBlock(b)
 			if err != nil {
 				return err
@@ -83,24 +90,10 @@ func (d *Dag) runDag(c Config, onReady func(Block) error) error {
 			pending = newPending
 			continue
 		}
-		ancestors, dagErr := d.GetAncestors(address)
-		if dagErr != nil {
-			return dagErr
-		}
-		ready := true
-		for upstreamAddress := range ancestors {
-			if !visited.Contains(upstreamAddress) {
-				ready = false
-			}
-		}
-		if !ready {
-			continue
-		}
 		if callbackErr := onReady(b); callbackErr != nil {
 			err = multierror.Append(err, callbackErr)
 		}
-		visited.Add(address)
-		// this address might be expanded during onReady and no more exist.
+		// this address might be expandable during onReady and no more exist.
 		exist = d.exist(address)
 		if !exist {
 			continue

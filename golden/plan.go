@@ -11,10 +11,6 @@ type Plan interface {
 }
 
 func dagPlan(b Block) error {
-	return runPlan(b)
-}
-
-func runPlan(b Block) error {
 	decodeErr := Decode(b)
 	if decodeErr != nil {
 		return fmt.Errorf("%s(%s) Decode error: %+v", b.Address(), b.HclBlock().Range().String(), decodeErr)
@@ -39,6 +35,7 @@ func runPlan(b Block) error {
 		if execErr != nil {
 			return fmt.Errorf("%s.%s.%s(%s) exec error: %+v", b.Type(), b.Type(), b.Name(), b.HclBlock().Range().String(), execErr)
 		}
+		b.markReady()
 	}
 	return nil
 }
