@@ -11,19 +11,15 @@ import (
 type BaseConfig struct {
 	ctx     context.Context
 	basedir string
-	dag     *Dag
+	d       *Dag
 }
 
 func (c *BaseConfig) Context() context.Context {
 	return c.ctx
 }
 
-func (c *BaseConfig) Dag() *Dag {
-	return c.dag
-}
-
-func (c *BaseConfig) RunDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error {
-	return c.dag.runDag(c, onReady)
+func (c *BaseConfig) dag() *Dag {
+	return c.d
 }
 
 func (c *BaseConfig) blocksByTypes() map[string][]Block {
@@ -58,7 +54,27 @@ func NewBasicConfig(basedir string, ctx context.Context) *BaseConfig {
 	c := &BaseConfig{
 		basedir: basedir,
 		ctx:     ctx,
-		dag:     newDag(),
+		d:       newDag(),
 	}
 	return c
+}
+
+func (c *BaseConfig) RunPlan() error {
+	return c.runDag(dagPlan)
+}
+
+func (c *BaseConfig) GetVertices() map[string]interface{} {
+	return c.d.GetVertices()
+}
+
+func (c *BaseConfig) GetChildren(id string) (map[string]interface{}, error) {
+	return c.d.GetChildren(id)
+}
+
+func (c *BaseConfig) buildDag(blocks []Block) error {
+	return c.d.buildDag(blocks)
+}
+
+func (c *BaseConfig) runDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error {
+	return c.d.runDag(c, onReady)
 }

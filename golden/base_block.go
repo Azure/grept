@@ -116,7 +116,7 @@ func (bb *BaseBlock) forEachDefined() bool {
 
 func (bb *BaseBlock) getDownstreams() []Block {
 	var blocks []Block
-	children, _ := bb.c.Dag().GetChildren(bb.blockAddress)
+	children, _ := bb.c.GetChildren(bb.blockAddress)
 	for _, c := range children {
 		blocks = append(blocks, c.(Block))
 	}
