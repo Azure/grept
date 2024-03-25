@@ -18,6 +18,7 @@ type BaseBlock struct {
 	blockAddress  string
 	forEach       *forEach
 	hasExpanded   bool
+	readyForRead  bool
 	preConditions []PreCondition
 }
 
@@ -145,6 +146,14 @@ func (bb *BaseBlock) markExpanded() {
 	bb.hasExpanded = true
 }
 
-func (bb *BaseBlock) expanded() bool {
-	return !bb.forEachDefined() || bb.hasExpanded
+func (bb *BaseBlock) expandable() bool {
+	return bb.forEachDefined() && !bb.hasExpanded
+}
+
+func (bb *BaseBlock) markReady() {
+	bb.readyForRead = true
+}
+
+func (bb *BaseBlock) isReadyForRead() bool {
+	return bb.readyForRead
 }

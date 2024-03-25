@@ -33,7 +33,7 @@ locals {
   c = tolist([for i in [1,2,3,4] : tostring(i) if i%2==0])
 }
 `
-	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{code})
+	s.dummyFsWithFiles([]string{"test.hcl"}, []string{code})
 	c, err := BuildDummyConfig("/", "", nil)
 	s.NoError(err)
 	_, err = RunDummyPlan(c)

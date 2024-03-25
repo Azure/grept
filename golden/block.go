@@ -31,7 +31,9 @@ type Block interface {
 	getDownstreams() []Block
 	getForEach() *forEach
 	markExpanded()
-	expanded() bool
+	isReadyForRead() bool
+	markReady()
+	expandable() bool
 }
 
 func BlockToString(f Block) string {
@@ -177,5 +179,10 @@ func prePlan(b Block) error {
 	if !ok {
 		return nil
 	}
-	return l.ExecuteBeforePlan()
+	err := l.ExecuteBeforePlan()
+	if err != nil {
+		return err
+	}
+	b.markReady()
+	return nil
 }
