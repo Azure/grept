@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/Azure/grept/pkg"
 	"os"
 
 	"github.com/Azure/grept/golden"
@@ -42,11 +43,11 @@ func replFunc() func(*cobra.Command, []string) error {
 		if err != nil {
 			return fmt.Errorf("error getting os wd: %+v", err)
 		}
-		config, err := golden.BuildGreptConfig(pwd, configPath, c.Context())
+		config, err := pkg.BuildGreptConfig(pwd, configPath, c.Context())
 		if err != nil {
 			return fmt.Errorf("error parsing config: %+v", err)
 		}
-		_, err = golden.RunGreptPlan(config)
+		_, err = pkg.RunGreptPlan(config)
 		if err != nil {
 			return fmt.Errorf("error plan config: %+v", err)
 		}
