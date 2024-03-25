@@ -52,6 +52,10 @@ func (bf *BaseFix) GetRuleIds() []string {
 
 func (bf *BaseFix) AddressLength() int { return 3 }
 
+func (bf *BaseFix) CanExecutePrePlan() bool {
+	return false
+}
+
 func (bf *BaseFix) setRuleIds(ids []string) {
 	bf.RuleIds = ids
 }
