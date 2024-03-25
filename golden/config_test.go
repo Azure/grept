@@ -89,7 +89,7 @@ func loadHclBlocks(ignoreUnsupportedBlock bool, dir string) ([]*HclBlock, error)
 }
 
 func RunDummyPlan(c Config) (*DummyPlan, error) {
-	err := c.RunDag(DagPlan)
+	err := c.runDag(dagPlan)
 	if err != nil {
 		return nil, err
 	}

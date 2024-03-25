@@ -11,12 +11,12 @@ type Plan interface {
 	Apply() error
 }
 
-func DagPlan(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
+func dagPlan(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
 	self, _ := dag.GetVertex(b.Address())
-	return RunPlan(self.(Block))
+	return runPlan(self.(Block))
 }
 
-func RunPlan(b Block) error {
+func runPlan(b Block) error {
 	decodeErr := Decode(b)
 	if decodeErr != nil {
 		return fmt.Errorf("%s(%s) Decode error: %+v", b.Address(), b.HclBlock().Range().String(), decodeErr)
