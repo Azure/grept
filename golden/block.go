@@ -3,7 +3,6 @@ package golden
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -28,6 +27,7 @@ type Block interface {
 	BaseValues() map[string]cty.Value
 	PreConditionCheck(*hcl.EvalContext) ([]PreCondition, error)
 	AddressLength() int
+	CanExecutePrePlan() bool
 	getDownstreams() []Block
 	getForEach() *forEach
 	markExpanded()
@@ -172,25 +172,10 @@ func blockAddress(b *HclBlock) string {
 }
 
 // Not all `local` expression could be evaluated before for_each expansion, so we need to try to evaluate them.
-func tryEvalLocal(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
-	l, ok := b.(*LocalBlock)
+func prePlan(b Block) error {
+	l, ok := b.(PrePlanBlock)
 	if !ok {
 		return nil
 	}
-	value, diag := l.HclBlock().Body.Attributes["value"].Expr.Value(c.EvalContext())
-	if !diag.HasErrors() {
-		l.LocalValue = value
-	}
-	return nil
-}
-
-func expandBlocks(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
-	expandBlocks, err := c.expandBlock(b)
-	if err != nil {
-		return err
-	}
-	for _, eb := range expandBlocks {
-		q.Enqueue(eb)
-	}
-	return nil
+	return l.ExecuteBeforePlan()
 }

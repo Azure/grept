@@ -17,3 +17,7 @@ func (bd *BaseData) BlockType() string {
 func (bd *BaseData) Data() {}
 
 func (bd *BaseData) AddressLength() int { return 3 }
+
+func (bd *BaseData) CanExecutePrePlan() bool {
+	return false
+}

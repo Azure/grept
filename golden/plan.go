@@ -2,7 +2,6 @@ package golden
 
 import (
 	"fmt"
-	"github.com/emirpasic/gods/queues/linkedlistqueue"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -11,9 +10,8 @@ type Plan interface {
 	Apply() error
 }
 
-func dagPlan(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
-	self, _ := dag.GetVertex(b.Address())
-	return runPlan(self.(Block))
+func dagPlan(b Block) error {
+	return runPlan(b)
 }
 
 func runPlan(b Block) error {
