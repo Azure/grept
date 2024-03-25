@@ -8,20 +8,23 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-type IDag interface {
-	Dag() *Dag
+type directedAcyclicGraph interface {
+	GetVertices() map[string]interface{}
+	GetChildren(id string) (map[string]interface{}, error)
+	buildDag(blocks []Block) error
+	runDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error
 }
 
 type Config interface {
-	IDag
+	directedAcyclicGraph
 	Context() context.Context
 	EvalContext() *hcl.EvalContext
-	RunDag(onReady func(Config, *Dag, *linkedlistqueue.Queue, Block) error) error
+	RunPlan() error
 }
 
-func Blocks[T Block](c IDag) []T {
+func Blocks[T Block](c directedAcyclicGraph) []T {
 	var r []T
-	for _, b := range c.Dag().GetVertices() {
+	for _, b := range c.GetVertices() {
 		t, ok := b.(T)
 		if ok {
 			r = append(r, t)
@@ -46,15 +49,15 @@ func InitConfig(config Config, hclBlocks []*HclBlock) error {
 		return err
 	}
 	// If there's dag error, return dag error first.
-	err = config.Dag().buildDag(blocks)
+	err = config.buildDag(blocks)
 	if err != nil {
 		return err
 	}
-	err = config.Dag().runDag(config, tryEvalLocal)
+	err = config.runDag(tryEvalLocal)
 	if err != nil {
 		return err
 	}
-	err = config.Dag().runDag(config, expandBlocks)
+	err = config.runDag(expandBlocks)
 	if err != nil {
 		return err
 	}
@@ -75,9 +78,9 @@ func wrapBlock(c Config, hb *HclBlock) (Block, error) {
 	return f(c, hb), nil
 }
 
-func blocks(c IDag) []Block {
+func blocks(c directedAcyclicGraph) []Block {
 	var blocks []Block
-	for _, n := range c.Dag().GetVertices() {
+	for _, n := range c.GetVertices() {
 		blocks = append(blocks, n.(Block))
 	}
 	return blocks

@@ -28,9 +28,7 @@ type Block interface {
 	BaseValues() map[string]cty.Value
 	PreConditionCheck(*hcl.EvalContext) ([]PreCondition, error)
 	AddressLength() int
-	forEachDefined() bool
 	getDownstreams() []Block
-	setForEach(*forEach)
 	getForEach() *forEach
 }
 
@@ -171,6 +169,7 @@ func blockAddress(b *HclBlock) string {
 	return sb.String()
 }
 
+// Not all `local` expression could be evaluated before for_each expansion, so we need to try to evaluate them.
 func tryEvalLocal(c Config, dag *Dag, q *linkedlistqueue.Queue, b Block) error {
 	l, ok := b.(*LocalBlock)
 	if !ok {

@@ -10,7 +10,7 @@ import (
 )
 
 func RunGreptPlan(c golden.Config) (*GreptPlan, error) {
-	err := c.RunDag(golden.DagPlan)
+	err := c.RunPlan()
 	if err != nil {
 		return nil, err
 	}
