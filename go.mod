@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-getter/v2 v2.2.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.5
-	github.com/hashicorp/hcl/v2 v2.20.0
+	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/heimdalr/dag v1.4.0
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-defaults v1.4.0
@@ -47,7 +47,7 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/consul/api v1.25.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -84,7 +84,6 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/timandy/routine v1.1.3 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
