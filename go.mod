@@ -16,7 +16,7 @@ require (
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-defaults v1.4.0
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
-	github.com/lonegunmanb/hclfuncs v0.5.0
+	github.com/lonegunmanb/hclfuncs v0.6.0
 	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
