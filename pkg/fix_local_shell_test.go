@@ -3,7 +3,7 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/google/uuid"
 	"github.com/prashantv/gostub"

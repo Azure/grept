@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/spf13/afero"
 	"github.com/zclconf/go-cty/cty"
 )

@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/grept/pkg"
 	"os"
 
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/peterh/liner"

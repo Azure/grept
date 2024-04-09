@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 )

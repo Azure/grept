@@ -1,6 +1,6 @@
 package pkg
 
-import "github.com/Azure/grept/golden"
+import "github.com/Azure/golden"
 
 type Data interface {
 	golden.PlanBlock

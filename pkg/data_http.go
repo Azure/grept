@@ -3,7 +3,7 @@ package pkg
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"io"
 	"log"
 	"net/http"
