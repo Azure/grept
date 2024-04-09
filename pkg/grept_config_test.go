@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

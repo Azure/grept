@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"io/fs"
 	"path/filepath"
 	"strconv"

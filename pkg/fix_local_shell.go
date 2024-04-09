@@ -3,7 +3,7 @@ package pkg
 import (
 	"bufio"
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/lonegunmanb/hclfuncs"
 	"io"
 	"net/http"

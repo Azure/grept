@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

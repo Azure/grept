@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"bufio"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/spf13/afero"
 	"strings"
 )

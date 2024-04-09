@@ -3,7 +3,7 @@ package pkg
 import (
 	"bufio"
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/spf13/afero"

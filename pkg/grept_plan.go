@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/Azure/grept/golden"
+	"github.com/Azure/golden"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/hashicorp/go-multierror"
 	"strings"
