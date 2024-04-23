@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/spf13/afero"
 	"path/filepath"
 )
@@ -56,13 +57,15 @@ func loadGreptHclBlocks(ignoreUnsupportedBlock bool, dir string) ([]*golden.HclB
 			err = multierror.Append(err, fsErr)
 			continue
 		}
-		file, diag := hclsyntax.ParseConfig(content, filename, hcl.InitialPos)
+		readFile, diag := hclsyntax.ParseConfig(content, filename, hcl.InitialPos)
 		if diag.HasErrors() {
 			err = multierror.Append(err, diag.Errs()...)
 			continue
 		}
-		body := file.Body.(*hclsyntax.Body)
-		blocks = append(blocks, golden.AsHclBlocks(body.Blocks)...)
+		writeFile, _ := hclwrite.ParseConfig(content, filename, hcl.InitialPos)
+		readBody := readFile.Body.(*hclsyntax.Body)
+		writeBody := writeFile.Body()
+		blocks = append(blocks, golden.AsHclBlocks(readBody.Blocks, writeBody.Blocks())...)
 	}
 	if err != nil {
 		return nil, err

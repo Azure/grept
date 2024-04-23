@@ -3,7 +3,7 @@ module github.com/Azure/grept
 go 1.22.1
 
 require (
-	github.com/Azure/golden v0.0.0-20240409043530-d340c7c4bff0
+	github.com/Azure/golden v0.0.0-20240423074409-5877b479266f
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/emirpasic/gods v1.18.1

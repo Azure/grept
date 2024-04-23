@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"testing"
 
 	"github.com/Azure/golden"
@@ -24,7 +25,8 @@ func TestPlan_String(t *testing.T) {
 							BaseBlock: golden.NewBaseBlock(nil, golden.NewHclBlock(&hclsyntax.Block{
 								Type:   "rule",
 								Labels: []string{"file_hash", "test-rule"},
-							}, nil)),
+								Body:   &hclsyntax.Body{},
+							}, hclwrite.NewBlock("rule", []string{"file_hash", "test-rule"}), nil)),
 							Glob:      "test-glob",
 							Hash:      "test-hash",
 							Algorithm: "sha1",
@@ -37,7 +39,8 @@ func TestPlan_String(t *testing.T) {
 						BaseBlock: golden.NewBaseBlock(nil, golden.NewHclBlock(&hclsyntax.Block{
 							Type:   "fix",
 							Labels: []string{"local_file", "test-fix"},
-						}, nil)),
+							Body:   &hclsyntax.Body{},
+						}, hclwrite.NewBlock("fix", []string{"local_file", "test-fix"}), nil)),
 						Paths:   []string{"test-path"},
 						Content: "test-content",
 					},
