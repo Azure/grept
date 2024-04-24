@@ -21,12 +21,7 @@ var _ Data = &HttpDatasource{}
 type HttpDatasource struct {
 	*golden.BaseBlock
 	*BaseData
-	Url string `hcl:"url"`
-	/*
-		if !validHttpMethods.Contains(h.Method) {
-				err = multierror.Append(err, fmt.Errorf(`"method"" must be one of "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"`))
-			}
-	*/
+	Url             string            `hcl:"url"`
 	Method          string            `hcl:"method,optional" default:"GET" validate:"oneof=GET HEAD POST PUT DELETE CONNECT OPTIONS TRACE PATCH"`
 	RequestBody     string            `hcl:"request_body,optional"`
 	RequestHeaders  map[string]string `hcl:"request_headers,optional"`
