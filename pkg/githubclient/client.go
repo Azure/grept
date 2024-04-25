@@ -48,9 +48,11 @@ func newClient(c *github.Client) *Client {
 	r.Repositories = func() RepositoriesClient {
 		return r.Client.Repositories
 	}
+
 	return r
 }
 
 type RepositoriesClient interface {
 	ListTeams(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.Team, *github.Response, error)
+	ListCollaborators(ctx context.Context, owner, repo string, opts *github.ListCollaboratorsOptions) ([]*github.User, *github.Response, error)
 }
