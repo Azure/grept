@@ -16,16 +16,16 @@ type Config struct {
 }
 
 type Team struct {
-	Name       string `hcl:"name" json:"name"`
-	Slug       string `hcl:"slug" json:"slug"`
-	Permission string `hcl:"permission" json:"permission"`
+	Name       string `hcl:"name"`
+	Slug       string `hcl:"slug"`
+	Permission string `hcl:"permission"`
 }
 
 type GitHubRepositoryTeamsDatasource struct {
 	*golden.BaseBlock
 	*BaseData
-	Owner    string `hcl:"owner" json:"owner"`
-	RepoName string `hcl:"repo_name" json:"repo_name"`
+	Owner    string `hcl:"owner"`
+	RepoName string `hcl:"repo_name"`
 	Teams    []Team `attribute:"teams"`
 }
 
@@ -46,9 +46,9 @@ func (g *GitHubRepositoryTeamsDatasource) ExecuteDuringPlan() error {
 		}
 		for _, team := range teams {
 			g.Teams = append(g.Teams, Team{
-				Name:       *team.Name,
-				Slug:       *team.Slug,
-				Permission: *team.Permission,
+				Name:       value(team.Name),
+				Slug:       value(team.Slug),
+				Permission: value(team.Permission),
 			})
 		}
 		if resp.NextPage == 0 {

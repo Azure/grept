@@ -37,4 +37,6 @@ func registerRule() {
 func registerData() {
 	golden.RegisterBlock(new(HttpDatasource))
 	golden.RegisterBlock(new(GitIgnoreDatasource))
+	golden.RegisterBlock(new(GitHubRepositoryTeamsDatasource))
+	golden.RegisterBlock(new(GitHubRepositoryCollaboratorsDatasource))
 }
