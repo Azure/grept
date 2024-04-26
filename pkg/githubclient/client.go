@@ -1,4 +1,4 @@
-//go:generate mockgen -destination ../mock_repositories_client_test.go -package pkg_test . RepositoriesClient
+//go:generate mockgen -destination ../mock_repositories_client_test.go -package pkg_test . RepositoriesClient,TeamsClient,OrganizationsClient
 package githubclient
 
 import (
@@ -13,7 +13,9 @@ import (
 
 type Client struct {
 	*github.Client
-	Repositories func() RepositoriesClient
+	Repositories  func() RepositoriesClient
+	Teams         func() TeamsClient
+	Organizations func() OrganizationsClient
 }
 
 var GetGithubClient = func() (*Client, error) {
@@ -45,8 +47,14 @@ func newClient(c *github.Client) *Client {
 	r := &Client{
 		Client: c,
 	}
+	r.Organizations = func() OrganizationsClient {
+		return c.Organizations
+	}
 	r.Repositories = func() RepositoriesClient {
-		return r.Client.Repositories
+		return c.Repositories
+	}
+	r.Teams = func() TeamsClient {
+		return c.Teams
 	}
 
 	return r
@@ -55,4 +63,14 @@ func newClient(c *github.Client) *Client {
 type RepositoriesClient interface {
 	ListTeams(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.Team, *github.Response, error)
 	ListCollaborators(ctx context.Context, owner, repo string, opts *github.ListCollaboratorsOptions) ([]*github.User, *github.Response, error)
+}
+
+type TeamsClient interface {
+	GetTeamByID(ctx context.Context, orgID, teamID int64) (*github.Team, *github.Response, error)
+	GetTeamBySlug(ctx context.Context, org, slug string) (*github.Team, *github.Response, error)
+	AddTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string, opts *github.TeamAddTeamRepoOptions) (*github.Response, error)
+}
+
+type OrganizationsClient interface {
+	Get(ctx context.Context, org string) (*github.Organization, *github.Response, error)
 }
