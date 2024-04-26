@@ -66,9 +66,9 @@ type RepositoriesClient interface {
 }
 
 type TeamsClient interface {
-	GetTeamByID(ctx context.Context, orgID, teamID int64) (*github.Team, *github.Response, error)
 	GetTeamBySlug(ctx context.Context, org, slug string) (*github.Team, *github.Response, error)
 	AddTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string, opts *github.TeamAddTeamRepoOptions) (*github.Response, error)
+	RemoveTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string) (*github.Response, error)
 }
 
 type OrganizationsClient interface {
