@@ -15,6 +15,7 @@ import (
 
 func TestGithubRepositoryTeamsRead(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	mockRepositoriesClient := NewMockRepositoriesClient(ctrl)
 	owner := "grept"
 	name := "test"
@@ -77,6 +78,6 @@ func readEssentialEnv(t *testing.T, envName string) string {
 	return r
 }
 
-func p(s string) *string {
+func p[T any](s T) *T {
 	return &s
 }
