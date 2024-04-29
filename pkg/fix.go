@@ -36,6 +36,10 @@ func (bf *BaseFix) BaseDecode(hb *golden.HclBlock, evalContext *hcl.EvalContext)
 	return nil
 }
 
+func (bf *BaseFix) ExecuteDuringPlan() error {
+	return nil
+}
+
 func (bf *BaseFix) Values() map[string]cty.Value {
 	return map[string]cty.Value{
 		"rule_ids": golden.ToCtyValue(bf.RuleIds),
