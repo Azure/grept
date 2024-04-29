@@ -4,6 +4,8 @@ codeberg.org/6543/go-yaml2json v1.0.0 h1:heGqo9VEi7gY2yNqjj7X4ADs5nzlFIbGsJtgYDL
 codeberg.org/6543/go-yaml2json v1.0.0/go.mod h1:mz61q14LWF4ZABrgMEDMmk3t9dPi6zgR1uBh2VKV2RQ=
 github.com/Azure/golden v0.0.0-20240423074409-5877b479266f h1:9qFo1nbVeQmjM53Fl6JCW5Ji3/hV9SBsbF1Q9cJslws=
 github.com/Azure/golden v0.0.0-20240423074409-5877b479266f/go.mod h1:YgAc9ezUf5or52XkRk8zrHTdKarSDltuux/qkvm200E=
+github.com/Azure/golden v0.0.0-20240428140632-c4f8365f9adc h1:JZxWzICUFB2zxz5lZZy9f3IrK0qHtcQfgh0MLOFPzBU=
+github.com/Azure/golden v0.0.0-20240428140632-c4f8365f9adc/go.mod h1:YgAc9ezUf5or52XkRk8zrHTdKarSDltuux/qkvm200E=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
@@ -318,6 +320,8 @@ github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 h1:nn5Wsu0esKSJiIVhscUt
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/shurcooL/githubv4 v0.0.0-20240120211514-18a1ae0e79dc h1:vH0NQbIDk+mJLvBliNGfcQgUmhlniWBDXC79oRxfZA0=
 github.com/shurcooL/githubv4 v0.0.0-20240120211514-18a1ae0e79dc/go.mod h1:zqMwyHmnN/eDOZOdiTohqIUKUrTFX62PNlu7IJdu0q8=
+github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064 h1:RCQBSFx5JrsbHltqTtJ+kN3U0Y3a/N/GlVdmRSoxzyE=
+github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064/go.mod h1:zqMwyHmnN/eDOZOdiTohqIUKUrTFX62PNlu7IJdu0q8=
 github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f h1:tygelZueB1EtXkPI6mQ4o9DQ0+FKW41hTbunoXZCTqk=
 github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f/go.mod h1:AuYgA5Kyo4c7HfUmvRGs/6rGlMMV/6B1bVnB9JxJEEg=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=

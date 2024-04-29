@@ -3,7 +3,7 @@ module github.com/Azure/grept
 go 1.22.1
 
 require (
-	github.com/Azure/golden v0.0.0-20240423074409-5877b479266f
+	github.com/Azure/golden v0.0.0-20240428140632-c4f8365f9adc
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/bradleyfalzon/ghinstallation/v2 v2.10.0
@@ -96,7 +96,7 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/shurcooL/githubv4 v0.0.0-20240120211514-18a1ae0e79dc // indirect
+	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/timandy/routine v1.1.3 // indirect
