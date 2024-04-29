@@ -16,7 +16,7 @@ type GitHubTeamFix struct {
 	Owner                   string `hcl:"owner"`
 	TeamName                string `hcl:"team_name"`
 	Description             string `hcl:"description,optional"`
-	Privacy                 string `hcl:"privacy,optional" default:"secret"`
+	Privacy                 string `hcl:"privacy,optional" default:"secret" validate:"oneof=secret closed"`
 	ParentTeamId            int64  `hcl:"parent_team_id,optional" default:"-1"`
 	LdapDistinguishedName   string `hcl:"ldap_dn,optional"`
 	CreateDefaultMaintainer bool   `hcl:"create_default_maintainer,optional" default:"false"`

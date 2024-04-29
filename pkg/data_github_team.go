@@ -30,8 +30,11 @@ func (g *GitHubTeamDatasource) ExecuteDuringPlan() error {
 	if err != nil {
 		return fmt.Errorf("cannot create github client: %s", err.Error())
 	}
-	team, _, err := client.Teams().GetTeamBySlug(g.Context(), g.Owner, g.Slug)
+	team, resp, err := client.Teams().GetTeamBySlug(g.Context(), g.Owner, g.Slug)
 	if err != nil {
+		if resp.StatusCode == 404 {
+			return nil
+		}
 		return fmt.Errorf("cannot get team by slug: %+v", err)
 	}
 	g.Description = value(team.Description)

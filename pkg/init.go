@@ -25,6 +25,7 @@ func registerFix() {
 	golden.RegisterBlock(new(LocalShellFix))
 	golden.RegisterBlock(new(GitIgnoreFix))
 	golden.RegisterBlock(new(YamlTransformFix))
+	golden.RegisterBlock(new(GitHubTeamRepositoryFix))
 	golden.RegisterBlock(new(GitHubTeamFix))
 }
 

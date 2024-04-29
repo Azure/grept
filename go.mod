@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
-	github.com/lonegunmanb/hclfuncs v0.6.0
+	github.com/lonegunmanb/hclfuncs v0.7.0
 	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
 	github.com/palantir/go-githubapp v0.24.1
 	github.com/peterh/liner v1.2.2
@@ -69,7 +69,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/packer-plugin-sdk v0.5.2 // indirect
+	github.com/hashicorp/packer-plugin-sdk v0.5.3 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/hashicorp/vault/api v1.10.0 // indirect
 	github.com/heimdalr/dag v1.4.0 // indirect
