@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v61/github"
+	"github.com/shurcooL/githubv4"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 type Client struct {
 	*github.Client
+	GraphQLClient *githubv4.Client
 	Repositories  func() RepositoriesClient
 	Teams         func() TeamsClient
 	Organizations func() OrganizationsClient
@@ -45,7 +47,8 @@ var GetGithubClient = func() (*Client, error) {
 
 func newClient(c *github.Client) *Client {
 	r := &Client{
-		Client: c,
+		Client:        c,
+		GraphQLClient: githubv4.NewClient(c.Client()),
 	}
 	r.Organizations = func() OrganizationsClient {
 		return c.Organizations
@@ -66,9 +69,13 @@ type RepositoriesClient interface {
 }
 
 type TeamsClient interface {
-	GetTeamBySlug(ctx context.Context, org, slug string) (*github.Team, *github.Response, error)
 	AddTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string, opts *github.TeamAddTeamRepoOptions) (*github.Response, error)
+	CreateTeam(ctx context.Context, org string, team github.NewTeam) (*github.Team, *github.Response, error)
+	DeleteTeamBySlug(ctx context.Context, org, slug string) (*github.Response, error)
+	EditTeamByID(ctx context.Context, orgID, teamID int64, team github.NewTeam, removeParent bool) (*github.Team, *github.Response, error)
+	GetTeamBySlug(ctx context.Context, org, slug string) (*github.Team, *github.Response, error)
 	RemoveTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string) (*github.Response, error)
+	RemoveTeamMembershipBySlug(ctx context.Context, org, slug, user string) (*github.Response, error)
 }
 
 type OrganizationsClient interface {

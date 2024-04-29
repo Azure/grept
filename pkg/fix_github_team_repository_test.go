@@ -23,6 +23,34 @@ type fakeRepoTeams struct {
 	orgs      map[string]*github.Organization
 }
 
+func (m *fakeRepoTeams) DeleteTeamBySlug(ctx context.Context, org, slug string) (*github.Response, error) {
+	delete(m.teams, fmt.Sprintf("%s/%s", org, slug))
+	return &github.Response{}, nil
+}
+
+func (m *fakeRepoTeams) EditTeamByID(ctx context.Context, orgID, teamID int64, team github.NewTeam, removeParent bool) (*github.Team, *github.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *fakeRepoTeams) RemoveTeamMembershipBySlug(ctx context.Context, org, slug, user string) (*github.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *fakeRepoTeams) CreateTeam(ctx context.Context, org string, team github.NewTeam) (*github.Team, *github.Response, error) {
+	nt := &github.Team{
+		Name:        &team.Name,
+		Description: team.Description,
+		Slug:        &team.Name,
+		Permission:  team.Permission,
+		Privacy:     team.Privacy,
+		LDAPDN:      team.LDAPDN,
+	}
+	m.teams[fmt.Sprintf("%s/%s", org, team.Name)] = nt
+	return nt, &github.Response{}, nil
+}
+
 func (m *fakeRepoTeams) Get(ctx context.Context, org string) (*github.Organization, *github.Response, error) {
 	return m.orgs[org], &github.Response{}, nil
 }
