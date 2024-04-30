@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"github.com/Azure/golden"
 	"github.com/Azure/grept/pkg/githubclient"
@@ -35,9 +36,9 @@ func (g GitHubTeamMembersFix) Apply() error {
 	if err != nil {
 		return fmt.Errorf("cannot read org info for %s, %s must be an organization", g.Owner, g.Owner)
 	}
-	team, _, err := client.Teams.GetTeamBySlug(g.Context(), g.Owner, g.TeamSlug)
+	team, err := readTeam(client, g.Context(), g.Owner, g.TeamSlug)
 	if err != nil {
-		return fmt.Errorf("cannot get team by slug: %+v", err)
+		return err
 	}
 	expectedMembers := make(map[string]TeamMember)
 	for _, member := range g.Members {
@@ -88,4 +89,20 @@ func (g GitHubTeamMembersFix) Apply() error {
 		}
 	}
 	return nil
+}
+
+func readTeam(client *githubclient.Client, ctx context.Context, owner, teamSlug string) (*github.Team, error) {
+	var team *github.Team
+	err := Do(func(attempt int) (retry bool, err error) {
+		var resp *github.Response
+		team, resp, err = client.Teams.GetTeamBySlug(ctx, owner, teamSlug)
+		if err != nil {
+			if resp.StatusCode == 404 {
+				return attempt < 3, err
+			}
+			return false, fmt.Errorf("cannot get team by slug: %+v", err)
+		}
+		return false, nil
+	})
+	return team, err
 }
