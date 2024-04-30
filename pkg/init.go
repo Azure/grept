@@ -28,6 +28,7 @@ func registerFix() {
 	golden.RegisterBlock(new(YamlTransformFix))
 	golden.RegisterBlock(new(GitHubTeamRepositoryFix))
 	golden.RegisterBlock(new(GitHubTeamFix))
+	golden.RegisterBlock(new(GitHubTeamMembersFix))
 }
 
 func registerRule() {
