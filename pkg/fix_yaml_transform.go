@@ -31,27 +31,6 @@ func (y *YamlTransformFix) Type() string {
 	return "yaml_transform"
 }
 
-//func (y *YamlTransformFix) Values() map[string]cty.Value {
-//	var transforms []cty.Value
-//	for _, t := range y.Transform {
-//		transforms = append(transforms, cty.ObjectVal(map[string]cty.Value{
-//			"yaml_path":    ToCtyValue(t.YamlPath),
-//			"string_value": ToCtyValue(t.StringValue),
-//		}))
-//	}
-//	transformVals := cty.ListValEmpty(cty.Object(map[string]cty.Type{
-//		"yaml_path":    cty.String,
-//		"string_value": cty.String,
-//	}))
-//	if len(transforms) > 0 {
-//		transformVals = cty.ListVal(transforms)
-//	}
-//	return map[string]cty.Value{
-//		"file_path": ToCtyValue(y.FilePath),
-//		"transform": transformVals,
-//	}
-//}
-
 func (y *YamlTransformFix) Apply() error {
 	fs := FsFactory()
 	yf, err := afero.ReadFile(fs, y.FilePath)
