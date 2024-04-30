@@ -54,7 +54,7 @@ func listTeamsForRepository(client *githubclient.Client, owner, repoName string,
 	opts := &github.ListOptions{PerPage: 100}
 	var r []*github.Team
 	for {
-		teams, resp, err := client.Repositories().ListTeams(ctx, owner, repoName, opts)
+		teams, resp, err := client.Repositories.ListTeams(ctx, owner, repoName, opts)
 		if err != nil {
 			return nil, fmt.Errorf("cannot list teams for %s/%s: %s", owner, repoName, err.Error())
 		}

@@ -31,8 +31,8 @@ func (g *GitHubTeamRepositoryFix) Apply() error {
 	if err != nil {
 		return fmt.Errorf("cannot create github client: %s", err.Error())
 	}
-	teamClient := client.Teams()
-	org, _, err := client.Organizations().Get(g.Context(), g.Owner)
+	teamClient := client.Teams
+	org, _, err := client.Organizations.Get(g.Context(), g.Owner)
 	if err != nil {
 		return fmt.Errorf("cannot read org info for %s, %s must be an organization", g.Owner, g.Owner)
 	}
@@ -62,7 +62,7 @@ func (g *GitHubTeamRepositoryFix) Apply() error {
 }
 
 func (g *GitHubTeamRepositoryFix) checkTeamSlug(client *githubclient.Client, slug string) (int64, error) {
-	team, _, err := client.Teams().GetTeamBySlug(g.Context(), g.Owner, slug)
+	team, _, err := client.Teams.GetTeamBySlug(g.Context(), g.Owner, slug)
 	if err != nil {
 		return -1, err
 	}

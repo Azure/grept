@@ -31,7 +31,7 @@ func (g *GitHubTeamFix) Apply() error {
 	if err != nil {
 		return fmt.Errorf("cannot create github client: %s", err.Error())
 	}
-	_, _, err = client.Organizations().Get(g.Context(), g.Owner)
+	_, _, err = client.Organizations.Get(g.Context(), g.Owner)
 	if err != nil {
 		return fmt.Errorf("cannot read org info for %s, %s must be an organization", g.Owner, g.Owner)
 	}
@@ -46,7 +46,7 @@ func (g *GitHubTeamFix) Apply() error {
 	if g.LdapDistinguishedName != "" {
 		newTeam.LDAPDN = &g.LdapDistinguishedName
 	}
-	teamClient := client.Teams()
+	teamClient := client.Teams
 	githubTeam, _, err := teamClient.CreateTeam(g.Context(), g.Owner, newTeam)
 	if err != nil {
 		return fmt.Errorf("cannot create team: %+v", err)
@@ -108,7 +108,7 @@ func (g *GitHubTeamFix) removeDefaultMaintainer(client *githubclient.Client, tea
 	}
 
 	for _, user := range query.Organization.Team.Members.Nodes {
-		_, err := client.Teams().RemoveTeamMembershipBySlug(g.Context(), g.Owner, teamSlug, string(user.Login))
+		_, err := client.Teams.RemoveTeamMembershipBySlug(g.Context(), g.Owner, teamSlug, string(user.Login))
 		if err != nil {
 			return err
 		}

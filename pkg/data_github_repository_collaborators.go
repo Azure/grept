@@ -39,7 +39,7 @@ func (g *GitHubRepositoryCollaboratorsDatasource) ExecuteDuringPlan() error {
 	}
 	opts := &github.ListCollaboratorsOptions{ListOptions: github.ListOptions{PerPage: 100}}
 	for {
-		collaborators, resp, err := client.Repositories().ListCollaborators(g.Context(), g.Owner, g.RepoName, opts)
+		collaborators, resp, err := client.Repositories.ListCollaborators(g.Context(), g.Owner, g.RepoName, opts)
 		if err != nil {
 			return fmt.Errorf("cannot list collaborators for %s/%s: %s", g.Owner, g.RepoName, err.Error())
 		}
