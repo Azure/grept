@@ -3,6 +3,7 @@ package pkg
 import "github.com/Azure/golden"
 
 func init() {
+	golden.MetaAttributeNames.Add("rule_ids")
 	golden.RegisterBaseBlock(func() golden.BlockType {
 		return new(BaseRule)
 	})
