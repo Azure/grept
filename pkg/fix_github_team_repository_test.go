@@ -2,9 +2,8 @@ package pkg_test
 
 import (
 	"context"
-	"fmt"
-	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 
 	"github.com/Azure/grept/pkg"
@@ -13,124 +12,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var _ githubclient.TeamsClient = &fakeRepoTeams{}
-var _ githubclient.RepositoriesClient = &fakeRepoTeams{}
-var _ githubclient.OrganizationsClient = &fakeRepoTeams{}
-
-type fakeRepoTeams struct {
-	teams     map[string]*github.Team
-	repoTeams map[string]int64
-	orgs      map[string]*github.Organization
-}
-
-func (m *fakeRepoTeams) DeleteTeamBySlug(ctx context.Context, org, slug string) (*github.Response, error) {
-	delete(m.teams, fmt.Sprintf("%s/%s", org, slug))
-	return &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) EditTeamByID(ctx context.Context, orgID, teamID int64, team github.NewTeam, removeParent bool) (*github.Team, *github.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *fakeRepoTeams) RemoveTeamMembershipBySlug(ctx context.Context, org, slug, user string) (*github.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *fakeRepoTeams) CreateTeam(ctx context.Context, org string, team github.NewTeam) (*github.Team, *github.Response, error) {
-	nt := &github.Team{
-		Name:        &team.Name,
-		Description: team.Description,
-		Slug:        &team.Name,
-		Permission:  team.Permission,
-		Privacy:     team.Privacy,
-		LDAPDN:      team.LDAPDN,
-	}
-	m.teams[fmt.Sprintf("%s/%s", org, team.Name)] = nt
-	return nt, &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) Get(ctx context.Context, org string) (*github.Organization, *github.Response, error) {
-	return m.orgs[org], &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) ListTeams(ctx context.Context, owner string, repo string, opts *github.ListOptions) ([]*github.Team, *github.Response, error) {
-	teamId, ok := m.repoTeams[fmt.Sprintf("%s/%s", owner, repo)]
-	if ok {
-		return []*github.Team{
-			&github.Team{ID: p(teamId)},
-		}, &github.Response{}, nil
-	}
-	return []*github.Team{}, &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) ListCollaborators(ctx context.Context, owner, repo string, opts *github.ListCollaboratorsOptions) ([]*github.User, *github.Response, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *fakeRepoTeams) GetTeamBySlug(ctx context.Context, org, slug string) (*github.Team, *github.Response, error) {
-	return m.teams[fmt.Sprintf("%s/%s", org, slug)], &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) AddTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string, opts *github.TeamAddTeamRepoOptions) (*github.Response, error) {
-	m.repoTeams[fmt.Sprintf("%s/%s", owner, repo)] = teamID
-	return &github.Response{}, nil
-}
-
-func (m *fakeRepoTeams) RemoveTeamRepoByID(ctx context.Context, orgID, teamID int64, owner, repo string) (*github.Response, error) {
-	delete(m.repoTeams, fmt.Sprintf("%s/%s", owner, repo))
-	return &github.Response{}, nil
-}
-
 func TestGithubRepositoryTeamFix(t *testing.T) {
-	owner := "Azure"
-	repoName := "testrepo"
-	expectedTeam := "testteam"
-	teamId := int64(123)
-	mock := &fakeRepoTeams{
-		orgs: map[string]*github.Organization{
-			owner: &github.Organization{
-				ID:   p(int64(456)),
-				Name: p(owner),
-			},
-		},
-		teams: map[string]*github.Team{
-			fmt.Sprintf("%s/%s", owner, expectedTeam): &github.Team{
-				ID:   p(teamId),
-				Name: p(expectedTeam),
-			},
-		},
-		repoTeams: map[string]int64{},
+	testToken := os.Getenv("INTEGRATION_TEST_GITHUB_TOKEN")
+	if testToken == "" {
+		t.Skip("to run this test you must set env INTEGRATION_TEST_GITHUB_TOKEN first")
 	}
-	stub := gostub.Stub(&githubclient.GetGithubClient, func() (*githubclient.Client, error) {
-		return &githubclient.Client{
-			Repositories: func() githubclient.RepositoriesClient {
-				return mock
-			},
-			Organizations: func() githubclient.OrganizationsClient {
-				return mock
-			},
-			Teams: func() githubclient.TeamsClient {
-				return mock
-			},
-		}, nil
-	})
-	defer stub.Reset()
+	t.Setenv("GITHUB_TOKEN", testToken)
+	owner := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_OWNER")
+	repoName := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_REPO_NAME")
+	altTeamName := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_ALT_TEAM")
+	expectedTeam := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_EXPECTED_TEAM")
+	client, err := githubclient.GetGithubClient()
+	require.NoError(t, err)
+	org, _, err := client.Organizations.Get(context.Background(), owner)
+	require.NoError(t, err)
+	altTeam, _, err := client.Teams.GetTeamBySlug(context.Background(), owner, altTeamName)
+	require.NoError(t, err)
+	defer func() {
+		_, _ = client.Teams.RemoveTeamRepoByID(context.Background(), *org.ID, *altTeam.ID, owner, repoName)
+	}()
 	sut := &pkg.GitHubTeamRepositoryFix{
 		Owner:    owner,
 		RepoName: repoName,
 		Teams: []pkg.TeamRepositoryBinding{
 			{
 				TeamSlug:   expectedTeam,
+				Permission: "admin",
+			},
+			{
+				TeamSlug:   altTeamName,
 				Permission: "pull",
 			},
 		},
 	}
-	err := sut.Apply()
+	err = sut.Apply()
 	require.NoError(t, err)
-	assert.Len(t, mock.repoTeams, 1)
-	actualTeamId := mock.repoTeams[fmt.Sprintf("%s/%s", owner, repoName)]
-	assert.Equal(t, teamId, actualTeamId)
+	teams, _, err := client.Repositories.ListTeams(context.Background(), owner, repoName, &github.ListOptions{PerPage: 100})
+	require.NoError(t, err)
+	assert.Len(t, teams, 2)
+	parsedTeams := make(map[string]string)
+	for _, team := range teams {
+		parsedTeams[*team.Name] = *team.Permission
+	}
+	assert.Equal(t, map[string]string{
+		expectedTeam: "admin",
+		altTeamName:  "pull",
+	}, parsedTeams)
 }
