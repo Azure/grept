@@ -62,7 +62,7 @@ func (g *GitHubTeamRepositoryFix) Apply() error {
 }
 
 func (g *GitHubTeamRepositoryFix) checkTeamSlug(client *githubclient.Client, slug string) (int64, error) {
-	team, _, err := client.Teams.GetTeamBySlug(g.Context(), g.Owner, slug)
+	team, err := readTeam(client, g.Context(), g.Owner, slug)
 	if err != nil {
 		return -1, err
 	}
