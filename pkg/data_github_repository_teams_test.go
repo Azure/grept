@@ -5,10 +5,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"testing"
 )
 
 func TestGithubRepositoryTeamsRead_IntegrationTest(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("run integration test only under linux to avoid parallel testing issue")
+	}
 	testToken := os.Getenv("INTEGRATION_TEST_GITHUB_TOKEN")
 	if testToken == "" {
 		t.Skip("to run this test you must set env INTEGRATION_TEST_GITHUB_TOKEN first")
@@ -40,8 +44,4 @@ func readEssentialEnv(t *testing.T, envName string) string {
 		t.Skipf("to run this test you must set env %s first", envName)
 	}
 	return r
-}
-
-func p[T any](s T) *T {
-	return &s
 }
