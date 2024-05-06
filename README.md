@@ -209,18 +209,6 @@ rule "must_be_true" "check_env" {
 
 Contributions to `grept` are welcome! Please submit a pull request or issue on the [grept GitHub page](https://github.com/Azure/grept).
 
-To run the tests, you must install `mockgen` by:
-
-```shell
-go install go.uber.org/mock/mockgen@latest
-```
-
-Then execute:
-
-```shell
-go generate ./...
-```
-
 ## License
 
 `grept` is released under the MIT license. For more information, see [LICENSE](https://github.com/Azure/grept/blob/main/LICENSE).
