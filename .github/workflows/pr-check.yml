@@ -30,8 +30,6 @@ jobs:
         uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 #v2.22.5
         with:
           languages: go
-      - name: Install mockgen
-        run: go install go.uber.org/mock/mockgen@latest
       - name: Run build
         run: |
           go build github.com/Azure/grept
