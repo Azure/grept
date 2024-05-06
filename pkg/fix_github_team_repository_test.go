@@ -2,17 +2,21 @@ package pkg_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/Azure/grept/pkg"
 	"github.com/Azure/grept/pkg/githubclient"
 	"github.com/google/go-github/v61/github"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGithubRepositoryTeamFix(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("run integration test only under linux to avoid parallel testing issue")
+	}
 	testToken := os.Getenv("INTEGRATION_TEST_GITHUB_TOKEN")
 	if testToken == "" {
 		t.Skip("to run this test you must set env INTEGRATION_TEST_GITHUB_TOKEN first")
