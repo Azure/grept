@@ -21,6 +21,7 @@ func TestGitHubTeamMembersFix(t *testing.T) {
 	expectedTeam := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_EXPECTED_TEAM")
 	expectedUserName := readEssentialEnv(t, "INTEGRATION_TEST_GITHUB_EXPECTED_USER_NAME")
 	client, err := githubclient.GetGithubClient()
+	require.NoError(t, err)
 	org, _, err := client.Organizations.Get(context.Background(), owner)
 	require.NoError(t, err)
 	team, _, err := client.Teams.GetTeamBySlug(context.Background(), owner, expectedTeam)
