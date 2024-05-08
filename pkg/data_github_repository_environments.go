@@ -32,15 +32,24 @@ func (g *GitHubRepositoryEnvironmentsDatasource) ExecuteDuringPlan() error {
 	if err != nil {
 		return fmt.Errorf("cannot create github client: %s", err.Error())
 	}
+	results, err := listGitHubRepositoryEnvironments(client, g.Owner, g.RepoName)
+	if err != nil {
+		return fmt.Errorf("cannot list environments for %s/%s: %+v", g.Owner, g.RepoName, err)
+	}
+	g.Environments = results
+	return nil
+}
+
+func listGitHubRepositoryEnvironments(client *githubclient.Client, owner, repoName string) ([]EnvironmentForGitHubRepositoryEnvironmentsDatasource, error) {
 	var results []EnvironmentForGitHubRepositoryEnvironmentsDatasource
 	var listOptions *github.EnvironmentListOptions
 	for {
-		environments, resp, err := client.Repositories.ListEnvironments(context.Background(), g.Owner, g.RepoName, listOptions)
+		environments, resp, err := client.Repositories.ListEnvironments(context.Background(), owner, repoName, listOptions)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if environments == nil {
-			return nil
+			return nil, nil
 		}
 		for _, environment := range environments.Environments {
 			results = append(results, EnvironmentForGitHubRepositoryEnvironmentsDatasource{
@@ -53,6 +62,5 @@ func (g *GitHubRepositoryEnvironmentsDatasource) ExecuteDuringPlan() error {
 		}
 		listOptions.Page = resp.NextPage
 	}
-	g.Environments = results
-	return nil
+	return results, nil
 }
