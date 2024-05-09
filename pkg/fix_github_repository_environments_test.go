@@ -40,7 +40,7 @@ func TestGithubRepositoryEnvironmentsFix_IntegrationTest(t *testing.T) {
 			_, err := client.Repositories.DeleteEnvironment(context.Background(), owner, repoName, *environment.Name)
 			require.NoError(t, err)
 		}
-		client.Repositories.CreateUpdateEnvironment(context.Background(), owner, repoName, env, &github.CreateUpdateEnvironment{
+		_, _, err = client.Repositories.CreateUpdateEnvironment(context.Background(), owner, repoName, env, &github.CreateUpdateEnvironment{
 			Reviewers: []*github.EnvReviewers{
 				{
 					Type: github.String("User"),
