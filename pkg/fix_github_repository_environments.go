@@ -68,18 +68,32 @@ func (g *GitHubRepositoryEnvironmentsFix) Apply() error {
 				ID:   id,
 			})
 		}
-
+		var deploymentBranchPolicy *github.BranchPolicy
+		if environment.DeploymentBranchPolicy != nil {
+			deploymentBranchPolicy = &github.BranchPolicy{
+				ProtectedBranches:    &environment.DeploymentBranchPolicy.ProtectedBranches,
+				CustomBranchPolicies: &environment.DeploymentBranchPolicy.CustomBranchPolicies,
+			}
+		}
 		_, _, err = client.Repositories.CreateUpdateEnvironment(g.Context(), g.Owner, g.RepoName, url.PathEscape(environment.Name), &github.CreateUpdateEnvironment{
-			WaitTimer:       environment.WaitTimer,
-			Reviewers:       reviewers,
-			CanAdminsBypass: &environment.CanAdminsBypass,
-			//TODO
-			DeploymentBranchPolicy: nil,
+			WaitTimer:              environment.WaitTimer,
+			Reviewers:              reviewers,
+			CanAdminsBypass:        &environment.CanAdminsBypass,
+			DeploymentBranchPolicy: deploymentBranchPolicy,
 			PreventSelfReview:      &environment.PreventSelfReview,
 		})
 		if err != nil {
 			return fmt.Errorf("cannot create or update environment %s for %s/%s: %+v", environment.Name, g.Owner, g.RepoName, err)
 		}
+		delete(existingEnvs, environment.Name)
 	}
+
+	for deprecatedEnv, _ := range existingEnvs {
+		_, err := client.Repositories.DeleteEnvironment(g.Context(), g.Owner, g.RepoName, deprecatedEnv)
+		if err != nil {
+			return fmt.Errorf("cannot remove environment %s from %s/%s: %+v", deprecatedEnv, g.Owner, g.RepoName, err)
+		}
+	}
+
 	return nil
 }
