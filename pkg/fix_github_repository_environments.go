@@ -88,7 +88,7 @@ func (g *GitHubRepositoryEnvironmentsFix) Apply() error {
 		delete(existingEnvs, environment.Name)
 	}
 
-	for deprecatedEnv, _ := range existingEnvs {
+	for deprecatedEnv := range existingEnvs {
 		_, err := client.Repositories.DeleteEnvironment(g.Context(), g.Owner, g.RepoName, deprecatedEnv)
 		if err != nil {
 			return fmt.Errorf("cannot remove environment %s from %s/%s: %+v", deprecatedEnv, g.Owner, g.RepoName, err)
