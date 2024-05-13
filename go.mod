@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter/v2 v2.2.1
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.5
+	github.com/hashicorp/go-retryablehttp v0.7.6
 	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
@@ -41,7 +41,7 @@ require (
 	github.com/bmatcuk/doublestar v1.1.5 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/fatih/color v1.14.1 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -57,7 +57,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-cty-funcs v0.0.0-20230405223818-a090f58aa992 // indirect
-	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
@@ -81,7 +81,7 @@ require (
 	github.com/lonegunmanb/go-defaults v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
