@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.20.1
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
-	github.com/lonegunmanb/hclfuncs v0.7.0
+	github.com/lonegunmanb/hclfuncs v0.8.0
 	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
@@ -64,6 +64,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.6 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -87,6 +88,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
