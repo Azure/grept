@@ -19,7 +19,7 @@ type GitHubTeamRepositoryFix struct {
 	*BaseFix
 	Owner    string                  `hcl:"owner"`
 	RepoName string                  `hcl:"repo_name"`
-	Teams    []TeamRepositoryBinding `hcl:"team,optional"`
+	Teams    []TeamRepositoryBinding `hcl:"team,block,optional"`
 }
 
 func (g *GitHubTeamRepositoryFix) Type() string {

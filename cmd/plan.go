@@ -18,8 +18,12 @@ func NewPlanCmd() *cobra.Command {
 
 func planFunc() func(*cobra.Command, []string) error {
 	return func(c *cobra.Command, args []string) error {
+		varFlags, err := varFlags(os.Args)
+		if err != nil {
+			return err
+		}
 		var cfgDir string
-		if len(args) == 1 {
+		if len(args) == 0 {
 			cfgDir = "."
 		} else {
 			cfgDir = args[1]
@@ -36,7 +40,7 @@ func planFunc() func(*cobra.Command, []string) error {
 		if err != nil {
 			return fmt.Errorf("error getting os wd: %+v", err)
 		}
-		config, err := pkg.BuildGreptConfig(pwd, configPath, c.Context())
+		config, err := pkg.BuildGreptConfig(pwd, configPath, c.Context(), varFlags)
 		if err != nil {
 			return fmt.Errorf("error parsing config: %+v\n", err)
 		}
@@ -53,4 +57,8 @@ func planFunc() func(*cobra.Command, []string) error {
 		fmt.Println(plan.String())
 		return nil
 	}
+}
+
+func init() {
+	rootCmd.AddCommand(NewPlanCmd())
 }

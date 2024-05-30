@@ -20,7 +20,7 @@ type GitHubTeamMembersFix struct {
 	*BaseFix
 	Owner    string       `hcl:"owner"`
 	TeamSlug string       `hcl:"team_slug"`
-	Members  []TeamMember `hcl:"member,optional"`
+	Members  []TeamMember `hcl:"member,block,optional"`
 }
 
 func (g GitHubTeamMembersFix) Type() string {

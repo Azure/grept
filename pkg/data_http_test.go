@@ -68,7 +68,7 @@ func (s *httpDataSuite) TestHttpDatasource_InvalidMethod() {
 
 	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
 
-	config, err := BuildGreptConfig("/", "", nil)
+	config, err := BuildGreptConfig("/", "", nil, nil)
 	s.NoError(err)
 	_, err = RunGreptPlan(config)
 	s.NotNil(err)

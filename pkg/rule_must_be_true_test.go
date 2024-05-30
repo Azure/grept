@@ -94,7 +94,7 @@ func (s *mustBeTrueRuleSuite) TestMustBeTrueRule_Eval() {
 	}
 `, filepath.ToSlash(temp.Name()))), 0644)
 
-	c, err := BuildGreptConfig("/", "/", context.TODO())
+	c, err := BuildGreptConfig("/", "/", context.TODO(), nil)
 	require.NoError(t, err)
 	plan, err := RunGreptPlan(c)
 	require.NoError(t, err)

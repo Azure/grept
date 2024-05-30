@@ -22,7 +22,7 @@ type GitHubRepositoryCollaboratorsFix struct {
 	*BaseFix
 	Owner         string                                      `hcl:"owner"`
 	RepoName      string                                      `hcl:"repo_name"`
-	Collaborators []CollaboratorForRepositoryCollaboratorsFix `hcl:"collaborator"`
+	Collaborators []CollaboratorForRepositoryCollaboratorsFix `hcl:"collaborator,block"`
 }
 
 func (g *GitHubRepositoryCollaboratorsFix) Type() string {

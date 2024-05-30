@@ -46,7 +46,7 @@ func (y *yamlTransformSuite) TestMultipleTransform() {
 	}
 `
 	y.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := BuildGreptConfig("", "/example", context.TODO())
+	config, err := BuildGreptConfig("", "/example", context.TODO(), nil)
 	y.NoError(err)
 	_, err = RunGreptPlan(config)
 	y.NoError(err)

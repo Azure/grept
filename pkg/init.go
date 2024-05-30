@@ -26,10 +26,11 @@ func registerFix() {
 	golden.RegisterBlock(new(LocalShellFix))
 	golden.RegisterBlock(new(GitIgnoreFix))
 	golden.RegisterBlock(new(YamlTransformFix))
-	golden.RegisterBlock(new(GitHubTeamRepositoryFix))
+	golden.RegisterBlock(new(GitHubRepositoryCollaboratorsFix))
+	golden.RegisterBlock(new(GitHubRepositoryEnvironmentsFix))
 	golden.RegisterBlock(new(GitHubTeamFix))
 	golden.RegisterBlock(new(GitHubTeamMembersFix))
-	golden.RegisterBlock(new(GitHubRepositoryEnvironmentsFix))
+	golden.RegisterBlock(new(GitHubTeamRepositoryFix))
 }
 
 func registerRule() {
@@ -42,8 +43,8 @@ func registerRule() {
 func registerData() {
 	golden.RegisterBlock(new(HttpDatasource))
 	golden.RegisterBlock(new(GitIgnoreDatasource))
-	golden.RegisterBlock(new(GitHubRepositoryTeamsDatasource))
 	golden.RegisterBlock(new(GitHubRepositoryCollaboratorsDatasource))
-	golden.RegisterBlock(new(GitHubTeamDatasource))
 	golden.RegisterBlock(new(GitHubRepositoryEnvironmentsDatasource))
+	golden.RegisterBlock(new(GitHubRepositoryTeamsDatasource))
+	golden.RegisterBlock(new(GitHubTeamDatasource))
 }

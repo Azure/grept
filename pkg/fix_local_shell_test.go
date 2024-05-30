@@ -305,7 +305,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix() {
 	}
 `, temp.Name(), temp.Name())
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := BuildGreptConfig("", "/example", context.TODO())
+	config, err := BuildGreptConfig("", "/example", context.TODO(), nil)
 	require.NoError(t, err)
 	plan, err := RunGreptPlan(config)
 	require.NoError(t, err)
@@ -358,7 +358,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_UserAssignedEnvShouldBeLo
 	}
 `, temp0.Name(), temp1.Name())
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := BuildGreptConfig("", "/example", context.TODO())
+	config, err := BuildGreptConfig("", "/example", context.TODO(), nil)
 	require.NoError(t, err)
 	plan, err := RunGreptPlan(config)
 	require.NoError(t, err)
@@ -405,7 +405,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_scriptWithUserAssignedEnv
 	}
 `, tmpScript.Name(), rand)
 	s.dummyFsWithFiles([]string{"/example/test.grept.hcl"}, []string{hcl})
-	config, err := BuildGreptConfig("", "/example", context.TODO())
+	config, err := BuildGreptConfig("", "/example", context.TODO(), nil)
 	require.NoError(t, err)
 	plan, err := RunGreptPlan(config)
 	require.NoError(t, err)
