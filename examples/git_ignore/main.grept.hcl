@@ -1,3 +1,8 @@
+# This example is designed to manage the .gitignore file in a repository.
+# It uses the `git_ignore` data source to fetch the current ignored items in the .gitignore file.
+# The `rule` block checks if all essential items (defined in `ignored_items` local variable) are present in the .gitignore file.
+# If any essential item is missing, an error message is generated.
+# The `fix` block is used to add the missing items to the .gitignore file.
 locals {
   ignored_items = toset([
     ".terraform.lock.hcl",

@@ -1,3 +1,9 @@
+# This policy is designed to manage collaborators for a specific GitHub repository.
+# It uses the `github_repository_collaborators` data source to fetch the current collaborators of the repository.
+# The `rule` block checks if a specific collaborator (defined by `collaborator_name` variable) is present in the repository's collaborators list.
+# The `fix` block is used to add the collaborator to the repository with 'push' permission if they are not already a collaborator.
+# The `owner` and `repo_name` variables define the repository for which the policy is applied.
+# The `collaborator_name` variable defines the collaborator to be checked/added.
 variable "owner" {
   type    = string
   default = "Azure"

@@ -1,3 +1,5 @@
+# This example demonstrate how to ensure that a set of files are in sync with their remote versions.
+# If you've set env `GITHUB_TOKEN` to increase GitHub API rate limitation, you must grant this token SSO permission on Azure org.
 locals {
   synced_files = toset([
     "CODE_OF_CONDUCT.md",
