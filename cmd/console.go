@@ -33,7 +33,7 @@ func replFunc() func(*cobra.Command, []string) error {
 		if len(args) == 0 {
 			cfgDir = "."
 		} else {
-			cfgDir = args[1]
+			cfgDir = args[0]
 		}
 		configPath, cleaner, err := getConfigFolder(cfgDir, c.Context())
 		if cleaner != nil {
