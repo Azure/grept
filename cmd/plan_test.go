@@ -51,7 +51,7 @@ func TestPlanFunc_WithSuccessfulCheck(t *testing.T) {
 	cmd := NewPlanCmd()
 	cmd.SetContext(context.TODO())
 	// Run function
-	err := cmd.RunE(cmd, []string{"plan", "."})
+	err := cmd.RunE(cmd, []string{"."})
 	require.NoError(t, err)
 
 	// Reset Stdout
@@ -96,8 +96,8 @@ func TestPlanFunc_WithFailedCheck(t *testing.T) {
 	})
 	defer stub.Reset()
 
-	_ = afero.WriteFile(mockFs, "test.txt", []byte("incorrect content"), 0644)
-	_ = afero.WriteFile(mockFs, "test_config.grept.hcl", []byte(configContent), 0644)
+	_ = afero.WriteFile(mockFs, "/cfg/test.txt", []byte("incorrect content"), 0644)
+	_ = afero.WriteFile(mockFs, "/cfg/test_config.grept.hcl", []byte(configContent), 0644)
 
 	// Redirect Stdout
 	r, w, _ := os.Pipe()
@@ -106,11 +106,12 @@ func TestPlanFunc_WithFailedCheck(t *testing.T) {
 	cmd := NewPlanCmd()
 	cmd.SetContext(context.TODO())
 	// Run function
-	err := cmd.RunE(cmd, []string{"plan", "."})
+	err := cmd.RunE(cmd, []string{"/cfg"})
 	require.NoError(t, err)
 
 	// Reset Stdout
-	w.Close()
+	err = w.Close()
+	require.NoError(t, err)
 
 	// Read Stdout
 	out, _ := io.ReadAll(r)

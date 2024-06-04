@@ -59,7 +59,7 @@ func TestApplyFunc(t *testing.T) {
 	cmd.SetContext(context.TODO())
 	_ = cmd.Flags().Set("auto", "true")
 	// Run function
-	err := cmd.RunE(cmd, []string{"apply", "."})
+	err := cmd.RunE(cmd, []string{"."})
 	require.NoError(t, err)
 
 	// Reset Stdout

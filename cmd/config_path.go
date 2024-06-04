@@ -12,10 +12,13 @@ import (
 )
 
 func getConfigFolder(path string, ctx context.Context) (configPath string, onDefer func(), err error) {
+	exists, err := isReadableLocalPath(path)
+	if exists && err == nil {
+		return path, nil, nil
+	}
 	absPath, err := filepath.Abs(path)
 	if err == nil {
-		fs := pkg.FsFactory()
-		exists, err := afero.Exists(fs, absPath)
+		exists, err = isReadableLocalPath(absPath)
 		if exists && err == nil {
 			return path, nil, nil
 		}
@@ -32,4 +35,9 @@ func getConfigFolder(path string, ctx context.Context) (configPath string, onDef
 		return "", cleaner, fmt.Errorf("cannot get config path")
 	}
 	return result.Dst, cleaner, nil
+}
+
+func isReadableLocalPath(path string) (bool, error) {
+	fs := pkg.FsFactory()
+	return afero.Exists(fs, path)
 }
