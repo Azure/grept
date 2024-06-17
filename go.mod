@@ -22,7 +22,7 @@ require (
 	github.com/prashantv/gostub v1.1.0
 	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064
 	github.com/spf13/afero v1.11.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.14.4
 	golang.org/x/net v0.26.0
