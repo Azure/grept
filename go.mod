@@ -3,7 +3,7 @@ module github.com/Azure/grept
 go 1.22.1
 
 require (
-	github.com/Azure/golden v0.0.0-20240626084106-2487ba83759f
+	github.com/Azure/golden v0.0.0-20240721085645-bc7b8a738d8c
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/bradleyfalzon/ghinstallation/v2 v2.11.0
@@ -48,7 +48,7 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.21.0 // indirect
+	github.com/go-playground/validator/v10 v10.22.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-github/v62 v62.0.0 // indirect
