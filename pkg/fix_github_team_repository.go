@@ -36,28 +36,47 @@ func (g *GitHubTeamRepositoryFix) Apply() error {
 	if err != nil {
 		return fmt.Errorf("cannot read org info for %s, %s must be an organization", g.Owner, g.Owner)
 	}
-	var teamIds []int64
+	wantedTeamPerm := make(map[int64]string)
 	for _, team := range g.Teams {
 		teamId, err := g.checkTeamSlug(client, team.TeamSlug)
 		if err != nil {
 			return fmt.Errorf("cannot read team id for team %s", team.TeamSlug)
 		}
-		teamIds = append(teamIds, teamId)
+		wantedTeamPerm[teamId] = team.Permission
 	}
 	teams, err := listTeamsForRepository(client, g.Owner, g.RepoName, g.Context())
 	if err != nil {
 		return fmt.Errorf("cannot read existing teams for %s/%s: %+v", g.Owner, g.RepoName, err)
 	}
+	var teamPerms = make(map[string]string)
+	var teamIdsToRemove []int64
 	for _, team := range teams {
-		if _, err := teamClient.RemoveTeamRepoByID(g.Context(), *org.ID, *team.ID, g.Owner, g.RepoName); err != nil {
-			return fmt.Errorf("error when remove team %s from repo %s: %+v", *team.Name, g.RepoName, err)
+		teamPerms[team.GetSlug()] = team.GetPermission()
+		teamId := team.GetID()
+		if _, ok := wantedTeamPerm[teamId]; !ok {
+			teamIdsToRemove = append(teamIdsToRemove, teamId)
 		}
 	}
-	for i, newTeamId := range teamIds {
-		if _, err := teamClient.AddTeamRepoByID(g.Context(), *org.ID, newTeamId, g.Owner, g.RepoName, &github.TeamAddTeamRepoOptions{Permission: g.Teams[i].Permission}); err != nil {
-			return fmt.Errorf("error when add team %s to repo %s/%s: %+v", g.Teams[i].TeamSlug, g.Owner, g.RepoName, err)
+	for teamId, perm := range wantedTeamPerm {
+		if _, err := teamClient.AddTeamRepoByID(g.Context(), *org.ID, teamId, g.Owner, g.RepoName, &github.TeamAddTeamRepoOptions{Permission: perm}); err != nil {
+			return fmt.Errorf("error when add team %d to repo %s/%s: %+v", teamId, g.Owner, g.RepoName, err)
 		}
 	}
+	for _, id := range teamIdsToRemove {
+		if _, err := teamClient.RemoveTeamRepoByID(g.Context(), *org.ID, id, g.Owner, g.RepoName); err != nil {
+			return fmt.Errorf("error when remove team %d from repo %s: %+v", id, g.RepoName, err)
+		}
+	}
+	//for _, team := range teams {
+	//	if _, err := teamClient.RemoveTeamRepoByID(g.Context(), *org.ID, *team.ID, g.Owner, g.RepoName); err != nil {
+	//		return fmt.Errorf("error when remove team %s from repo %s: %+v", *team.Name, g.RepoName, err)
+	//	}
+	//}
+	//for i, newTeamId := range teamIds {
+	//	if _, err := teamClient.AddTeamRepoByID(g.Context(), *org.ID, newTeamId, g.Owner, g.RepoName, &github.TeamAddTeamRepoOptions{Permission: g.Teams[i].Permission}); err != nil {
+	//		return fmt.Errorf("error when add team %s to repo %s/%s: %+v", g.Teams[i].TeamSlug, g.Owner, g.RepoName, err)
+	//	}
+	//}
 	return nil
 }
 
