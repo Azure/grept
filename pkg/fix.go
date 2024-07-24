@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"fmt"
+
 	"github.com/Azure/golden"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -24,7 +26,11 @@ type BaseFix struct {
 func (bf *BaseFix) Fix() {}
 
 func (bf *BaseFix) BaseDecode(hb *golden.HclBlock, evalContext *hcl.EvalContext) error {
-	ruleIds, diag := hb.Body.Attributes["rule_ids"].Expr.Value(evalContext)
+	ruleIdsAttr, ok := hb.Body.Attributes["rule_ids"]
+	if !ok {
+		return fmt.Errorf("missing required attribute `rule_ids`, every `fix` block must define `rule_ids`")
+	}
+	ruleIds, diag := ruleIdsAttr.Expr.Value(evalContext)
 	if diag.HasErrors() {
 		return diag
 	}
