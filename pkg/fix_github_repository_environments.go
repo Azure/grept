@@ -25,8 +25,8 @@ type EnvironmentForGitHubRepositoryEnvironmentsFix struct {
 	CanAdminsBypass        bool                                                      `hcl:"can_admins_bypass,optional" default:"true"`
 	PreventSelfReview      bool                                                      `hcl:"prevent_self_review,optional" default:"false"`
 	WaitTimer              *int                                                      `hcl:"wait_timer,optional" validate:"gte=0,lte=43200"`
-	Reviewers              []ReviewerForGitHubRepositoryEnvironmentsFix              `hcl:"reviewer,block,optional" validate:"max=6"`
-	DeploymentBranchPolicy *DeploymentBranchPolicyForGitHubRepositoryEnvironmentsFix `hcl:"deployment_branch_policy,block,optional"`
+	Reviewers              []ReviewerForGitHubRepositoryEnvironmentsFix              `hcl:"reviewer,block" validate:"max=6"`
+	DeploymentBranchPolicy *DeploymentBranchPolicyForGitHubRepositoryEnvironmentsFix `hcl:"deployment_branch_policy,block"`
 }
 
 type GitHubRepositoryEnvironmentsFix struct {
