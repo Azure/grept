@@ -18,9 +18,10 @@ type TeamMember struct {
 type GitHubTeamMembersFix struct {
 	*golden.BaseBlock
 	*BaseFix
-	Owner    string       `hcl:"owner"`
-	TeamSlug string       `hcl:"team_slug"`
-	Members  []TeamMember `hcl:"member,block"`
+	Owner             string       `hcl:"owner"`
+	TeamSlug          string       `hcl:"team_slug"`
+	PruneExtraMembers bool         `hcl:"prune_extra_members,optional" default:"false"`
+	Members           []TeamMember `hcl:"member,block"`
 }
 
 func (g GitHubTeamMembersFix) Type() string {
@@ -48,15 +49,14 @@ func (g GitHubTeamMembersFix) Apply() error {
 		opts := &github.TeamListTeamMembersOptions{
 			ListOptions: github.ListOptions{PerPage: 100},
 		}
-		members, resp, err := client.Teams.ListTeamMembersByID(g.Context(), *org.ID, *team.ID, opts)
+		currentMembers, resp, err := client.Teams.ListTeamMembersByID(g.Context(), *org.ID, *team.ID, opts)
 		if err != nil {
 			return fmt.Errorf("cannot list members for %s/%s: %s", g.Owner, g.TeamSlug, err.Error())
 		}
-		for _, c := range members {
+		for _, c := range currentMembers {
 			expectedMembership, found := expectedMembers[*c.Login]
-			if !found {
-				_, err := client.Teams.RemoveTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login)
-				if err != nil {
+			if !found && g.PruneExtraMembers {
+				if _, err := client.Teams.RemoveTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login); err != nil {
 					return fmt.Errorf("cannot remove membership %s from %s/%s", *c.Login, g.Owner, g.TeamSlug)
 				}
 				continue
@@ -66,10 +66,6 @@ func (g GitHubTeamMembersFix) Apply() error {
 				return fmt.Errorf("cannot get membership %s from %s/%s", *c.Login, g.Owner, g.TeamSlug)
 			}
 			if *membership.Role != expectedMembership.Role {
-				_, err := client.Teams.RemoveTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login)
-				if err != nil {
-					return fmt.Errorf("cannot remove membership %s from %s/%s", *c.Login, g.Owner, g.TeamSlug)
-				}
 				_, _, err = client.Teams.AddTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, expectedMembership.UserName, &github.TeamAddTeamMembershipOptions{Role: expectedMembership.Role})
 				if err != nil {
 					return fmt.Errorf("cannot add membership %s to %s/%s", *c.Name, g.Owner, g.TeamSlug)
