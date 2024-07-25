@@ -57,20 +57,20 @@ func (g GitHubTeamMembersFix) Apply() error {
 			expectedMembership, found := expectedMembers[*c.Login]
 			if !found && g.PruneExtraMembers {
 				if _, err := client.Teams.RemoveTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login); err != nil {
-					return fmt.Errorf("cannot remove membership %s from %s/%s", *c.Login, g.Owner, g.TeamSlug)
+					return fmt.Errorf("cannot remove membership %s from %s/%s: %+v", *c.Login, g.Owner, g.TeamSlug, err)
 				}
 				continue
 			}
-			membership, _, err := client.Teams.GetTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, expectedMembership.UserName)
+			membership, _, err := client.Teams.GetTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login)
 			if err != nil {
-				return fmt.Errorf("cannot get membership %s from %s/%s", *c.Login, g.Owner, g.TeamSlug)
+				return fmt.Errorf("cannot get membership %s from %s/%s:  %+v", *c.Login, g.Owner, g.TeamSlug, err)
 			}
 			if *membership.Role != expectedMembership.Role {
-				_, _, err = client.Teams.AddTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, expectedMembership.UserName, &github.TeamAddTeamMembershipOptions{Role: expectedMembership.Role})
+				_, _, err = client.Teams.AddTeamMembershipBySlug(g.Context(), g.Owner, g.TeamSlug, *c.Login, &github.TeamAddTeamMembershipOptions{Role: expectedMembership.Role})
 				if err != nil {
-					return fmt.Errorf("cannot add membership %s to %s/%s", *c.Name, g.Owner, g.TeamSlug)
+					return fmt.Errorf("cannot add membership %s to %s/%s:  %+v", *c.Login, g.Owner, g.TeamSlug, err)
 				}
-				delete(expectedMembers, expectedMembership.UserName)
+				delete(expectedMembers, *c.Login)
 			}
 		}
 		if resp.NextPage == 0 {
