@@ -3,7 +3,7 @@ module github.com/Azure/grept
 go 1.22.1
 
 require (
-	github.com/Azure/golden v0.0.0-20240720111115-f96332273f9b
+	github.com/Azure/golden v0.0.0-20240724054028-6928c9df4fd4
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/bradleyfalzon/ghinstallation/v2 v2.11.0
@@ -24,7 +24,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/zclconf/go-cty v1.14.4
+	github.com/zclconf/go-cty v1.15.0
 	golang.org/x/net v0.27.0
 	golang.org/x/text v0.16.0
 	gopkg.in/yaml.v3 v3.0.1
