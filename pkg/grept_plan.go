@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"github.com/Azure/golden"
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/hashicorp/go-multierror"
 	"strings"
 	"sync"
 )
 
-func RunGreptPlan(c golden.Config) (*GreptPlan, error) {
+func RunGreptPlan(c *GreptConfig) (*GreptPlan, error) {
 	err := c.RunPlan()
 	if err != nil {
 		return nil, err
 	}
 
-	plan := newPlan()
+	plan := newPlan(c)
 	for _, rb := range golden.Blocks[Rule](c) {
 		checkErr := rb.CheckError()
 		if checkErr == nil {
@@ -40,11 +39,13 @@ var _ golden.Plan = &GreptPlan{}
 type GreptPlan struct {
 	FailedRules []*FailedRule
 	Fixes       map[string]Fix
+	c           *GreptConfig
 	mu          sync.Mutex
 }
 
-func newPlan() *GreptPlan {
+func newPlan(c *GreptConfig) *GreptPlan {
 	return &GreptPlan{
+		c:     c,
 		Fixes: make(map[string]Fix),
 	}
 }
@@ -64,23 +65,22 @@ func (p *GreptPlan) String() string {
 }
 
 func (p *GreptPlan) Apply() error {
-	var err error
+	addresses := make(map[string]struct{})
 	for _, fix := range p.Fixes {
-		if err = golden.Decode(fix); err != nil {
-			err = multierror.Append(err, fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclBlock().Range().String(), err))
-		}
-		if err != nil {
-			return err
-		}
+		addresses[fix.Address()] = struct{}{}
 	}
-
-	for _, fix := range p.Fixes {
-		if applyErr := fix.Apply(); applyErr != nil {
-			err = multierror.Append(err, applyErr)
+	if err := golden.Traverse[Fix](p.c.BaseConfig, func(fix Fix) error {
+		if decodeErr := golden.Decode(fix); decodeErr != nil {
+			return fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclBlock().Range().String(), decodeErr)
 		}
+		return nil
+	}); err != nil {
+		return err
 	}
-	if err != nil {
-		return fmt.Errorf("errors applying fixes: %+v", err)
+	if err := golden.Traverse[Fix](p.c.BaseConfig, func(fix Fix) error {
+		return fix.Apply()
+	}); err != nil {
+		return err
 	}
 	return nil
 }
