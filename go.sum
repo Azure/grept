@@ -6,6 +6,8 @@ github.com/Azure/golden v0.0.0-20240807022525-13041ab3416e h1:RN3xEemyc3ZI64y7qK
 github.com/Azure/golden v0.0.0-20240807022525-13041ab3416e/go.mod h1:txtVd/xX4CFV17iwYE/BNV7Vv2EsRPDXmXc6yPXSvvE=
 github.com/Azure/golden v0.0.0-20240807125530-35d893709a68 h1:nX6eQuopmjM3xPsOU5z4j7wAtlpV488SNa0m1YBRa14=
 github.com/Azure/golden v0.0.0-20240807125530-35d893709a68/go.mod h1:txtVd/xX4CFV17iwYE/BNV7Vv2EsRPDXmXc6yPXSvvE=
+github.com/Azure/golden v0.0.0-20240820025702-df7eb0ff9702 h1:RdS6G/+DRLDSIy0Mo/y0oJGEpJxEwTpzWIdcLVX5sco=
+github.com/Azure/golden v0.0.0-20240820025702-df7eb0ff9702/go.mod h1:QPml/lxVgcwOG2vGySCuZtq/P2rtSWvkz2XAeGjtez8=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
@@ -181,6 +183,8 @@ github.com/hashicorp/vault/api v1.10.0 h1:/US7sIjWN6Imp4o/Rj1Ce2Nr5bki/AXi9vAW3p
 github.com/hashicorp/vault/api v1.10.0/go.mod h1:jo5Y/ET+hNyz+JnKDt8XLAdKs+AM0G5W0Vp1IrFI8N8=
 github.com/heimdalr/dag v1.4.0 h1:zG3JA4RDVLc55k3AXAgfwa+EgBNZ0TkfOO3C29Ucpmg=
 github.com/heimdalr/dag v1.4.0/go.mod h1:OCh6ghKmU0hPjtwMqWBoNxPmtRioKd1xSu7Zs4sbIqM=
+github.com/heimdalr/dag v1.5.0 h1:hqVtijvY776P5OKP3QbdVBRt3Xxq6BYopz3XgklsGvo=
+github.com/heimdalr/dag v1.5.0/go.mod h1:lthekrHl01dddmzqyBQ1YZbi7XcVGGzjFo0jIky5knc=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 h1:IPJ3dvxmJ4uczJe5YQdrYB16oTJlGSC/OyZDqUk9xX4=
