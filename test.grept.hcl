@@ -8,7 +8,7 @@ rule file_hash license {
 }
 
 fix local_file license {
-  rule_id = rule.file_hash.license.id
+  rule_ids = [rule.file_hash.license.id]
   paths = ["LICENSE"]
   content = data.http.mit_license.response_body
 }

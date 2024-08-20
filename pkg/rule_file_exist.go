@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Azure/golden"
 	"github.com/spf13/afero"
-	"github.com/zclconf/go-cty/cty"
 )
 
 var _ Rule = &FileExistRule{}
@@ -18,13 +17,6 @@ type FileExistRule struct {
 
 func (f *FileExistRule) Type() string {
 	return "file_exist"
-}
-
-func (f *FileExistRule) Values() map[string]cty.Value {
-	return map[string]cty.Value{
-		"glob":        golden.ToCtyValue(f.Glob),
-		"match_files": golden.ToCtyValue(f.MatchFiles),
-	}
 }
 
 func (f *FileExistRule) ExecuteDuringPlan() error {
