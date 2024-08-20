@@ -95,7 +95,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/timandy/routine v1.1.3 // indirect
+	github.com/timandy/routine v1.1.4 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.3 // indirect
 	golang.org/x/crypto v0.26.0 // indirect

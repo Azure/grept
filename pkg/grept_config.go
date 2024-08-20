@@ -18,14 +18,14 @@ type GreptConfig struct {
 	*golden.BaseConfig
 }
 
-func NewGreptConfig(baseDir string, cliFlagAssignedVariables []golden.CliFlagAssignedVariables, ctx context.Context, hclBlocks []*golden.HclBlock) (golden.Config, error) {
+func NewGreptConfig(baseDir string, cliFlagAssignedVariables []golden.CliFlagAssignedVariables, ctx context.Context, hclBlocks []*golden.HclBlock) (*GreptConfig, error) {
 	cfg := &GreptConfig{
 		BaseConfig: golden.NewBasicConfig(baseDir, "grept", "grept", nil, cliFlagAssignedVariables, ctx),
 	}
 	return cfg, golden.InitConfig(cfg, hclBlocks)
 }
 
-func BuildGreptConfig(baseDir, cfgDir string, ctx context.Context, cliFlagAssignedVariables []golden.CliFlagAssignedVariables) (golden.Config, error) {
+func BuildGreptConfig(baseDir, cfgDir string, ctx context.Context, cliFlagAssignedVariables []golden.CliFlagAssignedVariables) (*GreptConfig, error) {
 	var err error
 	hclBlocks, err := loadGreptHclBlocks(false, cfgDir)
 	if err != nil {
