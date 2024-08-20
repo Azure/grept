@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/http/httpproxy"
 )
 
@@ -80,16 +79,4 @@ func (h *HttpDatasource) ExecuteDuringPlan() error {
 
 func (h *HttpDatasource) Type() string {
 	return "http"
-}
-
-func (h *HttpDatasource) Values() map[string]cty.Value {
-	return map[string]cty.Value{
-		"url":              golden.ToCtyValue(h.Url),
-		"method":           golden.ToCtyValue(h.Method),
-		"request_body":     golden.ToCtyValue(h.RequestBody),
-		"response_body":    golden.ToCtyValue(h.ResponseBody),
-		"status_code":      golden.ToCtyValue(int64(h.StatusCode)),
-		"request_headers":  golden.ToCtyValue(h.RequestHeaders),
-		"response_headers": golden.ToCtyValue(h.ResponseHeaders),
-	}
 }
