@@ -70,6 +70,9 @@ func (p *GreptPlan) Apply() error {
 		addresses[fix.Address()] = struct{}{}
 	}
 	if err := golden.Traverse[Fix](p.c.BaseConfig, func(fix Fix) error {
+		if _, ok := p.Fixes[fix.Id()]; !ok {
+			return nil
+		}
 		if decodeErr := golden.Decode(fix); decodeErr != nil {
 			return fmt.Errorf("rule.%s.%s(%s) decode error: %+v", fix.Type(), fix.Name(), fix.HclBlock().Range().String(), decodeErr)
 		}
@@ -78,6 +81,9 @@ func (p *GreptPlan) Apply() error {
 		return err
 	}
 	if err := golden.Traverse[Fix](p.c.BaseConfig, func(fix Fix) error {
+		if _, ok := p.Fixes[fix.Id()]; !ok {
+			return nil
+		}
 		return fix.Apply()
 	}); err != nil {
 		return err

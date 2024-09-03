@@ -3,6 +3,8 @@ package pkg
 import (
 	"fmt"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/Azure/golden"
@@ -63,4 +65,34 @@ func TestPlan_String(t *testing.T) {
 			}
 		})
 	}
+}
+
+func (s *greptConfigSuite) TestUnTriggeredFixShouldNotBeApplied() {
+	t := s.T()
+	content := `
+	rule "must_be_true" sample {
+		condition = true
+	}
+
+	fix "local_file" hello_world{
+		rule_ids = [rule.must_be_true.sample.id]
+		paths = ["/path/to/file.txt"]
+		content = "Hello, world!"
+	}
+	`
+
+	s.dummyFsWithFiles([]string{"test.grept.hcl"}, []string{content})
+	config, err := BuildGreptConfig("", "", nil, nil)
+	require.NoError(t, err)
+	plan, err := RunGreptPlan(config)
+	require.NoError(t, err)
+
+	// Apply the plan
+	err = plan.Apply()
+	require.NoError(t, err)
+
+	// Verify that the file has not been created
+	exists, err := afero.Exists(s.fs, "/path/to/file.txt")
+	s.NoError(err)
+	s.False(exists)
 }
