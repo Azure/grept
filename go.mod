@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/zclconf/go-cty v1.15.0
 	golang.org/x/net v0.28.0
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.18.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
