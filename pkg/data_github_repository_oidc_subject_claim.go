@@ -15,8 +15,8 @@ type GitHubRepositoryOidcSubjectClaimDatasource struct {
 	*BaseData
 	Owner           string   `hcl:"owner"`
 	RepoName        string   `hcl:"repo_name"`
-	ClaimKeys       []string `hcl:"claim_keys"`
-	ClaimUseDefault *bool    `hcl:"claim_use_default"`
+	ClaimKeys       []string `attribute:"claim_keys"`
+	ClaimUseDefault *bool    `attribute:"claim_use_default"`
 }
 
 func (g *GitHubRepositoryOidcSubjectClaimDatasource) Type() string {

@@ -12,13 +12,12 @@
       "program": "${workspaceFolder}",
       "args": [
         "apply",
-        "--auto",
-        "git::https://github.com/Azure/Azure-Verified-Modules-Grept.git//terraform"
+        "/Users/matt/code/Azure-Verified-Modules-Grept/terraform"
       ],
-      "cwd": "/home/matt/code/terraform-azurerm-avm-ptn-virtualwan",
+      "cwd": "/Users/matt/code/terraform-azurerm-avm-res-keyvault-vault",
       "env": {
         "GITHUB_REPOSITORY_OWNER": "Azure",
-        "GITHUB_REPOSITORY": "Azure/terraform-azurerm-ptn-virtualwan",
+        "GITHUB_REPOSITORY": "Azure/terraform-azurerm-avm-res-keyvault-vault",
       }
     }
   ]
