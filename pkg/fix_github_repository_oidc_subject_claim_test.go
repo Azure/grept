@@ -3,6 +3,7 @@ package pkg_test
 import (
 	"context"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,9 +15,9 @@ import (
 )
 
 func TestGithubRepositoryOidcSubjectFix_IntegrationTest(t *testing.T) {
-	// if runtime.GOOS != "linux" {
-	// 	t.Skip("run integration test only under linux to avoid parallel testing issue")
-	// }
+	if runtime.GOOS != "linux" {
+		t.Skip("run integration test only under linux to avoid parallel testing issue")
+	}
 	testToken := os.Getenv("INTEGRATION_TEST_GITHUB_TOKEN")
 	if testToken == "" {
 		t.Skip("to run this test you must set env INTEGRATION_TEST_GITHUB_TOKEN first")
