@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/lonegunmanb/atomatt-yaml v0.0.0-20231115063413-65f675868d34
 	github.com/lonegunmanb/go-yaml-edit v0.0.0-20231115083743-85302adf634b
-	github.com/lonegunmanb/hclfuncs v0.9.0
+	github.com/lonegunmanb/hclfuncs v0.10.0
 	github.com/lonegunmanb/yaml-jsonpointer v0.1.2-0.20231115082754-71ac0a5bbbd2
 	github.com/peterh/liner v1.2.2
 	github.com/prashantv/gostub v1.1.0
@@ -97,7 +97,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/timandy/routine v1.1.4 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	github.com/zclconf/go-cty-yaml v1.0.3 // indirect
+	github.com/zclconf/go-cty-yaml v1.1.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.17.0 // indirect
