@@ -24,7 +24,7 @@ require (
 	github.com/spf13/afero v1.12.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zclconf/go-cty v1.16.1
+	github.com/zclconf/go-cty v1.16.2
 	golang.org/x/net v0.34.0
 	golang.org/x/text v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
