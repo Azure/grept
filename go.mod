@@ -22,7 +22,7 @@ require (
 	github.com/prashantv/gostub v1.1.0
 	github.com/shurcooL/githubv4 v0.0.0-20240429030203-be2daab69064
 	github.com/spf13/afero v1.12.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/zclconf/go-cty v1.16.2
 	golang.org/x/net v0.35.0
@@ -94,7 +94,7 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/timandy/routine v1.1.4 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/zclconf/go-cty-yaml v1.1.0 // indirect
