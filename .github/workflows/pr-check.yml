@@ -25,7 +25,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe #v4.1.0
         with:
-          go-version: 1.21.4
+          go-version-file: go.mod
       - name: Initialize CodeQL
         uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 #v2.22.5
         with:
@@ -51,7 +51,7 @@ jobs:
       - name: golangci-lint
         if: runner.os == 'Linux'
         run: |
-          docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.57.2 golangci-lint run -v --timeout=3600s
+          docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.64.7 golangci-lint run -v --timeout=3600s
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@55d79496019a560e16e73e1948dee20a1fad631a #v2.18.2
+        uses: securego/gosec@136f6c00402b11775d4f4a45d5a21e2f6dd99db2 #v2.22.2
         if: runner.os == 'Linux'
