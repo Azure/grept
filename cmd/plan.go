@@ -42,12 +42,12 @@ func planFunc() func(*cobra.Command, []string) error {
 		}
 		config, err := pkg.BuildGreptConfig(pwd, configPath, c.Context(), varFlags)
 		if err != nil {
-			return fmt.Errorf("error parsing config: %+v\n", err)
+			return fmt.Errorf("error parsing config: %+v", err)
 		}
 
 		plan, err := pkg.RunGreptPlan(config)
 		if err != nil {
-			return fmt.Errorf("error generating plan: %s\n", err.Error())
+			return fmt.Errorf("error generating plan: %s", err.Error())
 		}
 
 		if len(plan.FailedRules) == 0 {

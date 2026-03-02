@@ -20,7 +20,7 @@ func (y *yamlTransformSuite) SetupTest() {
 }
 
 func (y *yamlTransformSuite) TearDownTest() {
-	y.testBase.teardown()
+	y.teardown()
 }
 
 func TestYamlTransformSuite(t *testing.T) {

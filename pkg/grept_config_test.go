@@ -27,7 +27,7 @@ func (y *greptConfigSuite) SetupTest() {
 }
 
 func (y *greptConfigSuite) TearDownTest() {
-	y.testBase.teardown()
+	y.teardown()
 }
 
 func TestGreptConfigSuite(t *testing.T) {

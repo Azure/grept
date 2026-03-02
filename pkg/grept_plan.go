@@ -57,7 +57,7 @@ func (p *GreptPlan) String() string {
 		sb.WriteString("\n---\n")
 	}
 	for _, f := range p.Fixes {
-		sb.WriteString(fmt.Sprintf("%s would be apply:\n %s\n", f.Address(), golden.BlockToString(f)))
+		fmt.Fprintf(&sb, "%s would be apply:\n %s\n", f.Address(), golden.BlockToString(f))
 		sb.WriteString("\n---\n")
 	}
 

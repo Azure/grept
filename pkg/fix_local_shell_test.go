@@ -385,9 +385,7 @@ func (s *localExecFixSuite) TestLocalShellFix_ApplyFix_scriptWithUserAssignedEnv
 	defer func() {
 		_ = os.Remove(tmpScript.Name())
 	}()
-	_, _ = tmpScript.WriteString(fmt.Sprintf(`#!/bin/sh
-		echo $TMP_ENV>%s
-`, resultFile.Name()))
+	_, _ = fmt.Fprintf(tmpScript, "#!/bin/sh\n\t\techo $TMP_ENV>%s\n", resultFile.Name())
 	_ = tmpScript.Close()
 
 	rand := uuid.NewString()
