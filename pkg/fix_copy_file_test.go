@@ -16,7 +16,7 @@ func (s *copyFileFixSuite) SetupTest() {
 }
 
 func (s *copyFileFixSuite) TearDownTest() {
-	s.testBase.teardown()
+	s.teardown()
 }
 
 func TestCopyFileFixSuite(t *testing.T) {

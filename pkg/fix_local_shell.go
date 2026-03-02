@@ -97,13 +97,17 @@ func (l *LocalShellFix) downloadFile(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer out.Close()
+	defer func() {
+		_ = out.Close()
+	}()
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return out.Name(), err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
@@ -126,7 +130,7 @@ func (l *LocalShellFix) createTmpFileForInlines(shebang string, inlines []string
 		_ = tmp.Close()
 	}()
 	writer := bufio.NewWriter(tmp)
-	_, err = writer.WriteString(fmt.Sprintf("#!%s\n", shebang))
+	_, err = fmt.Fprintf(writer, "#!%s\n", shebang)
 	if err != nil {
 		return tmp.Name(), err
 	}

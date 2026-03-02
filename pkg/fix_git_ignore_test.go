@@ -16,7 +16,7 @@ func (s *gitIgnoreFixSuite) SetupTest() {
 }
 
 func (s *gitIgnoreFixSuite) TearDownTest() {
-	s.testBase.teardown()
+	s.teardown()
 }
 
 func TestGitIgnoreFixSuite(t *testing.T) {

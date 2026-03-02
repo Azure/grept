@@ -50,12 +50,12 @@ func applyFunc(auto *bool) func(*cobra.Command, []string) error {
 		}
 		config, err := pkg.BuildGreptConfig(pwd, configPath, c.Context(), varFlags)
 		if err != nil {
-			return fmt.Errorf("error parsing config: %s\n", err.Error())
+			return fmt.Errorf("error parsing config: %s", err.Error())
 		}
 
 		plan, err := pkg.RunGreptPlan(config)
 		if err != nil {
-			return fmt.Errorf("Error generating plan: %s\n", err.Error())
+			return fmt.Errorf("error generating plan: %s", err.Error())
 		}
 
 		if len(plan.FailedRules) == 0 {
@@ -77,7 +77,7 @@ func applyFunc(auto *bool) func(*cobra.Command, []string) error {
 		}
 		err = plan.Apply()
 		if err != nil {
-			return fmt.Errorf("error applying plan: %s\n", err.Error())
+			return fmt.Errorf("error applying plan: %s", err.Error())
 		}
 		fmt.Println("Plan applied successfully.")
 		return nil
